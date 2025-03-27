@@ -28,7 +28,7 @@ const completeApplication = require("./routers/studentDashboard/completeApplicat
 // Middleware
 server.use(
   cors({
-    origin: ["https://wwah.vercel.app", "http://localhost:3000", "https://www.worldwideadmissionshub.com/"],
+    origin: ["https://wwah.vercel.app", "http://localhost:3000", "https://www.worldwideadmissionshub.com"],
     credentials: true,
   })
 ); // Adjust origin for production
