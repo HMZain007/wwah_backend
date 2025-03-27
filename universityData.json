@@ -1,0 +1,271 @@
+ {
+    "countries": [
+        {
+            "name": "Canada",
+            "cities": [
+                { 
+                    "name": "Sackville",
+                    "universities": [
+                        {
+                            "name": "MOUNT ALLISON UNIVERSITY ",
+                            "programs": [{
+                                "courseName": "BA in International Relations",
+                                "ENTRY REQUIREMENTS" : "To be eligible for International students with an International Baccalaureate (IB) Diploma and a minimum overall score of 26, excluding core points, are eligible for admission consideration. However, Pakistani students must meet specific requirements, including a minimum score of 60% in five courses, including English and Grade 12 math for Bachelor of Science programs." ,
+                                "Required IELTS Score" : "Overall: 6.5, With no band score lower than 6",
+                                "Required PTE Score" : "Overall: 60, No individual score less than 51",
+                                "Required TOEFL Score" : "Overall: 90, Minimum Listening: 20, Reading: 20, Speaking: 20, Writing: 20",
+                                "Anuual Fee" :"CAD $20,810",
+                                "Study Mode" : "On-Campus"
+                            }, 
+                            {
+                                "courseName": "BA /BSc in Psychology",
+                                "ENTRY REQUIREMENTS" : "To be eligible for International students with an International Baccalaureate (IB) Diploma and a minimum overall score of 26, excluding core points, are eligible for admission consideration. However, Pakistani students must meet specific requirements, including a minimum score of 60% in five courses, including English and Grade 12 math for Bachelor of Science programs.",
+                                "Required IELTS Score" : "Overall: 6.5, With no band score lower than 6",
+                                "Required PTE Score" : "Overall: 60, No individual score less than 51",
+                                "Required TOEFL Score" : "Overall: 90, Minimum Listening: 20, Reading: 20, Speaking: 20, Writing: 20",
+                                "Anuual Fee" :"CAD $20,810",
+                                "Study Mode" : "On-Campus"
+                            },
+                            {
+                                "courseName": "BA in Drama Studies",
+                                "ENTRY REQUIREMENTS" : "To be eligible for International students with an International Baccalaureate (IB) Diploma and a minimum overall score of 26, excluding core points, are eligible for admission consideration. However, Pakistani students must meet specific requirements, including a minimum score of 60% in five courses, including English and Grade 12 math for Bachelor of Science programs.",
+                                "Required IELTS Score" : "Overall: 6.5, With no band score lower than 6",
+                                "Required PTE Score" : "Overall: 60, No individual score less than 51",
+                                "Required TOEFL Score" : "Overall: 90, Minimum Listening: 20, Reading: 20, Speaking: 20, Writing: 20",
+                                "Anuual Fee" :"CAD $20,810",
+                                "Study Mode" : "On-Campus"
+                            }
+                        ]
+                        }
+                    ]
+                },
+                {
+                    "name": "Winnipeg",
+                    "universities": [
+                        {
+                            "name": "UNIVERSITY OF MANITOBA",
+                            "programs": [{
+                                "courseName": "BSc in Computer Science",
+                                "ENTRY REQUIREMENTS" : "To be eligible for Bachelor's program, applicants must be current high school students or have graduated from high school with fewer than 24 credit hours of post-secondary study.  Advanced entry applicants have completed 24 or more credit hours. For Pakistani students seeking direct entry, a minimum 85% average across specific academic courses in high school is required; for advanced entry, a minimum 70% average in three senior-level courses with at least 60% in English or first language literature is needed.." ,
+                                "Required IELTS Score" : "Overall: 6.5, With no band score lower than 6",
+                                "Required PTE Score" : "Overall: 60, No individual score less than 51",
+                                "Required TOEFL Score" : "Overall: 86; Component scores: Reading: 20, Writing: 20, Listening: 20, Speaking: 43",
+                                "Anuual Fee" :"$22,600 CAD",
+                                "Study Mode" : "On-Campus"
+                            }, 
+                            {
+                                "courseName": "MSc and MEng in Civil Engineering",
+                                "ENTRY REQUIREMENTS" : "To be eligible for Bachelor's program, applicants must be current high school students or have graduated from high school with fewer than 24 credit hours of post-secondary study.  Advanced entry applicants have completed 24 or more credit hours. For Pakistani students seeking direct entry, a minimum 85% average across specific academic courses in high school is required; for advanced entry, a minimum 70% average in three senior-level courses with at least 60% in English or first language literature is needed..",
+                                "Required IELTS Score" : "Overall: 6.5, With no band score lower than 6",
+                                "Required PTE Score" : "Overall: 60, No individual score less than 51",
+                                "Required TOEFL Score" : "Overall: 86; Component scores: Reading: 20, Writing: 20, Listening: 20, Speaking: 43",
+                                "Anuual Fee" :"$22,600 CAD",
+                                "Study Mode" : "On-Campus"
+                            },
+                            {
+                                "courseName": "PhD Food Science",
+                                "ENTRY REQUIREMENTS" : "Applicants require for admission to the PhD program is a master's degree or equivalent from a recognized university with a cumulative GPA of 3.0 (B or equivalent) in the last two previous years of full-time study (60 credit hours).",
+                                "Required PTE Score" : "Overall: 60, No individual score less than 51",
+                                "Required TOEFL Score" : "Overall: 86; Component scores: Reading: 20, Writing: 20, Listening: 20, Speaking: 43",
+                                "Anuual Fee" :"$22,400 CAD",
+                                "Study Mode" : "On-Campus"
+                            }
+                        ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "UK",
+            "cities": [
+                {
+                    "name": "CARDIFF",
+                    "universities": [
+                        {
+                            "name": "Cardiff University",
+                            "programs": [{
+                                "courseName": "(BSc) Accounting and Finance",
+                                "ENTRY REQUIREMENTS" : "Applicants require A-levels with grades AAB-BBB, or equivalent qualifications. For International Baccalaureate, a score of 34-31 overall or 666-665 in three HL subjects is needed. Other essential requirements include GCSE English Language grade C/4 or equivalent, and GCSE Maths grade B/6 or equivalent unless A-level Maths is taken.  Core Maths can be accepted in place of GCSE Maths.  Critical Thinking, General Studies, Citizenship Studies, and similar subjects are not accepted.   For students from Pakistan, applicants typically require GCE A-Levels, an International Baccalaureate, or a bachelor's degree from a recognized Pakistani university with a CGPA around 3.0.  Applicants with a recognized foundation program or those who studied under the US high school system may also be considered." ,
+                                "Required IELTS Score" : "Overall: 6.5, with 5.5 in all subskills",
+                                "Required PTE Score" : "69 overall, with a minimum of 59 in all communicative skills",
+                                "Required TOEFL Score" : "80 overall (Reading 18, Listening 17, Writing 17, Speaking 20)",
+                                "Anuual Fee" :"£23,700",
+                                "Study Mode" : "On-Campus"
+                            }, 
+                            {
+                                "courseName": "(MSc) Data Science and Analytics",
+                                "ENTRY REQUIREMENTS" : "Applicants Require with a CGPA in the region of 3.0 or above (for programs requiring a 2:1 honours degree equivalent) or CGPA in the region of 2.5 or above (for programmes requiring a 2:2 honours degree equivalent).",
+                                "Required IELTS Score" : "Overall: 6.5, with 5.5 in all subskills",
+                                "Required PTE Score" : "69 overall, with a minimum of 59 in all communicative skills",
+                                "Required TOEFL Score" : "90 overall (Reading 18, Listening 17, Writing 17, Speaking 20)",
+                                "Anuual Fee" :"£23,700",
+                                "Study Mode" : "On-Campus"
+                            },
+                            {
+                                "courseName": "(LLB) Law",
+                                "ENTRY REQUIREMENTS" : "For admission to the Law (LLB) program, applicants typically need AAA-ABB grades in their A Levels.  Students from Pakistan with an undergraduate degree (two, three, or four years) from a reputable Pakistani university with a CGPA around 3.0 may also be considered.  The University also considers the circumstances in which students have been studying.",
+                                "Required IELTS Score" : "Overall: 6.5, with 5.5 in all subskills",
+                                "Required PTE Score" : "69 overall, with a minimum of 59 in all communicative skills",
+                                "Required TOEFL Score" : "90 overall, with minimum scores of 17 in listening, 18 in reading, 20 in speaking, and 17 in writing",
+                                "Anuual Fee" :"£23,700",
+                                "Study Mode" : "On-Campus"
+                            }
+                        ]
+                        }
+                    ]
+                },
+                {
+                    "name": "London",
+                    "universities": [
+                        {
+                            "name": "LONDON SOUTH BANK UNIVERSITY",
+                            "programs": [{
+                                "courseName": "BSc (Hons) Psychology",
+                                "ENTRY REQUIREMENTS" : "Application for an undergraduate course at LSBU, candidates need one of the following: three GCE A Level passes (with grades depending on the course), an International Baccalaureate Diploma with 24 points or more, a UK-accredited Foundation program with 55-60% or above. Students from Pakistan are required to have a two-year Bachelors degree from a recognized institution in Pakistan with at least 60%, or an HSC with 70% or higher. Candidates with a UK Higher National Diploma may qualify for advanced or top-up entry. , and some courses may require specific subjects." ,
+                                "Required IELTS Score" : "Overall: 6.5, w6.0 overall (no component below 5.5)ith 5.5 in all subskills",
+                                "Required PTE Score" : "Overall Score: 59 Sectional Scores: Listening: 59 Reading: 59 Speaking: 59 Writing: 59",
+                                "Required TOEFL Score" : "90 overall, with minimum scores of 17 in listening, 18 in reading, 20 in speaking, and 17 in writing",
+                                "Anuual Fee" :"£23,700",
+                                "Study Mode" : "On-Campus"
+                            }, 
+                            {
+                                "courseName": "MSc Civil Engineering",
+                                "ENTRY REQUIREMENTS" : " Applicants must hold an undergraduate Civil Engineering degree with a minimum of a BEng Civil Engineering - 2:2 (or above) or a BSc Civil Engineering - 2:1 (or above) or equivalent work experience. LSBU's postgraduate admission requirements include having a three-year Bachelor's degree with a grade of 65% or higher, or a four-year Bachelor's degree with a grade of 55% or higher. Alternatively, applicants with a two-year Bachelor's degree and a two-year Master's degree with a 1st class grade are also eligible.",
+                                "Required PTE Score" : "6.5 overall (no component below 5.5)",
+                                "Required TOEFL Score" : "90 overall, with minimum scores of 17 in listening, 18 in reading, 20 in speaking, and 17 in writing",
+                                "Anuual Fee" :"£23,700",
+                                "Study Mode" : "On-Campus"
+                            },
+                            {
+                                "courseName": "PhD Food Sciences",
+                                "ENTRY REQUIREMENTS" : "Applicants for a Research Degree program at LSBU are typically expected to hold a good honors degree (2:1 and above) and a relevant postgraduate qualification, ideally a merit at Master's level. Two academic references are required as part of the application, along with proof of all qualifications.",
+                                "Required IELTS Score" : "Overall: 7.0",
+                                "Required PTE Score" : "Not Required",
+                                "Required TOEFL Score" : "Not Required",
+                                "Anuual Fee" :"£23,700",
+                                "Study Mode" : "On-Campus"
+                            }
+                        ]
+                        }
+                    ]
+                },
+                {
+                    "name": "FARNHAM",
+                    "universities": [
+                        {
+                            "name": "UNIVERSITY OF CREATIVE ARTS FARNHAM",
+                            "programs": [{
+                                "courseName": "BSc (Hons) Psychology",
+                                "ENTRY REQUIREMENTS" : "For undergraduate courses, they require one of the following: 112 UCAS points, 27-30 total points in the International Baccalaureate Diploma with at least 15 IB points at Higher level, and four GCSE passes at grade 9-4/A*-C including English (or Functional Skills English/Key Skills Communication Level 2).For foundation year entry, they require one of the following:  32 UCAS points from an accredited Access to Higher Education Diploma in appropriate subject, 24 points from the International Baccalaureate, and four GCSE passes at grade 9-4/A*-C including English (or Functional Skills English/Key Skills Communication Level 2). Specifically for Pakistani undergraduate requirements, they require either an Associate Degree from a recognized Pakistani university with 55% or GPA 2.5 or a transcript showing successful completion of two or three years of a Bachelor's degree from a recognized Pakistani university with 55% or GPA 2.5.  For Pakistani foundation year entry, they require a Pakistani Higher Education Secondary School Certificate (HSSC)/Intermediate, showing 12 years of completed school study, with 60% or 3/5." ,
+
+                                "Required IELTS Score" : "Overall: 6.0, Minimum in Any Section: 5.5",
+                                "Required PTE Score" : "Overall Score: 59 Sectional Scores: Listening: 59 Reading: 59 Speaking: 59 Writing: 59",
+                                "Required TOEFL Score" : "Overall Score: 80 Sectional Scores: Reading: 17 Listening: 18 Speaking: 20 Writing: 17",
+                                "Anuual Fee" :"£17,500",
+                                "Study Mode" : "On-Campus"
+                            }, 
+                            {
+                                "courseName": "MSc Civil Engineering",
+                                "ENTRY REQUIREMENTS" : "For Bachelor's courses, we usually require one of the following: Associate Degree from a recognized Pakistani university with: 55% or GPA 2.5Transcript showing successful completion of two or three years of a Bachelor's degree from a recognized Pakistani university with: 55% or GPA 2.5For our International Foundation in Creative Practices and our Integrated International Foundation courses, we usually require: Pakistani Higher Education Secondary School Certificate (HSSC)/Intermediate showing: 12 years of completed school study, 60% or 3/5",
+                                "Required IELTS Score" : "Overall: 6.0, Minimum in Any Section: 5.5",
+                                "Required PTE Score" : "Overall Score: 59 Sectional Scores: Listening: 59 Reading: 59 Speaking: 59 Writing: 59",
+                                "Required TOEFL Score" : "Overall Score: 80 Sectional Scores: Reading: 17 Listening: 18 Speaking: 20 Writing: 17",
+                                "Anuual Fee" :"£17,500",
+                                "Study Mode" : "On-Campus"
+                            },
+                            {
+                                "courseName": "PhD Food Sciences",
+                                "ENTRY REQUIREMENTS" : "For the MA Fashion Design, UCA Epsom requires a good honours degree or equivalent qualification in a related discipline. Relevant work experience demonstrating the ability to study at postgraduate level is also considered. Applicants must demonstrate a strong case for admission in relation to a particular project and their potential to satisfactorily complete the course. Pakistani students are usually required to have a Bachelor's Degree (minimum 4 years) from a recognized university with 50% overall or GPA 2.6. They can also apply with a Master's Degree from a recognized university. For the MA with Integrated Pre-Masters, a recognized bachelor degree or 3 year diploma with a strong portfolio in a relevant subject is required. ",
+                                "Required IELTS Score" : "Overall: 6.5, Minimum in Any Section: 5.5",
+                                "Required PTE Score" : "Overall Score: 59 Sectional Scores: Listening: 59 Reading: 59 Speaking: 59 Writing: 59",
+                                "Required TOEFL Score" : "Overall Score: 80 Sectional Scores: Reading: 17 Listening: 18 Speaking: 20 Writing: 17",
+                                "Anuual Fee" :"£17,500",
+                                "Study Mode" : "On-Campus"
+                            }
+                        ]
+                        }
+                    ]
+                }
+
+            ]
+        },
+        {
+            "name": "AUSTRALIA",
+            "cities": [
+                {
+                    "name": "Gold Coast",
+                    "universities": [
+                        {
+                            "name": "BOND UNIVERSITY (Gold Coast), AUSTRALIA",
+                            "programs": [{
+                                "courseName": "Bachelor of Business",
+                                "ENTRY REQUIREMENTS" : "Prospective students must meet specific academic requirements based on their educational background. International Baccalaureate (IB) Diploma holders are required to achieve a minimum score of 24. Applicants with an International GCE A Level qualification must attain an aggregate score of 5.0 across three A-levels. For students from Pakistan, those with a Pakistani Intermediate Certificate or Higher Secondary Certificate (HSC) in the Humanities or Science Stream need a minimum score of 85%, while those from the Pre-Medical or Pre-Engineering Stream require a minimum score of 65%." ,
+                                "Required IELTS Score" : "Overall 6.5 with no sub score less than 6.0",
+                                "Required PTE Score" : "Overall 58 with no Communicative Scores below 50",
+                                "Required TOEFL Score" : "Overall 79 (no scores below 21 in Writing, 18 in Speaking, and 16 in Reading and Listening)",
+                                "Anuual Fee" :"$47,920",
+                                "Study Mode" : "On-Campus"
+                            }, 
+                            {
+                                "courseName": "Bachelor of Laws",
+                                "ENTRY REQUIREMENTS" : "To apply for this Bachelor program, prospective students must meet specific academic requirements based on their educational background. International Baccalaureate (IB) Diploma holders are required to achieve a minimum score of 30. Applicants with an International GCE A Level qualification must attain an aggregate score of 10.0 across three A-levels. For students from Pakistan, those with a Pakistani Intermediate Certificate or Higher Secondary Certificate (HSC) in the Humanities or Science Stream need a minimum score of 85%, while those from the Pre-Medical or Pre-Engineering Stream require a minimum score of 65%.",
+                                "Required IELTS Score" : "Overall 6.5 with no sub score less than 6.0",
+                                "Required PTE Score" : "Overall 58 with no Communicative Scores below 50",
+                                "Required TOEFL Score" : "Overall 79 (no scores below 21 in Writing, 18 in Speaking, and 16 in Reading and Listening)",
+                                "Anuual Fee" :"$47,920",
+                                "Study Mode" : "On-Campus"
+                            },
+                            {
+                                "courseName": "Master of Business Administration",
+                                "ENTRY REQUIREMENTS" : "To be eligible for this Master program, applicants must successfully complete a recognized Bachelor’s degree (or an equivalent qualification) in any field of study. The degree should be a Three or four-year Bachelor’s program, and candidates are required to have a minimum GPA of 2.00.",
+                                "Required IELTS Score" : "Overall 6.5 with no sub score less than 6.0",
+                                "Required PTE Score" : "Overall 58 with no Communicative Scores below 50",
+                                "Required TOEFL Score" : "Overall 79 (no scores below 21 in Writing, 18 in Speaking, and 16 in Reading and Listening)",
+                                "Anuual Fee" :"$38,920 ",
+                                "Study Mode" : "On-Campus"
+                            }
+                        ]
+                        }
+                    ]
+                },
+                {
+                    "name": "Casuarina",
+                    "universities": [
+                        {
+                            "name": "CHARLES DARWIN UNIVERSITY ( Casuarina), AUSTRALIA",
+                            "programs": [{
+                                "courseName": "Bachelor of Computer Science",
+                                "ENTRY REQUIREMENTS" : "International students applying for bachelor's programs must meet academic requirements by completing CDU's Foundation Studies Program with a minimum 65% in Foundation English units A and B. Alternatively, they can have their overseas secondary or tertiary qualifications assessed for equivalence to Australian standards. For Pakistani students, this means having a Higher Secondary School Certificate Intermediate (Division 1) with a 65% average in four academic subjects, or completing the first year of a degree at a recognized institution with a 60% average." ,
+                                "Required IELTS Score" : "6.0 overall score Minimum 5.5 in each subtest",
+                                "Required PTE Score" : "50 with no score lower than 42",
+                                "Required TOEFL Score" : "60 with a minimum score of 18 for reading, speaking and listening and a minimum score of 21 for writing",
+                                "Anuual Fee" :"$31,688 ",
+                                "Study Mode" : "On-Campus"
+                            }, 
+                            {
+                                "courseName": "Bachelor of Accounting",
+                                "ENTRY REQUIREMENTS" : "International students applying for bachelor's programs must meet academic requirements by completing CDU's Foundation Studies Program with a minimum 65% in Foundation English units A and B. Alternatively, they can have their overseas secondary or tertiary qualifications assessed for equivalence to Australian standards. For Pakistani students, this means having a Higher Secondary School Certificate Intermediate (Division 1) with a 65% average in four academic subjects, or completing the first year of a degree at a recognized institution with a 60% average.",
+                                "Required IELTS Score" : "6.0 overall score Minimum 5.5 in each subtest",
+                                "Required PTE Score" : "50 with no score lower than 42",
+                                "Required TOEFL Score" : "60 with a minimum score of 18 for reading, speaking and listening and a minimum score of 21 for writing",
+                                "Anuual Fee" :"$28,376",
+                                "Study Mode" : "On-Campus"
+                            },
+                            {
+                                "courseName": "Master of Data Science",
+                                "ENTRY REQUIREMENTS" : "To be eligible for Master programs, international students typically need a recognized bachelor's degree, often with a certain GPA or academic average, and sometimes relevant work experience or prerequisite courses. For Pakistan, the entry requirement is Higher Secondary School Certificate plus one year of study at bachelor's degree level at a recognized institution",
+                                "Required IELTS Score" : "6.5 overall score with no band less than 6.0",
+                                "Required PTE Score" : "50 with no score lower than 42",
+                                "Required TOEFL Score" : "60 with a minimum score of 18 for reading, speaking and listening and a minimum score of 21 for writing",
+                                "Anuual Fee" :"$31,688 ",
+                                "Study Mode" : "On-Campus"
+                            }
+                        ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
