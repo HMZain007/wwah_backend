@@ -256,8 +256,7 @@ const studentData = require("./routers/adminDashboard/studentData");
 server.use(
   cors({
     origin: [
-      "https://www.worldwideadmissionshub.com",
-      "https://wwah.vercel.app",
+      "https://www.worldwideadmissionshub.com"
     ],
     credentials: true,
   })
