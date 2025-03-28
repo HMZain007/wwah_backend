@@ -254,8 +254,10 @@ const createAdminRoute = require("./routers/createAdmin");
 const studentData = require("./routers/adminDashboard/studentData");
 // Middleware
 server.use(cors({
-  origin: "https://www.worldwideadmissionshub.com",
-  credentials: true // If using authentication (cookies, JWT)
+  origin: "https://www.worldwideadmissionshub.com", // Allow only your frontend
+  credentials: true, // If using authentication (cookies, JWT)
+  methods: "GET, POST, PUT, DELETE, OPTIONS",
+  allowedHeaders: "Content-Type, Authorization"
 }));
 
 server.options("*", cors()); // Adjust origin for production
