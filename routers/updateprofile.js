@@ -9,9 +9,5 @@ router.post('/personal-Information', authenticateToken, profileController.person
 router.post('/academic-Information', authenticateToken, profileController.academicInformation)
 router.post('/english-proficiency', authenticateToken, profileController.languageProficiency)
 router.post('/userPreference', authenticateToken, profileController.userPreference)
-router.post(
-    "/workExperience",
-    authenticateToken,
-    profileController.workExperience
-);
+
 module.exports = router;
