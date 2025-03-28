@@ -28,7 +28,7 @@ router.post("/", authenticateAiToken, async (req, res) => {
       return res.status(200).json({
         success: true,
         answer:
-          "Please log in for better results. Click here: https://world-wide-admission.vercel.app/signin",
+          "Please log in for better results. Click here: https://worldwideadmissionhub.com/signin",
       });
     }
     else {

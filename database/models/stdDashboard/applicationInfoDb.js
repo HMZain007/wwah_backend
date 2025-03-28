@@ -25,8 +25,7 @@ const educationalBackgroundSchema = new mongoose.Schema({
     type: Date,
   },
 });
-const workExperienceSchema = new mongoose.Schema(
-  {
+const workExperienceSchema = new mongoose.Schema({
   jobTitle: {
     type: String,
   },

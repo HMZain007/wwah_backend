@@ -2,13 +2,14 @@ const mongoose = require("mongoose");
 // Define a schema
 const userSchema = new mongoose.Schema(
   {
+    name: {
+      type: String,
+    },
     firstName: {
       type: String,
-      required: true,
     },
     lastName: {
       type: String,
-      required: true,
     },
     email: {
       type: String,
@@ -18,6 +19,11 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       minlength: 8,
+    },
+    role: {
+      type: String,
+      enum: ["user", "admin"],
+      default: "user",
     },
     contactNo: {
       type: Number,
@@ -32,15 +38,13 @@ const userSchema = new mongoose.Schema(
       type: String,
     },
     otpExpiration: {
-      type: Date,
+      type: Date, 
     },
     otpVerified: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
-
 // Create a model
-// const UserDb = mongoose.model("UserDb", userSchema);
 const UserDb = mongoose.models.UserDb || mongoose.model("UserDb", userSchema);
 // Export the model
 module.exports = UserDb;

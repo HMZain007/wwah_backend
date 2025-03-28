@@ -21,7 +21,7 @@
 // module.exports = authenticateToken;
 const jwt = require("jsonwebtoken");
 
-const authenticateToken = (req, res, next) => {
+const authenticateToken = (req, res, next) => {  
   // 🔹 Get token from `cookies` OR `Authorization` header
   const token = req.cookies.authToken || req.headers.authorization?.split(" ")[1];
 
