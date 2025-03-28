@@ -253,14 +253,12 @@ const completeApplication = require("./routers/studentDashboard/completeApplicat
 const createAdminRoute = require("./routers/createAdmin");
 const studentData = require("./routers/adminDashboard/studentData");
 // Middleware
-server.use(
-  cors({
-    origin: [
-      "https://www.worldwideadmissionshub.com"
-    ],
-    credentials: true,
-  })
-); // Adjust origin for production
+server.use(cors({
+  origin: "https://www.worldwideadmissionshub.com",
+  credentials: true // If using authentication (cookies, JWT)
+}));
+
+server.options("*", cors()); // Adjust origin for production
 server.use(helmet()); // Add security headers
 server.use(express.json()); // Built-in JSON parser
 server.use(express.urlencoded({ extended: true })); // Parse URL-encoded data
