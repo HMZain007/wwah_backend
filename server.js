@@ -254,12 +254,9 @@ const createAdminRoute = require("./routers/createAdmin");
 const studentData = require("./routers/adminDashboard/studentData");
 // Middleware
 server.use(cors({
-  origin: [
-    "https://wwah.vercel.app",
-    "http://localhost:3000",
-    "https://www.worldwideadmissionshub.com",
-  ],
-  credentials: true,
+  origin: 'https://www.worldwideadmissionshub.com', // Allow only this origin
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 server.use(helmet()); // Add security headers
