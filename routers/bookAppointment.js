@@ -22,8 +22,10 @@ router.post("/", async (req, res) => {
 
   // Setup email data
   let mailOptions = {
-    from: email, // sender address
-    to: "chillpills313@gmail.com", // list of receivers
+    // from: email, // sender address
+    // to: "chillpills313@gmail.com", // list of receivers
+    from: "umberfatimi@gmail.com", // Use your configured email as sender
+    to: "info@worldwideadmissionshub.com", // Recipient
     subject: "Book Demo", // Subject line
     text: user, // plain text body
   };

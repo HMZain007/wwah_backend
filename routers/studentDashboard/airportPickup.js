@@ -33,6 +33,13 @@ const upload = multer({
   fileFilter: fileFilter,
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB file size limit
 });
+// let transporter = nodemailer.createTransport({
+//   service: "gmail",
+//   auth: {
+//     user: process.env.EMAIL_USER,
+//     pass: process.env.EMAIL_PASS,
+//   },
+// });
 let transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -70,8 +77,10 @@ router.post("/", upload.single("ticket"), async (req, res) => {
       });
     }
     const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: "chillpills313@gmail.com",
+      from: "umberfatimi@gmail.com", // Use your configured email as sender
+      to: "info@worldwideadmissionshub.com", // Recipient
+      // from: process.env.EMAIL_USER,
+      // to: "chillpills313@gmail.com",
       subject: "New Airport Pickup Request",
       html: `
         <h2>Airport Pickup Request</h2>
@@ -88,31 +97,25 @@ router.post("/", upload.single("ticket"), async (req, res) => {
         <p><strong>Pickup Option:</strong> ${pickupOption}</p>
         <p><strong>Drop-off Location:</strong> ${dropOffLocation}</p>
 
-        ${
-          additionalPreference
-            ? `<h3>Additional Preferences</h3><p>${additionalPreference}</p>`
-            : ""
+        ${additionalPreference
+          ? `<h3>Additional Preferences</h3><p>${additionalPreference}</p>`
+          : ""
         }
 
-        ${
-          Object.keys(parsedFlightDetails).length > 0
-            ? `
+        ${Object.keys(parsedFlightDetails).length > 0
+          ? `
         <h3>Flight Details</h3>
-        <p><strong>Arrival Date:</strong> ${
-          parsedFlightDetails.arrivalDate || "N/A"
-        }</p>
+        <p><strong>Arrival Date:</strong> ${parsedFlightDetails.arrivalDate || "N/A"
+          }</p>
         <p><strong>Time:</strong> ${parsedFlightDetails.time || "N/A"}</p>
-        <p><strong>Airport Name:</strong> ${
-          parsedFlightDetails.airportName || "N/A"
-        }</p>
-        <p><strong>Flight Number:</strong> ${
-          parsedFlightDetails.flightNumber || "N/A"
-        }</p>
-        <p><strong>Airline Name:</strong> ${
-          parsedFlightDetails.airlineName || "N/A"
-        }</p>
+        <p><strong>Airport Name:</strong> ${parsedFlightDetails.airportName || "N/A"
+          }</p>
+        <p><strong>Flight Number:</strong> ${parsedFlightDetails.flightNumber || "N/A"
+          }</p>
+        <p><strong>Airline Name:</strong> ${parsedFlightDetails.airlineName || "N/A"
+          }</p>
         `
-            : ""
+          : ""
         }
       `,
       cc: email,

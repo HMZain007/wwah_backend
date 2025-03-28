@@ -5,17 +5,15 @@ const router = express.Router();
 router.post("/", async (req, res) => {
   try {
     const formData = req.body;
-    console.log("backend : Received form data:", formData );
-
-    // Create a transporter object using the default SMTP transport
+    console.log("backend : Received form data:", formData);
     let transporter = nodemailer.createTransport({
+
       service: "gmail",
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
       },
     });
-
     // Format data for email body
     const emailBodyText = `
       Accommodation Booking Request
@@ -36,8 +34,8 @@ router.post("/", async (req, res) => {
 
     // Setup email data
     let mailOptions = {
-      from: process.env.EMAIL_USER, // Use your configured email as sender
-      to: "chillpills313@gmail.com", // Recipient
+      from: "umberfatimi@gmail.com", // Use your configured email as sender
+      to: "info@worldwideadmissionshub.com", // Recipient
       subject: "New Accommodation Booking Request",
       text: emailBodyText,
     };
