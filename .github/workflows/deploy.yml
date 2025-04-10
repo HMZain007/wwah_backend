@@ -25,6 +25,9 @@ jobs:
       - name: Deploy to EC2
         run: |
           ssh -i key.pem -o StrictHostKeyChecking=no ubuntu@"${{ secrets.EC2_IP }}" << 'EOF'
+            source ~/.bashrc || true
+            source /etc/profile || true
+            
             # Move to /home/ubuntu
             cd /home/ubuntu
 
