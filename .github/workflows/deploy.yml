@@ -18,6 +18,10 @@ jobs:
           echo "${{ secrets.EC2_SSH_KEY }}" > key.pem
           chmod 600 key.pem
 
+      - name: Debug Key
+        run: |
+          head -n 2 key.pem
+
       - name: Deploy to EC2
         run: |
           ssh -i key.pem -o StrictHostKeyChecking=no ubuntu@"${{ secrets.EC2_IP }}" << 'EOF'
