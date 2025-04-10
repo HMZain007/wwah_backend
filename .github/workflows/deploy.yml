@@ -50,19 +50,6 @@ jobs:
             # Pull latest changes from the main branch
             git pull origin main
 
-            # Create or overwrite the .env file every time
-            echo "Creating or overwriting the .env file"
-            cat <<EOF > .env
-            NODE_ENV=production
-            JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}
-            EMAIL_USER=${{ secrets.EMAIL_USER }}
-            EMAIL_PASS=${{ secrets.EMAIL_PASS }}
-            OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
-            CLOUDINARY_CLOUD_NAME=${{ secrets.CLOUDINARY_CLOUD_NAME }}
-            CLOUDINARY_API_KEY=${{ secrets.CLOUDINARY_API_KEY }}
-            CLOUDINARY_API_SECRET=${{ secrets.CLOUDINARY_API_SECRET }}
-            PORT=8080
-            EOF
 
             # Install dependencies
             npm install
