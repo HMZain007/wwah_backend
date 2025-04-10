@@ -25,9 +25,15 @@ jobs:
       - name: Deploy to EC2
         run: |
           ssh -i key.pem -o StrictHostKeyChecking=no ubuntu@"${{ secrets.EC2_IP }}" << 'EOF'
-            source ~/.bashrc || true
-            source /etc/profile || true
-            
+            export NVM_DIR="/home/ubuntu/.nvm"
+            export NODE_BIN="/home/ubuntu/.nvm/versions/node/v18.18.0/bin"
+            export PATH="$NODE_BIN:$PATH"
+
+            echo "PATH: $PATH"
+            which node
+            which npm
+            which pm2
+
             # Move to /home/ubuntu
             cd /home/ubuntu
 
