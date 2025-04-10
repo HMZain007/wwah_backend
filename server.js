@@ -253,14 +253,16 @@ const completeApplication = require("./routers/studentDashboard/completeApplicat
 const createAdminRoute = require("./routers/createAdmin");
 const studentData = require("./routers/adminDashboard/studentData");
 // Middleware
-server.use(cors({
-  origin: [
-    "https://wwah.vercel.app",
-    "http://localhost:3000",
-    "https://www.worldwideadmissionshub.com",
-  ],
-  credentials: true,
-}));
+server.use(
+  cors({
+    origin: [
+      "https://wwah.vercel.app",
+      "http://localhost:3000",
+      "https://www.worldwideadmissionshub.com",
+    ],
+    credentials: true,
+  })
+);
 
 server.use(helmet()); // Add security headers
 server.use(express.json()); // Built-in JSON parser
@@ -324,3 +326,5 @@ const port = process.env.PORT || 8080;
 server.listen(port, () => {
   console.log(`The Server is running at port ${port}`);
 });
+
+// test
