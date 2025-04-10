@@ -50,9 +50,8 @@ jobs:
             # Pull latest changes from the main branch
             git pull origin main
 
-            # Create or overwrite the .env file every time
             echo "Creating or overwriting the .env file"
-            cat <<EOF > .env
+            cat << 'EOF' > .env
             NODE_ENV=production
             JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}
             EMAIL_USER=${{ secrets.EMAIL_USER }}
