@@ -312,7 +312,7 @@ server.get("/", async (req, res) => {
 
 // Health check route
 server.get("/health", (req, res) => {
-  res.status(200).json({ message: "Server is running smoothly" });
+  res.status(200).json({ message: "Server is running " });
 });
 
 // Centralized error handler
@@ -326,5 +326,3 @@ const port = process.env.PORT || 8080;
 server.listen(port, () => {
   console.log(`The Server is running at port ${port}`);
 });
-
-// test
