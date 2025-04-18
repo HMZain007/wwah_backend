@@ -1,9 +1,9 @@
 const mongoose = require('mongoose');
+require("dotenv").config();
 
-const url = "mongodb+srv://hafizainsarwar007:AI37K7TloQhBqRrj@cluster0.kz0pu.mongodb.net/wwah"
-mongoose.connect(url, {})
+const uri = process.env.MONGODB_URI;
+mongoose.connect(uri, {})
 const db = mongoose.connection;
-
 // Connection successful
 db.on('connected', () => {
     console.log('MongoDB connected with server  successfully');

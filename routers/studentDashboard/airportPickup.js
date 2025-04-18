@@ -97,25 +97,31 @@ router.post("/", upload.single("ticket"), async (req, res) => {
         <p><strong>Pickup Option:</strong> ${pickupOption}</p>
         <p><strong>Drop-off Location:</strong> ${dropOffLocation}</p>
 
-        ${additionalPreference
-          ? `<h3>Additional Preferences</h3><p>${additionalPreference}</p>`
-          : ""
+        ${
+          additionalPreference
+            ? `<h3>Additional Preferences</h3><p>${additionalPreference}</p>`
+            : ""
         }
 
-        ${Object.keys(parsedFlightDetails).length > 0
-          ? `
+        ${
+          Object.keys(parsedFlightDetails).length > 0
+            ? `
         <h3>Flight Details</h3>
-        <p><strong>Arrival Date:</strong> ${parsedFlightDetails.arrivalDate || "N/A"
-          }</p>
+        <p><strong>Arrival Date:</strong> ${
+          parsedFlightDetails.arrivalDate || "N/A"
+        }</p>
         <p><strong>Time:</strong> ${parsedFlightDetails.time || "N/A"}</p>
-        <p><strong>Airport Name:</strong> ${parsedFlightDetails.airportName || "N/A"
-          }</p>
-        <p><strong>Flight Number:</strong> ${parsedFlightDetails.flightNumber || "N/A"
-          }</p>
-        <p><strong>Airline Name:</strong> ${parsedFlightDetails.airlineName || "N/A"
-          }</p>
+        <p><strong>Airport Name:</strong> ${
+          parsedFlightDetails.airportName || "N/A"
+        }</p>
+        <p><strong>Flight Number:</strong> ${
+          parsedFlightDetails.flightNumber || "N/A"
+        }</p>
+        <p><strong>Airline Name:</strong> ${
+          parsedFlightDetails.airlineName || "N/A"
+        }</p>
         `
-          : ""
+            : ""
         }
       `,
       cc: email,

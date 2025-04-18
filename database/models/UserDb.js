@@ -4,6 +4,7 @@ const userSchema = new mongoose.Schema(
   {
     name: {
       type: String,
+
     },
     firstName: {
       type: String,
@@ -14,6 +15,11 @@ const userSchema = new mongoose.Schema(
     email: {
       type: String,
       required: true,
+    },
+    phone: {
+      type: Number,
+      required: true,
+      minlength: 11,
     },
     password: {
       type: String,
@@ -38,7 +44,7 @@ const userSchema = new mongoose.Schema(
       type: String,
     },
     otpExpiration: {
-      type: Date, 
+      type: Date,
     },
     otpVerified: { type: Boolean, default: false },
   },

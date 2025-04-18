@@ -7,8 +7,8 @@ const userPeferenceDb = require("../database/models/userPreference");
 const UserDb = require("../database/models/UserDb");
 const workExperience = require("../database/models/workExperience");
 
-router.get("/", authenticateToken, async (req, res) => {  
-       try {
+router.get("/", authenticateToken, async (req, res) => {
+  try {
     const user = await UserDb.findById(req.user.id).select(
       "-otp -otpExpiration"
     );
@@ -24,13 +24,13 @@ router.get("/", authenticateToken, async (req, res) => {
     const workExp = await workExperience.findOne({
       user: req.user.id,
     });
-        console.log(AcademmicInfo, "user from backend");
-         if (!user ) {
-           res.status(404).json({ message: "User not found Why" });
-         }
-         else res.json({ user, AcademmicInfo, LanguageProf, UserPref, workExp });
-                
-         
+    console.log(AcademmicInfo, "user from backend");
+    if (!user) {
+      res.status(404).json({ message: "User not found Why" });
+    }
+    else res.json({ user, AcademmicInfo, LanguageProf, UserPref, workExp });
+
+
   } catch (error) {
     console.error("Error fetching profile in backend:", error);
     res.status(500).json({ message: "Internal Server Error" });
@@ -56,5 +56,4 @@ router.get("/data", authenticateToken, async (req, res) => {
     });
   }
 });
-
 module.exports = router;
