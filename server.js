@@ -28,6 +28,7 @@ const airportPickup = require("./routers/studentDashboard/airportPickup");
 const completeApplication = require("./routers/studentDashboard/completeApplication");
 const createAdminRoute = require("./routers/createAdmin");
 const studentData = require("./routers/adminDashboard/studentData");
+const successChanceRoute = require('./routes/success-chance');
 // Middleware
 server.use(
   cors({
@@ -69,6 +70,7 @@ server.use("/chatZEUS", chatZEUS);
 server.use("/bookappointment", bookAppointment);
 server.use("/contactus", contactUs);
 server.use("/scheduleSession", scheduleSession);
+server.use('/success-chance', successChanceRoute);
 server.use("/studentDashboard/accommodationBooking", accommodationBooking);
 server.use("/studentDashboard/accommodationBooking", accommodationBooking);
 server.use("/studentDashboard/airportPickup", airportPickup);
