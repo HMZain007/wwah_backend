@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-// const { parseNumberDef } = require('openai/_vendor/zod-to-json-schema/index.mjs');
 
 const successChanceSchema = new mongoose.Schema({
     userId: {
@@ -13,8 +12,14 @@ const successChanceSchema = new mongoose.Schema({
     dateOfBirth: String,
     nationality: String,
     majorSubject: String,
-    livingCosts: String,
-    tuitionFee: String,
+    livingCosts: {
+        amount: Number,
+        currency: String,
+    },
+    tuitionFee: {
+        amount: Number,
+        currency: String,
+    },
     languageProficiency: {
         test: String,
         score: String,

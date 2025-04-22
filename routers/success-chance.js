@@ -20,7 +20,6 @@ router.post("/add", authenticateToken, async (req, res) => {
             workExperience,
             studyPreferenced
         } = req.body;
-
         const newEntry = new userSuccessDb({
             userId,
             studyLevel,
@@ -35,10 +34,8 @@ router.post("/add", authenticateToken, async (req, res) => {
             workExperience,
             studyPreferenced
         });
-
         const saved = await newEntry.save();
         res.status(201).json({ success: true, data: saved });
-
     } catch (error) {
         console.error("Error saving success chance data:", error);
         res.status(500).json({ success: false, message: "Internal Server Error" });
