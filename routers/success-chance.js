@@ -5,7 +5,8 @@ const authenticateToken = require("../middlewares/authMiddleware");
 const UserDb = require("../database/models/UserDb");
 
 router.post("/add", authenticateToken, async (req, res) => {
-    const userId = req.user.id;
+    const userId = req.user.id
+    console.log(userId, " helloe")
     try {
         const {
             studyLevel,
@@ -35,7 +36,9 @@ router.post("/add", authenticateToken, async (req, res) => {
             studyPreferenced
         });
         const saved = await newEntry.save();
+        console.log("The Data is added ");
         res.status(201).json({ success: true, data: saved });
+
     } catch (error) {
         console.error("Error saving success chance data:", error);
         res.status(500).json({ success: false, message: "Internal Server Error" });

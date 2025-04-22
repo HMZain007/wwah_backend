@@ -36,6 +36,7 @@ server.use(
       "https://wwah.vercel.app",
       "http://localhost:3000",
       "https://www.worldwideadmissionshub.com",
+      "https://www.wwah.ai"
     ],
     credentials: true,
   })
