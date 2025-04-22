@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const userSuccessDb = require('../models/SuccessChance');
+const userSuccessDb = require('../database/models/successChance');
 const authenticateToken = require("../middlewares/authMiddleware");
 const UserDb = require("../database/models/UserDb");
 

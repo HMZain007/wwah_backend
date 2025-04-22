@@ -28,7 +28,7 @@ const airportPickup = require("./routers/studentDashboard/airportPickup");
 const completeApplication = require("./routers/studentDashboard/completeApplication");
 const createAdminRoute = require("./routers/createAdmin");
 const studentData = require("./routers/adminDashboard/studentData");
-const successChanceRoute = require('./routes/success-chance');
+const successChanceRoute = require('./routers/success-chance');
 // Middleware
 server.use(
   cors({
