@@ -24,8 +24,8 @@ router.post("/add", authenticateToken, async (req, res) => {
         const newEntry = new userSuccessDb({
             userId,
             studyLevel,
-            gradetype,
-            grade,
+            gradetype: grade.gradetype,
+            grade: grade.score,
             dateOfBirth,
             nationality,
             majorSubject,
