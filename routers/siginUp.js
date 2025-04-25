@@ -62,12 +62,11 @@ router.post("/", async (req, res) => {
     // Save the user and set cookie
     await newUser.save();
     res.cookie("authToken", token, {
-      sameSite: "strict", // Prevent CSRF
-      httpOnly: true,       // Not accessible via client-side JS
-      secure: process.env.NODE_ENV === "production",
-      maxAge: 3600000       // 1 hour
+      httpOnly: true,
+      sameSite: "None",
+      secure: true,
+      maxAge: 24 * 60 * 60 * 1000, // 1 day
     });
-
     // Success response
     res.status(201).json({
       message: "User successfully signed up",
