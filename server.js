@@ -51,7 +51,9 @@ server.use(
     resave: false,
     saveUninitialized: true,
     cookie: {
-      secure: process.env.NODE_ENV === "production", // Secure cookies in production
+      httpOnly: true,                     // JS can’t tamper with it
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "none",                   // ← allow cross-site send
       maxAge: 5 * 60 * 1000, // 5 minutes
     },
   })

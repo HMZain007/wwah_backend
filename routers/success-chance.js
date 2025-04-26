@@ -100,7 +100,6 @@ const validateSuccessChanceInput = (req, res, next) => {
 router.post("/add", authenticateToken, validateSuccessChanceInput, async (req, res) => {
     const userId = req.user.id;
     // console.log(`Processing request for user ID: ${userId}`);
-
     try {
         const {
             studyLevel,
