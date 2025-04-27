@@ -32,7 +32,7 @@ router.post("/", async (req, res) => {
     });
   }
 
-  const { firstName, lastName, email, phone, password } = userData;
+  const { firstName, lastName, email, phone, password, referralCode } = userData;
 
   try {
     // Check if a user with the given email already exists
@@ -46,11 +46,36 @@ router.post("/", async (req, res) => {
       return res.status(400).json({ message: "Password must be at least 8 characters", success: false });
     }
 
+    // Phone number validation - basic format check
+    const phoneRegex = /^\d{10,15}$/; // Adjust regex as needed for your requirements
+    if (!phoneRegex.test(phone)) {
+      return res.status(400).json({ message: "Please enter a valid phone number", success: false });
+    }
+
     // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create new user instance
-    const newUser = new UserDb({ firstName, lastName, email, phone, password: hashedPassword });
+    // Process referral code if provided
+    let referralData = {};
+    if (referralCode) {
+      // Check if referral code exists in system
+      const referrer = await UserDb.findOne({ referralCode: referralCode });
+      if (referrer) {
+        referralData = { referredBy: referrer._id };
+        // You could add logic here to update the referrer's stats/rewards
+      }
+    }
+
+    // Create new user instance with all fields including optional referral code
+    const newUser = new UserDb({
+      firstName,
+      lastName,
+      email,
+      phone,
+      password: hashedPassword,
+      referralCode: referralCode || null,  // Store referral code if provided
+      ...referralData  // Include referred by data if code was valid
+    });
 
     // Generate JWT token
     const token = jwt.sign(
@@ -67,13 +92,22 @@ router.post("/", async (req, res) => {
       secure: true,
       maxAge: 24 * 60 * 60 * 1000, // 1 day
     });
+
     // Success response
     res.status(201).json({
       message: "User successfully signed up",
       success: true,
       signup: true,
       token,
-      user: newUser
+      user: {
+        _id: newUser._id,
+        firstName: newUser.firstName,
+        lastName: newUser.lastName,
+        email: newUser.email,
+        phone: newUser.phone,
+        // Don't return the password even if hashed
+        // Return only the necessary user data
+      }
     });
   } catch (error) {
     console.error(`Error during signup: ${error.message}`);
