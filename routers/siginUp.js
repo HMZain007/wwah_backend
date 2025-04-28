@@ -66,7 +66,7 @@ router.post("/", async (req, res) => {
       phone,
       password: hashedPassword,
       referralCode: referralCode || null,  // Store referral code if provided
-      // ...referralData  // Include referred by data if code was valid
+      ...referralData  // Include referred by data if code was valid
     });
 
     // Generate JWT token

@@ -31,15 +31,15 @@ const userSchema = new mongoose.Schema(
       type: String,
       sparse: true, // This allows multiple null values (for users without referral codes)
     },
-    // referredBy: {
-    //   type: mongoose.Schema.Types.ObjectId,
-    //   ref: 'UserDb',
-    //   default: null,
-    // },
-    // referrals: [{
-    //   type: mongoose.Schema.Types.ObjectId,
-    //   ref: 'UserDb'
-    // }],
+    referredBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'UserDb',
+      default: null,
+    },
+    referrals: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'UserDb'
+    }],
     role: {
       type: String,
       enum: ["user", "admin"],
