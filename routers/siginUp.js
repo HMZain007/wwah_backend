@@ -56,15 +56,7 @@ router.post("/", async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Process referral code if provided
-    let referralData = {};
-    if (referralCode) {
-      // Check if referral code exists in system
-      const referrer = await UserDb.findOne({ referralCode: referralCode });
-      if (referrer) {
-        referralData = { referredBy: referrer._id };
-        // You could add logic here to update the referrer's stats/rewards
-      }
-    }
+
 
     // Create new user instance with all fields including optional referral code
     const newUser = new UserDb({
@@ -74,7 +66,7 @@ router.post("/", async (req, res) => {
       phone,
       password: hashedPassword,
       referralCode: referralCode || null,  // Store referral code if provided
-      ...referralData  // Include referred by data if code was valid
+      // ...referralData  // Include referred by data if code was valid
     });
 
     // Generate JWT token
