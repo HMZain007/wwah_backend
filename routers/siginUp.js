@@ -91,7 +91,7 @@ router.post("/", async (req, res) => {
       success: true,
       signup: true,
       token,
-      user: {
+      data: {
         _id: newUser._id,
         firstName: newUser.firstName,
         lastName: newUser.lastName,
