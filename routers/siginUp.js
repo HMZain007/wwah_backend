@@ -20,7 +20,6 @@ router.get("/", async (req, res) => {
 // POST Route for User Signup
 router.post("/", async (req, res) => {
   const userData = req.body;
-
   // Check which required fields are missing
   const missingFields = REQUIRED_FIELDS.filter(field => !userData[field]);
 
@@ -54,11 +53,6 @@ router.post("/", async (req, res) => {
 
     // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Process referral code if provided
-
-
-    // Create new user instance with all fields including optional referral code
     const newUser = new UserDb({
       firstName,
       lastName,
@@ -66,7 +60,7 @@ router.post("/", async (req, res) => {
       phone,
       password: hashedPassword,
       referralCode: referralCode || null,  // Store referral code if provided
-      ...referralData  // Include referred by data if code was valid
+      // ...referralData  // Include referred by data if code was valid
     });
 
     // Generate JWT token
@@ -84,7 +78,7 @@ router.post("/", async (req, res) => {
       secure: true,
       maxAge: 24 * 60 * 60 * 1000, // 1 day
     });
-
+    console.log("User successfully signed up:");
     // Success response
     res.status(201).json({
       message: "User successfully signed up",
@@ -97,10 +91,9 @@ router.post("/", async (req, res) => {
         lastName: newUser.lastName,
         email: newUser.email,
         phone: newUser.phone,
-        // Don't return the password even if hashed
-        // Return only the necessary user data
       }
     });
+
   } catch (error) {
     console.error(`Error during signup: ${error.message}`);
     res.status(500).json({ message: "Registration failed, server is busy", success: false });
