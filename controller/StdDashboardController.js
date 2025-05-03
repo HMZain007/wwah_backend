@@ -523,10 +523,6 @@ const stdDashboardController = {
 
   // delete Documents Controller
   deleteDocument: async (req, res) => {
-    console.log("Cloudinary Env Variables:");
-    console.log("CLOUDINARY_CLOUD_NAME:", process.env.CLOUDINARY_CLOUD_NAME);
-    console.log("CLOUDINARY_API_KEY:", process.env.CLOUDINARY_API_KEY);
-    console.log("CLOUDINARY_API_SECRET:", process.env.CLOUDINARY_API_SECRET);
     try {
       const { files } = req.body;
       const userId = req.user?.id;
