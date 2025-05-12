@@ -36,14 +36,6 @@ const userSchema = new mongoose.Schema(
       enum: ["user", "admin"],
       default: "user",
     },
-    contactNo: {
-      type: Number,
-    },
-    dob: { type: Date },
-    countryCode: { type: String },
-    nationality: { type: String },
-    country: { type: String },
-    city: { type: String },
     token: { type: String },
     otp: {
       type: String,

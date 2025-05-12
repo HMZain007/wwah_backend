@@ -8,6 +8,7 @@ const bcrypt = require("bcryptjs");
 const profileController = {
   // Update password
   changePassword: async (req, res) => {
+
     try {
       const { currentPassword, newPassword } = req.body;
       const userId = req.user?.id;
@@ -90,17 +91,11 @@ const profileController = {
   },
   // Update Personal Information Controller
   updatePersonalInfomation: async (req, res) => {
-    const {
-      firstName,
-      lastName,
-      contactNo,
-      dob,
-      countryCode,
-      nationality,
-      country,
-      city,
-    } = req.body;
-    console.log(req.body);
+    const { firstName, lastName, phone } = req.body;
+    console.log(
+      req.body,
+      "update personal information from req.body of updatePersonalInfomation controller"
+    );
     try {
       const userId = req.user?.id || req.user?._id;
       console.log(userId);
@@ -116,12 +111,7 @@ const profileController = {
           $set: {
             firstName,
             lastName,
-            contactNo,
-            dob,
-            countryCode,
-            nationality,
-            country,
-            city,
+            phone,
           },
         },
         { new: true, upsert: true } // Return the updated document or insert if not found
