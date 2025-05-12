@@ -10,9 +10,7 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-cloudinary.api.resources({ type: "upload" }, (error, result) => {
-
-});
+cloudinary.api.resources({ type: "upload" }, (error, result) => {});
 const stdDashboardController = {
   // get basic info
   getBasicInformation: async (req, res) => {
@@ -432,7 +430,7 @@ const stdDashboardController = {
     try {
       const { documents } = req.body;
       const userId = req.user?.id;
-
+    console.log(req.body, "Request Body");
       if (!userId) {
         return res.status(401).json({
           message: "Login First to upload file",
@@ -520,7 +518,6 @@ const stdDashboardController = {
       res.status(500).json({ error: "Internal server error" });
     }
   },
-
   // delete Documents Controller
   deleteDocument: async (req, res) => {
     try {
