@@ -5,11 +5,15 @@
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "start": "nodemon server.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.816.0",
+    "@aws-sdk/lib-storage": "^3.816.0",
+    "@aws-sdk/s3-request-presigner": "^3.816.0",
+    "aws-sdk": "^2.1692.0",
     "bcrypt": "^5.1.1",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.20.3",
@@ -24,9 +28,11 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.8.2",
     "multer": "^1.4.5-lts.2",
+    "multer-s3": "^3.0.1",
     "node-localstorage": "^3.0.5",
     "nodemailer": "^6.9.16",
     "nodemon": "^3.1.7",
-    "openai": "^4.73.1"
+    "openai": "^4.73.1",
+    "uuid": "^11.1.0"
   }
 }

@@ -3,14 +3,69 @@ const applicationInfo = require("../database/models/stdDashboard/applicationInfo
 const BasicInfo = require("../database/models/stdDashboard/basicInfoDb");
 const userFiles = require("../database/models/stdDashboard/uploadFilesDb");
 const UserDb = require("../database/models/UserDb");
-const cloudinary = require("cloudinary");
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
 
-cloudinary.api.resources({ type: "upload" }, (error, result) => {});
+const {
+  upload,
+  generatePresignedUrl,
+  deleteFromS3,
+} = require("../config/s3Config"); // Import your fixed S3 config
+
+// Helper function to determine file type
+const getFileType = (extension) => {
+  const imageTypes = ["jpg", "jpeg", "png", "gif", "webp"];
+  const documentTypes = ["pdf", "doc", "docx"];
+
+  if (imageTypes.includes(extension)) return "image";
+  if (documentTypes.includes(extension)) return "document";
+  return "other";
+};
+// // Enhanced file type detection
+// const getFileType = (extension) => {
+//   const imageTypes = [
+//     "jpg",
+//     "jpeg",
+//     "png",
+//     "gif",
+//     "bmp",
+//     "webp",
+//     "svg",
+//     "tiff",
+//     "ico",
+//   ];
+//   const documentTypes = [
+//     "doc",
+//     "docx",
+//     "txt",
+//     "xlsx",
+//     "xls",
+//     "ppt",
+//     "pptx",
+//     "rtf",
+//     "odt",
+//   ];
+
+//   extension = extension.toLowerCase();
+
+//   if (extension === "pdf") return "pdf";
+//   if (imageTypes.includes(extension)) return "image";
+//   if (documentTypes.includes(extension)) return "document";
+//   return "other";
+// };
+
+// Helper function to determine Cloudinary resource type
+const getCloudinaryResourceType = (fileType) => {
+  switch (fileType) {
+    case "image":
+      return "image";
+    case "pdf":
+    case "document":
+    case "other":
+      return "raw";
+    default:
+      return "raw";
+  }
+};
+
 const stdDashboardController = {
   // get basic info
   getBasicInformation: async (req, res) => {
@@ -395,10 +450,224 @@ const stdDashboardController = {
       });
     }
   },
-  // get user documents
+  // // get user documents
+  // getDocuments: async (req, res) => {
+  //   try {
+  //     const userId = req.user?.id;
+  //     if (!userId) {
+  //       return res.status(401).json({
+  //         message: "Login First to view documents",
+  //         success: false,
+  //       });
+  //     }
+
+  //     // Find the user's documents
+  //     const userDocument = await userFiles.findOne({ user: userId });
+  //     if (!userDocument || userDocument.documents.length === 0) {
+  //       return res.status(404).json({
+  //         message: "No documents found",
+  //         success: false,
+  //       });
+  //     }
+
+  //     res.status(200).json({
+  //       message: "Documents retrieved successfully!",
+  //       success: true,
+  //       documents: userDocument.documents,
+  //     });
+  //   } catch (error) {
+  //     console.error("Error retrieving documents:", error);
+  //     res.status(500).json({ error: "Internal server error" });
+  //   }
+  // },
+  // // Upload Documents Controller
+  // uploadDocument: async (req, res) => {
+  //   try {
+  //     const { documents } = req.body;
+  //     const userId = req.user?.id;
+
+  //     console.log(req.body, "Request Body");
+
+  //     if (!userId) {
+  //       return res.status(401).json({
+  //         message: "Login First to upload file",
+  //         success: false,
+  //       });
+  //     }
+
+  //     if (!Array.isArray(documents) || documents.length === 0) {
+  //       return res.status(400).json({
+  //         message: "No documents provided",
+  //         success: false,
+  //       });
+  //     }
+
+  //     // Find user's existing document entry
+  //     let userDocument = await userFiles.findOne({ user: userId });
+
+  //     if (!userDocument) {
+  //       userDocument = new userFiles({ user: userId, documents: [] });
+  //     }
+
+  //     for (const doc of documents) {
+  //       const { id, name, date, isChecked, files = [] } = doc;
+
+  //       if (!id || !name || !Array.isArray(files) || files.length === 0) {
+  //         continue; // Skip invalid documents
+  //       }
+
+  //       // Enhanced file metadata mapping
+  //       const uploadedFiles = files.map((file) => {
+  //         const fileExtension = file.name.split(".").pop().toLowerCase();
+  //         const fileType = getFileType(fileExtension);
+  //         const resourceType = getCloudinaryResourceType(fileType);
+
+  //         return {
+  //           name: file.name,
+  //           url: file.url,
+  //           public_id: file.public_id,
+  //           file_type: fileType,
+  //           file_extension: fileExtension,
+  //           resource_type: resourceType,
+  //           // Add file size if available
+  //           size: file.size || null,
+  //           // Add upload timestamp
+  //           uploaded_at: new Date().toISOString(),
+  //         };
+  //       });
+
+  //       // Check if document already exists (by `id`)
+  //       const existingDocumentIndex = userDocument.documents.findIndex(
+  //         (d) => d.id === id
+  //       );
+
+  //       if (existingDocumentIndex !== -1) {
+  //         // Update existing document (Avoid duplicates)
+  //         const existingDocument =
+  //           userDocument.documents[existingDocumentIndex];
+  //         const existingFileNames = existingDocument.files.map(
+  //           (file) => file.name
+  //         );
+
+  //         const newFiles = uploadedFiles.filter(
+  //           (file) => !existingFileNames.includes(file.name)
+  //         );
+
+  //         existingDocument.files.push(...newFiles);
+  //         existingDocument.date = date;
+  //         existingDocument.isChecked = isChecked;
+  //       } else {
+  //         // Add a new document
+  //         userDocument.documents.push({
+  //           id,
+  //           name,
+  //           files: uploadedFiles,
+  //           date,
+  //           isChecked,
+  //         });
+  //       }
+  //     }
+
+  //     console.log(
+  //       "Documents being saved:",
+  //       JSON.stringify(userDocument.documents, null, 2)
+  //     );
+
+  //     await userDocument.save();
+
+  //     res.status(201).json({
+  //       message: "Documents uploaded successfully!",
+  //       success: true,
+  //       documents: userDocument.documents,
+  //     });
+  //   } catch (error) {
+  //     console.error("Error saving documents:", error);
+  //     res.status(500).json({
+  //       error: "Internal server error",
+  //       message: error.message,
+  //     });
+  //   }
+  // },
+
+  // deleteDocument: async (req, res) => {
+  //   try {
+  //     const { files } = req.body;
+  //     const userId = req.user?.id;
+
+  //     if (!userId) {
+  //       return res.status(401).json({
+  //         message: "Unauthorized! Please login first.",
+  //         success: false,
+  //       });
+  //     }
+
+  //     if (!Array.isArray(files) || files.length === 0) {
+  //       return res.status(400).json({
+  //         message: "Invalid request. Missing document ID or files.",
+  //         success: false,
+  //       });
+  //     }
+
+  //     // Find the user's document entry
+  //     let userDocument = await userFiles.findOne({ user: userId });
+
+  //     if (!userDocument) {
+  //       return res.status(404).json({
+  //         message: "User document entry not found.",
+  //         success: false,
+  //       });
+  //     }
+
+  //     // **Filter out documents that match the given file IDs**
+  //     const fileIdsToDelete = files.map((file) => file._id);
+
+  //     // Remove the specific files from each document
+  //     userDocument.documents.forEach((doc) => {
+  //       doc.files = doc.files.filter(
+  //         (file) => !fileIdsToDelete.includes(file._id.toString())
+  //       );
+  //     });
+
+  //     // Delete documents that have no files left
+  //     userDocument.documents = userDocument.documents.filter(
+  //       (doc) => doc.files.length > 0
+  //     );
+
+  //     for (const file of files) {
+  //       try {
+  //         const publicId = file.public_id; // Ensure you store `public_id` in the database
+
+  //         if (!publicId) {
+  //           console.error("Missing Cloudinary Public ID for:", file.url);
+  //           continue; // Skip if no public ID
+  //         }
+
+  //         const result = await cloudinary.uploader.destroy(publicId);
+  //         console.log(`Deleted ${publicId}:`, result);
+  //       } catch (err) {
+  //         console.error("Error deleting file from Cloudinary:", err);
+  //       }
+  //     }
+
+  //     // Save the updated document list
+  //     await userDocument.save();
+
+  //     res.status(200).json({
+  //       message: "Document deleted successfully!",
+  //       success: true,
+  //     });
+  //   } catch (error) {
+  //     console.error("Error deleting document:", error);
+  //     res.status(500).json({ error: "Internal server error" });
+  //   }
+  // },
+  //controller\StdDashboardController.js
+  // Get user documents with presigned URLs
   getDocuments: async (req, res) => {
     try {
       const userId = req.user?.id;
+      console.log("DEBUG: User ID:", userId);
+
       if (!userId) {
         return res.status(401).json({
           message: "Login First to view documents",
@@ -406,8 +675,13 @@ const stdDashboardController = {
         });
       }
 
-      // Find the user's documents
       const userDocument = await userFiles.findOne({ user: userId });
+      console.log("DEBUG: User document found:", !!userDocument);
+      console.log(
+        "DEBUG: Number of documents:",
+        userDocument?.documents?.length || 0
+      );
+
       if (!userDocument || userDocument.documents.length === 0) {
         return res.status(404).json({
           message: "No documents found",
@@ -415,22 +689,73 @@ const stdDashboardController = {
         });
       }
 
+      // Generate presigned URLs for all files
+      const documentsWithUrls = await Promise.all(
+        userDocument.documents.map(async (doc) => {
+          console.log(
+            `DEBUG: Processing document "${doc.name}" with ${
+              doc.files?.length || 0
+            } files`
+          );
+
+          const docObj = doc.toObject();
+          const filesWithUrls = await Promise.all(
+            doc.files.map(async (file, index) => {
+              const fileObj = file.toObject();
+              console.log(`DEBUG: File ${index}:`, {
+                name: fileObj.name,
+                s3_key: fileObj.s3_key,
+                hasS3Key: !!fileObj.s3_key,
+              });
+
+              let presignedUrl = null;
+              if (fileObj.s3_key) {
+                try {
+                  presignedUrl = await generatePresignedUrl(
+                    fileObj.s3_key,
+                    3600
+                  );
+                } catch (error) {
+                  console.error(
+                    `Error generating presigned URL for ${fileObj.s3_key}:`,
+                    error
+                  );
+                }
+              }
+
+              return {
+                ...fileObj,
+                url: presignedUrl || fileObj.url, // Fallback to stored URL if presigned fails
+                permanent_url: fileObj.s3_key,
+              };
+            })
+          );
+
+          return {
+            ...docObj,
+            files: filesWithUrls,
+          };
+        })
+      );
+
+      console.log("DEBUG: Successfully processed documents");
+
       res.status(200).json({
         message: "Documents retrieved successfully!",
         success: true,
-        documents: userDocument.documents,
+        documents: documentsWithUrls,
       });
     } catch (error) {
       console.error("Error retrieving documents:", error);
       res.status(500).json({ error: "Internal server error" });
     }
   },
-  // Upload Documents Controller
+
   uploadDocument: async (req, res) => {
     try {
-      const { documents } = req.body;
       const userId = req.user?.id;
-    console.log(req.body, "Request Body");
+      console.log("DEBUG: Upload request for user:", userId);
+
       if (!userId) {
         return res.status(401).json({
           message: "Login First to upload file",
@@ -438,87 +763,125 @@ const stdDashboardController = {
         });
       }
 
-      if (!Array.isArray(documents) || documents.length === 0) {
-        return res.status(400).json({
-          message: "No documents provided",
-          success: false,
-        });
-      }
-
-      // Find user's existing document entry
-      let userDocument = await userFiles.findOne({ user: userId });
-
-      if (!userDocument) {
-        userDocument = new userFiles({ user: userId, documents: [] });
-      }
-
-      for (const doc of documents) {
-        const { id, name, date, isChecked, files = [] } = doc;
-
-        if (!id || !name || !Array.isArray(files) || files.length === 0) {
-          continue; // Skip invalid documents
+      // Use multer middleware for file upload
+      upload.array("files", 10)(req, res, async (err) => {
+        if (err) {
+          console.error("Multer error:", err);
+          return res.status(400).json({
+            message: err.message || "File upload failed",
+            success: false,
+          });
         }
 
-        // 🔥 Map uploaded file metadata
-        const uploadedFiles = files.map((file) => ({
-          name: file.name,
-          url: file.url,
-          public_id: file.public_id,
-        }));
+        const { documentName, documentId } = req.body;
+        const uploadedFiles = req.files;
 
-        // ✅ Check if document already exists (by `id`)
+        console.log("DEBUG: Request body:", { documentName, documentId });
+        console.log("DEBUG: Uploaded files count:", uploadedFiles?.length || 0);
+
+        if (!uploadedFiles || uploadedFiles.length === 0) {
+          return res.status(400).json({
+            message: "No files uploaded",
+            success: false,
+          });
+        }
+
+        // Debug: Log the structure of uploaded files
+        console.log("DEBUG: First uploaded file structure:", {
+          originalname: uploadedFiles[0].originalname,
+          key: uploadedFiles[0].key,
+          location: uploadedFiles[0].location,
+          size: uploadedFiles[0].size,
+          mimetype: uploadedFiles[0].mimetype,
+        });
+
+        // Find or create user document entry
+        let userDocument = await userFiles.findOne({ user: userId });
+        if (!userDocument) {
+          userDocument = new userFiles({ user: userId, documents: [] });
+          console.log("DEBUG: Created new user document entry");
+        } else {
+          console.log("DEBUG: Found existing user document entry");
+        }
+
+        // Process uploaded files
+        const processedFiles = uploadedFiles.map((file) => {
+          const fileExtension = file.originalname
+            .split(".")
+            .pop()
+            .toLowerCase();
+          const fileType = getFileType(fileExtension);
+
+          // Extract bucket name from S3 URL
+          const bucketName = file.location
+            .split(".s3.")[0]
+            .split("https://")[1];
+
+          const processedFile = {
+            name: file.originalname,
+            key: file.key, // Changed from s3_key to key (matches schema)
+            bucket: bucketName, // Added bucket field (required by schema)
+            url: file.location,
+            size: file.size,
+            mimetype: file.mimetype, // Changed from content_type to mimetype (matches schema)
+            uploadedAt: new Date(),
+            // Optional: Add etag if available from multer-s3
+            etag: file.etag || undefined,
+          };
+
+          console.log("DEBUG: Processed file:", processedFile);
+          return processedFile;
+        });
+
+        // Check if document already exists
         const existingDocumentIndex = userDocument.documents.findIndex(
-          (d) => d.id === id
+          (d) => d.id === documentId
         );
 
         if (existingDocumentIndex !== -1) {
-          // ✅ Update existing document (Avoid duplicates)
+          console.log("DEBUG: Updating existing document");
           const existingDocument =
             userDocument.documents[existingDocumentIndex];
-          const existingFileNames = existingDocument.files.map(
-            (file) => file.name
-          );
-
-          const newFiles = uploadedFiles.filter(
-            (file) => !existingFileNames.includes(file.name)
-          );
-
-          existingDocument.files.push(...newFiles);
-          existingDocument.date = date;
-          existingDocument.isChecked = isChecked;
+          existingDocument.files.push(...processedFiles);
+          existingDocument.date = new Date().toISOString(); // Ensure it's a string as per schema
+          existingDocument.isChecked = true;
         } else {
-          // ✅ Add a new document
+          console.log("DEBUG: Creating new document");
           userDocument.documents.push({
-            id, // Ensure `id` is stored
-            name,
-            files: uploadedFiles,
-            date,
-            isChecked,
+            id: documentId,
+            name: documentName,
+            files: processedFiles,
+            date: new Date().toISOString(), // Ensure it's a string as per schema
+            isChecked: true,
           });
         }
-      }
 
-      console.log("Documents received:", documents);
-      documents.forEach((doc) => {
-        doc.files.forEach((file) => {
-          console.log("File:", file);
-          console.log("Public ID:", file.public_id);
+        await userDocument.save();
+        console.log("DEBUG: Document saved successfully");
+
+        res.status(201).json({
+          message: "Documents uploaded successfully!",
+          success: true,
+          uploadedFiles: processedFiles.map((file) => ({
+            name: file.name,
+            url: file.url,
+            key: file.key, // Changed from s3_key to key
+            bucket: file.bucket, // Added bucket
+            size: file.size,
+            mimetype: file.mimetype, // Changed from file_type to mimetype
+            _id: file._id || new Date().getTime().toString(), // Temporary ID for frontend
+          })),
         });
       });
-
-      await userDocument.save();
-
-      res.status(201).json({
-        message: "Documents uploaded successfully!",
-        success: true,
-        documents: userDocument.documents,
-      });
     } catch (error) {
-      console.error("Error saving documents:", error);
-      res.status(500).json({ error: "Internal server error" });
+      console.error("Error uploading documents:", error);
+      res.status(500).json({
+        error: "Internal server error",
+        message: error.message,
+      });
     }
   },
-  // delete Documents Controller
+
   deleteDocument: async (req, res) => {
     try {
       const { files } = req.body;
@@ -533,14 +896,12 @@ const stdDashboardController = {
 
       if (!Array.isArray(files) || files.length === 0) {
         return res.status(400).json({
-          message: "Invalid request. Missing document ID or files.",
+          message: "Invalid request. Missing files.",
           success: false,
         });
       }
 
-      // Find the user's document entry
-      let userDocument = await userFiles.findOne({ user: userId });
-
+      const userDocument = await userFiles.findOne({ user: userId });
       if (!userDocument) {
         return res.status(404).json({
           message: "User document entry not found.",
@@ -548,61 +909,40 @@ const stdDashboardController = {
         });
       }
 
-      // **Filter out documents that match the given file IDs**
       const fileIdsToDelete = files.map((file) => file._id);
 
-      // Remove the documents from user's document list
-      // userDocument.documents = userDocument.documents.filter(
-      //   (doc) => !fileIdsToDelete.includes(doc._id.toString())
-      // );
-      // Remove the specific files from each document
+      // Delete files from S3
+      for (const file of files) {
+        try {
+          const s3Key = file.s3_key;
+          if (s3Key) {
+            const deleteResult = await deleteFromS3(s3Key);
+            if (deleteResult.success) {
+              console.log(`Successfully deleted ${s3Key} from S3`);
+            } else {
+              console.error(
+                `Failed to delete ${s3Key} from S3:`,
+                deleteResult.error
+              );
+            }
+          }
+        } catch (err) {
+          console.error("Error deleting file from S3:", err);
+        }
+      }
+
+      // Remove files from database
       userDocument.documents.forEach((doc) => {
         doc.files = doc.files.filter(
           (file) => !fileIdsToDelete.includes(file._id.toString())
         );
       });
 
-      // Delete documents that have no files left
+      // Remove documents with no files
       userDocument.documents = userDocument.documents.filter(
         (doc) => doc.files.length > 0
       );
 
-      // Delete files from Cloudinary
-      // for (const file of files) {
-      //   try {
-      //     const urlParts = file.url.split("/");
-      //     const fileNameWithExtension = urlParts.pop(); // Last part of URL
-      //     const publicId = fileNameWithExtension.split(".")[0]; // Extract public ID
-
-      //     // Ensure publicId is valid
-      //     if (!publicId) {
-      //       console.error("Invalid Cloudinary Public ID:", file.url);
-      //       continue; // Skip this file if extraction fails
-      //     }
-
-      //     const result = await cloudinary.uploader.destroy(publicId);
-      //     console.log(`Deleted ${publicId}:`, result);
-      //   } catch (err) {
-      //     console.error("Error deleting file from Cloudinary:", err);
-      //   }
-      // }
-      for (const file of files) {
-        try {
-          const publicId = file.public_id; // Ensure you store `public_id` in the database
-
-          if (!publicId) {
-            console.error("Missing Cloudinary Public ID for:", file.url);
-            continue; // Skip if no public ID
-          }
-
-          const result = await cloudinary.uploader.destroy(publicId);
-          console.log(`Deleted ${publicId}:`, result);
-        } catch (err) {
-          console.error("Error deleting file from Cloudinary:", err);
-        }
-      }
-
-      // Save the updated document list
       await userDocument.save();
 
       res.status(200).json({
@@ -614,6 +954,137 @@ const stdDashboardController = {
       res.status(500).json({ error: "Internal server error" });
     }
   },
+
+  getFileUrl: async (req, res) => {
+    try {
+      const { s3Key } = req.params;
+      const userId = req.user?.id;
+
+      if (!userId) {
+        return res.status(401).json({
+          message: "Unauthorized",
+          success: false,
+        });
+      }
+
+      // Verify the file belongs to the user
+      const userDocument = await userFiles.findOne({ user: userId });
+      const fileExists = userDocument?.documents.some((doc) =>
+        doc.files.some((file) => file.s3_key === s3Key)
+      );
+
+      if (!fileExists) {
+        return res.status(404).json({
+          message: "File not found or access denied",
+          success: false,
+        });
+      }
+
+      const presignedUrl = await generatePresignedUrl(s3Key, 900); // 15 minutes
+
+      res.status(200).json({
+        message: "Presigned URL generated successfully",
+        success: true,
+        url: presignedUrl,
+      });
+    } catch (error) {
+      console.error("Error generating presigned URL:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  },
 };
 
+// uploadDocument: async (req, res) => {
+//   try {
+//     const { documents } = req.body;
+//     const userId = req.user?.id;
+//     console.log(req.body, "Request Body");s
+//     if (!userId) {
+//       return res.status(401).json({
+//         message: "Login First to upload file",
+//         success: false,
+//       });
+//     }
+
+//     if (!Array.isArray(documents) || documents.length === 0) {
+//       return res.status(400).json({
+//         message: "No documents provided",
+//         success: false,
+//       });
+//     }
+
+//     // Find user's existing document entry
+//     let userDocument = await userFiles.findOne({ user: userId });
+
+//     if (!userDocument) {
+//       userDocument = new userFiles({ user: userId, documents: [] });
+//     }
+
+//     for (const doc of documents) {
+//       const { id, name, date, isChecked, files = [] } = doc;
+
+//       if (!id || !name || !Array.isArray(files) || files.length === 0) {
+//         continue; // Skip invalid documents
+//       }
+
+//       // 🔥 Map uploaded file metadata
+//       const uploadedFiles = files.map((file) => ({
+//         name: file.name,
+//         url: file.url,
+//         public_id: file.public_id,
+//       }));
+
+//       // ✅ Check if document already exists (by `id`)
+//       const existingDocumentIndex = userDocument.documents.findIndex(
+//         (d) => d.id === id
+//       );
+
+//       if (existingDocumentIndex !== -1) {
+//         // ✅ Update existing document (Avoid duplicates)
+//         const existingDocument =
+//           userDocument.documents[existingDocumentIndex];
+//         const existingFileNames = existingDocument.files.map(
+//           (file) => file.name
+//         );
+
+//         const newFiles = uploadedFiles.filter(
+//           (file) => !existingFileNames.includes(file.name)
+//         );
+
+//         existingDocument.files.push(...newFiles);
+//         existingDocument.date = date;
+//         existingDocument.isChecked = isChecked;
+//       } else {
+//         // ✅ Add a new document
+//         userDocument.documents.push({
+//           id, // Ensure `id` is stored
+//           name,
+//           files: uploadedFiles,
+//           date,
+//           isChecked,
+//         });
+//       }
+//     }
+
+//     console.log("Documents received:", documents);
+//     documents.forEach((doc) => {
+//       doc.files.forEach((file) => {
+//         console.log("File:", file);
+//         console.log("Public ID:", file.public_id);
+//       });
+//     });
+
+//     await userDocument.save();
+
+//     res.status(201).json({
+//       message: "Documents uploaded successfully!",
+//       success: true,
+//       documents: userDocument.documents,
+//     });
+//   } catch (error) {
+//     console.error("Error saving documents:", error);
+//     res.status(500).json({ error: "Internal server error" });
+//   }
+// },
+// delete Documents Controller
 module.exports = stdDashboardController;
