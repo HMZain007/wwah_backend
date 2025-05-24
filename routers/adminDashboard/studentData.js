@@ -1,28 +1,9 @@
-// const express = require("express");
-// const UserDb = require("../../database/models/UserDb");
-// const applicationInfo = require("../../database/models/stdDashboard/applicationInfoDb");
-// const basicInfo = require("../../database/models/stdDashboard/basicInfoDb");
-// const router = express.Router();
-// router.get("/", async (req, res) => {
-//   try {
-//     const [Users, applications, basics] = await Promise.all([
-//       UserDb.find({ role: { $ne: "admin" } }),
-//       applicationInfo.find(),
-//       basicInfo.find(),
-//     ]);
-//     res.json({ Users, applications, basics });
-//   } catch (error) {
-//     console.error("Error fetching data:", error);
-//     res.status(500).json({ message: "Internal server error" });
-//   }
-// });
-
-// module.exports = router;
 
 const express = require("express");
 const UserDb = require("../../database/models/UserDb");
 const applicationInfo = require("../../database/models/stdDashboard/applicationInfoDb");
 const basicInfo = require("../../database/models/stdDashboard/basicInfoDb");
+const userFiles = require("../../database/models/stdDashboard/uploadFilesDb");
 const router = express.Router();
 
 router.get("/", async (req, res) => {
@@ -41,13 +22,14 @@ router.get("/", async (req, res) => {
     }
 
     // Fetch all users when no ID is provided
-    const [Users, applications, basics] = await Promise.all([
+    const [Users, applications, basics, documents] = await Promise.all([
       UserDb.find({ role: { $ne: "admin" } }),
       applicationInfo.find(),
       basicInfo.find(),
+      userFiles.find(),
     ]);
 
-    res.json({ Users, applications, basics });
+    res.json({ Users, applications, basics, documents });
   } catch (error) {
     console.error("Error fetching data:", error);
     res.status(500).json({ message: "Internal server error" });

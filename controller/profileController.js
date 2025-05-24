@@ -54,6 +54,8 @@ const profileController = {
   personalInfomation: async (req, res) => {
     const { countryCode, contactNo, dob, nationality, country, city } =
       req.body;
+    console.log(req.body , "update personal information from req.body of personalInfomation controller");
+    
     try {
       const userId = req.user?.id; // Safely access req.user and get userId
       if (!userId) {
