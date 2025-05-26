@@ -100,13 +100,11 @@ const stdDashboardController = {
         currentEmail,
         currentCountryCode,
         currentPhoneNo,
-        // Passport info
         hasPassport,
         passportNumber,
         passportExpiryDate,
         oldPassportNumber,
         oldPassportExpiryDate,
-        // Study abroad info
         hasStudiedAbroad,
         visitedCountry,
         studyDuration,
