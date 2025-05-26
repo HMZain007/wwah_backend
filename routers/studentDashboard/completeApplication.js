@@ -7,6 +7,7 @@ router.post(
   authenticateToken,
   stdDashboardController.basicInformation
 );
+
 router.get(
   "/getBasicInformation",
   authenticateToken,
@@ -36,5 +37,19 @@ router.delete(
   "/deleteDocument",
   authenticateToken,
   stdDashboardController.deleteDocument
+);
+router.post(
+  "/createStatusUpdate",
+  authenticateToken,
+  stdDashboardController.createStatusUpdate
+);
+router.put(
+  "/updateStatus",
+  authenticateToken,
+  stdDashboardController.updateStatus
+);
+router.get(
+  "/getStatusUpdate",
+  stdDashboardController.getStatusUpdate
 );
 module.exports = router;

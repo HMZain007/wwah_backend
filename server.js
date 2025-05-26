@@ -75,7 +75,6 @@ server.use("/contactus", contactUs);
 server.use("/scheduleSession", scheduleSession);
 server.use('/success-chance', successChance);
 server.use("/studentDashboard/accommodationBooking", accommodationBooking);
-server.use("/studentDashboard/accommodationBooking", accommodationBooking);
 server.use("/studentDashboard/airportPickup", airportPickup);
 server.use("/studentDashboard/completeApplication", completeApplication);
 server.use("/adminDashboard/studentData", studentData);

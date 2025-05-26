@@ -9,6 +9,7 @@ const {
   generatePresignedUrl,
   deleteFromS3,
 } = require("../config/s3Config"); // Import your fixed S3 config
+const statusUpdate = require("../database/models/stdDashboard/statusUpdates");
 
 // Helper function to determine file type
 const getFileType = (extension) => {
@@ -18,52 +19,6 @@ const getFileType = (extension) => {
   if (imageTypes.includes(extension)) return "image";
   if (documentTypes.includes(extension)) return "document";
   return "other";
-};
-// // Enhanced file type detection
-// const getFileType = (extension) => {
-//   const imageTypes = [
-//     "jpg",
-//     "jpeg",
-//     "png",
-//     "gif",
-//     "bmp",
-//     "webp",
-//     "svg",
-//     "tiff",
-//     "ico",
-//   ];
-//   const documentTypes = [
-//     "doc",
-//     "docx",
-//     "txt",
-//     "xlsx",
-//     "xls",
-//     "ppt",
-//     "pptx",
-//     "rtf",
-//     "odt",
-//   ];
-
-//   extension = extension.toLowerCase();
-
-//   if (extension === "pdf") return "pdf";
-//   if (imageTypes.includes(extension)) return "image";
-//   if (documentTypes.includes(extension)) return "document";
-//   return "other";
-// };
-
-// Helper function to determine Cloudinary resource type
-const getCloudinaryResourceType = (fileType) => {
-  switch (fileType) {
-    case "image":
-      return "image";
-    case "pdf":
-    case "document":
-    case "other":
-      return "raw";
-    default:
-      return "raw";
-  }
 };
 
 const stdDashboardController = {
@@ -450,219 +405,6 @@ const stdDashboardController = {
       });
     }
   },
-  // // get user documents
-  // getDocuments: async (req, res) => {
-  //   try {
-  //     const userId = req.user?.id;
-  //     if (!userId) {
-  //       return res.status(401).json({
-  //         message: "Login First to view documents",
-  //         success: false,
-  //       });
-  //     }
-
-  //     // Find the user's documents
-  //     const userDocument = await userFiles.findOne({ user: userId });
-  //     if (!userDocument || userDocument.documents.length === 0) {
-  //       return res.status(404).json({
-  //         message: "No documents found",
-  //         success: false,
-  //       });
-  //     }
-
-  //     res.status(200).json({
-  //       message: "Documents retrieved successfully!",
-  //       success: true,
-  //       documents: userDocument.documents,
-  //     });
-  //   } catch (error) {
-  //     console.error("Error retrieving documents:", error);
-  //     res.status(500).json({ error: "Internal server error" });
-  //   }
-  // },
-  // // Upload Documents Controller
-  // uploadDocument: async (req, res) => {
-  //   try {
-  //     const { documents } = req.body;
-  //     const userId = req.user?.id;
-
-  //     console.log(req.body, "Request Body");
-
-  //     if (!userId) {
-  //       return res.status(401).json({
-  //         message: "Login First to upload file",
-  //         success: false,
-  //       });
-  //     }
-
-  //     if (!Array.isArray(documents) || documents.length === 0) {
-  //       return res.status(400).json({
-  //         message: "No documents provided",
-  //         success: false,
-  //       });
-  //     }
-
-  //     // Find user's existing document entry
-  //     let userDocument = await userFiles.findOne({ user: userId });
-
-  //     if (!userDocument) {
-  //       userDocument = new userFiles({ user: userId, documents: [] });
-  //     }
-
-  //     for (const doc of documents) {
-  //       const { id, name, date, isChecked, files = [] } = doc;
-
-  //       if (!id || !name || !Array.isArray(files) || files.length === 0) {
-  //         continue; // Skip invalid documents
-  //       }
-
-  //       // Enhanced file metadata mapping
-  //       const uploadedFiles = files.map((file) => {
-  //         const fileExtension = file.name.split(".").pop().toLowerCase();
-  //         const fileType = getFileType(fileExtension);
-  //         const resourceType = getCloudinaryResourceType(fileType);
-
-  //         return {
-  //           name: file.name,
-  //           url: file.url,
-  //           public_id: file.public_id,
-  //           file_type: fileType,
-  //           file_extension: fileExtension,
-  //           resource_type: resourceType,
-  //           // Add file size if available
-  //           size: file.size || null,
-  //           // Add upload timestamp
-  //           uploaded_at: new Date().toISOString(),
-  //         };
-  //       });
-
-  //       // Check if document already exists (by `id`)
-  //       const existingDocumentIndex = userDocument.documents.findIndex(
-  //         (d) => d.id === id
-  //       );
-
-  //       if (existingDocumentIndex !== -1) {
-  //         // Update existing document (Avoid duplicates)
-  //         const existingDocument =
-  //           userDocument.documents[existingDocumentIndex];
-  //         const existingFileNames = existingDocument.files.map(
-  //           (file) => file.name
-  //         );
-
-  //         const newFiles = uploadedFiles.filter(
-  //           (file) => !existingFileNames.includes(file.name)
-  //         );
-
-  //         existingDocument.files.push(...newFiles);
-  //         existingDocument.date = date;
-  //         existingDocument.isChecked = isChecked;
-  //       } else {
-  //         // Add a new document
-  //         userDocument.documents.push({
-  //           id,
-  //           name,
-  //           files: uploadedFiles,
-  //           date,
-  //           isChecked,
-  //         });
-  //       }
-  //     }
-
-  //     console.log(
-  //       "Documents being saved:",
-  //       JSON.stringify(userDocument.documents, null, 2)
-  //     );
-
-  //     await userDocument.save();
-
-  //     res.status(201).json({
-  //       message: "Documents uploaded successfully!",
-  //       success: true,
-  //       documents: userDocument.documents,
-  //     });
-  //   } catch (error) {
-  //     console.error("Error saving documents:", error);
-  //     res.status(500).json({
-  //       error: "Internal server error",
-  //       message: error.message,
-  //     });
-  //   }
-  // },
-
-  // deleteDocument: async (req, res) => {
-  //   try {
-  //     const { files } = req.body;
-  //     const userId = req.user?.id;
-
-  //     if (!userId) {
-  //       return res.status(401).json({
-  //         message: "Unauthorized! Please login first.",
-  //         success: false,
-  //       });
-  //     }
-
-  //     if (!Array.isArray(files) || files.length === 0) {
-  //       return res.status(400).json({
-  //         message: "Invalid request. Missing document ID or files.",
-  //         success: false,
-  //       });
-  //     }
-
-  //     // Find the user's document entry
-  //     let userDocument = await userFiles.findOne({ user: userId });
-
-  //     if (!userDocument) {
-  //       return res.status(404).json({
-  //         message: "User document entry not found.",
-  //         success: false,
-  //       });
-  //     }
-
-  //     // **Filter out documents that match the given file IDs**
-  //     const fileIdsToDelete = files.map((file) => file._id);
-
-  //     // Remove the specific files from each document
-  //     userDocument.documents.forEach((doc) => {
-  //       doc.files = doc.files.filter(
-  //         (file) => !fileIdsToDelete.includes(file._id.toString())
-  //       );
-  //     });
-
-  //     // Delete documents that have no files left
-  //     userDocument.documents = userDocument.documents.filter(
-  //       (doc) => doc.files.length > 0
-  //     );
-
-  //     for (const file of files) {
-  //       try {
-  //         const publicId = file.public_id; // Ensure you store `public_id` in the database
-
-  //         if (!publicId) {
-  //           console.error("Missing Cloudinary Public ID for:", file.url);
-  //           continue; // Skip if no public ID
-  //         }
-
-  //         const result = await cloudinary.uploader.destroy(publicId);
-  //         console.log(`Deleted ${publicId}:`, result);
-  //       } catch (err) {
-  //         console.error("Error deleting file from Cloudinary:", err);
-  //       }
-  //     }
-
-  //     // Save the updated document list
-  //     await userDocument.save();
-
-  //     res.status(200).json({
-  //       message: "Document deleted successfully!",
-  //       success: true,
-  //     });
-  //   } catch (error) {
-  //     console.error("Error deleting document:", error);
-  //     res.status(500).json({ error: "Internal server error" });
-  //   }
-  // },
-  //controller\StdDashboardController.js
-  // Get user documents with presigned URLs
   getDocuments: async (req, res) => {
     try {
       const userId = req.user?.id;
@@ -992,99 +734,120 @@ const stdDashboardController = {
       res.status(500).json({ error: "Internal server error" });
     }
   },
+  createStatusUpdate: async (req, res) => {
+    try {
+      const adminId = req.user?.id;
+      if (!adminId) {
+        return res.status(401).json({
+          message: "Login First to create or update status",
+          success: false,
+        });
+      }
+
+      const { applicationStatus, userId } = req.body;
+      const validStatuses = [1, 2, 3, 4, 5, 6, 7];
+
+      if (!validStatuses.includes(applicationStatus)) {
+        return res.status(400).json({
+          message: "Invalid application status",
+          success: false,
+        });
+      }
+
+      const status = await statusUpdate.findOneAndUpdate(
+        { user: userId }, // Find by user
+        { applicationStatus }, // Update the status
+        { new: true, upsert: true } // Return updated, create if not exist
+      );
+
+      return res.status(200).json({
+        message: "Application status created or updated successfully",
+        success: true,
+        data: status,
+      });
+    } catch (error) {
+      console.error("Error creating or updating application status:", error);
+      res.status(500).json({
+        message: error.message || "Internal Server Error",
+        success: false,
+      });
+    }
+  },
+  updateStatus: async (req, res) => {
+    try {
+      const adminId = req.user?.id; // Ensure user is authenticated
+      if (!adminId) {
+        return res.status(401).json({
+          message: "Login First to update status",
+          success: false,
+        });
+      }
+
+      const { applicationStatus, userId } = req.body;
+
+      // Validate the status
+      const validStatuses = [1, 2, 3, 4, 5, 6, 7];
+
+      if (!validStatuses.includes(applicationStatus)) {
+        return res.status(400).json({
+          message: "Invalid application status",
+          success: false,
+        });
+      }
+
+      // Update the user's status
+      const updatedStatus = await statusUpdate.findByIdAndUpdate(
+        userId,
+        { statusUpdate },
+        { new: true }
+      );
+
+      if (!updatedStatus) {
+        return res.status(404).json({
+          message: "User not found",
+          success: false,
+        });
+      }
+
+      return res.status(200).json({
+        message: "Application status updated successfully",
+        success: true,
+        data: updatedStatus,
+      });
+    } catch (error) {
+      console.error("Error updating application status:", error);
+      res.status(500).json({
+        message: error.message || "Internal Server Error",
+        success: false,
+      });
+    }
+  },
+  // Backend Controller Method (add this to your controller file)
+  getStatusUpdate: async (req, res) => {
+    try {
+      const { userId } = req.body;
+      const status = await statusUpdate.findOne({ user: userId });
+      console.log(userId, "User ID for status update");
+      if (!status) {
+        return res.status(404).json({
+          message: "No status found for this user",
+          success: false,
+        });
+      }
+
+      return res.status(200).json({
+        message: "Status retrieved successfully",
+        success: true,
+        data: status,
+      });
+    } catch (error) {
+      console.error("Error fetching status:", error);
+      res.status(500).json({
+        message: error.message || "Internal Server Error",
+        success: false,
+      });
+    }
+  },
 };
 
-// uploadDocument: async (req, res) => {
-//   try {
-//     const { documents } = req.body;
-//     const userId = req.user?.id;
-//     console.log(req.body, "Request Body");s
-//     if (!userId) {
-//       return res.status(401).json({
-//         message: "Login First to upload file",
-//         success: false,
-//       });
-//     }
-
-//     if (!Array.isArray(documents) || documents.length === 0) {
-//       return res.status(400).json({
-//         message: "No documents provided",
-//         success: false,
-//       });
-//     }
-
-//     // Find user's existing document entry
-//     let userDocument = await userFiles.findOne({ user: userId });
-
-//     if (!userDocument) {
-//       userDocument = new userFiles({ user: userId, documents: [] });
-//     }
-
-//     for (const doc of documents) {
-//       const { id, name, date, isChecked, files = [] } = doc;
-
-//       if (!id || !name || !Array.isArray(files) || files.length === 0) {
-//         continue; // Skip invalid documents
-//       }
-
-//       // 🔥 Map uploaded file metadata
-//       const uploadedFiles = files.map((file) => ({
-//         name: file.name,
-//         url: file.url,
-//         public_id: file.public_id,
-//       }));
-
-//       // ✅ Check if document already exists (by `id`)
-//       const existingDocumentIndex = userDocument.documents.findIndex(
-//         (d) => d.id === id
-//       );
-
-//       if (existingDocumentIndex !== -1) {
-//         // ✅ Update existing document (Avoid duplicates)
-//         const existingDocument =
-//           userDocument.documents[existingDocumentIndex];
-//         const existingFileNames = existingDocument.files.map(
-//           (file) => file.name
-//         );
-
-//         const newFiles = uploadedFiles.filter(
-//           (file) => !existingFileNames.includes(file.name)
-//         );
-
-//         existingDocument.files.push(...newFiles);
-//         existingDocument.date = date;
-//         existingDocument.isChecked = isChecked;
-//       } else {
-//         // ✅ Add a new document
-//         userDocument.documents.push({
-//           id, // Ensure `id` is stored
-//           name,
-//           files: uploadedFiles,
-//           date,
-//           isChecked,
-//         });
-//       }
-//     }
-
-//     console.log("Documents received:", documents);
-//     documents.forEach((doc) => {
-//       doc.files.forEach((file) => {
-//         console.log("File:", file);
-//         console.log("Public ID:", file.public_id);
-//       });
-//     });
-
-//     await userDocument.save();
-
-//     res.status(201).json({
-//       message: "Documents uploaded successfully!",
-//       success: true,
-//       documents: userDocument.documents,
-//     });
-//   } catch (error) {
-//     console.error("Error saving documents:", error);
-//     res.status(500).json({ error: "Internal server error" });
-//   }
-// },
-// delete Documents Controller
 module.exports = stdDashboardController;
