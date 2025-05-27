@@ -9,7 +9,6 @@ const validateSuccessChanceInput = (req, res, next) => {
   const {
     studyLevel,
     grade,
-    gradeType,
     dateOfBirth,
     nationality,
     majorSubject,
@@ -26,7 +25,6 @@ const validateSuccessChanceInput = (req, res, next) => {
     { field: grade, name: "Grade" },
     { field: dateOfBirth, name: "Date of Birth" },
     { field: nationality, name: "Nationality" },
-    { field: gradeType, name: "gradeType" },
     { field: majorSubject, name: "Major Subject" },
   ];
 
@@ -56,15 +54,6 @@ const validateSuccessChanceInput = (req, res, next) => {
       success: false,
       message: "Living costs amount and currency are required",
       field: "livingCosts",
-    });
-  }
-
-  // Validate tuition fee
-  if (!tuitionFee || !tuitionFee.amount || !tuitionFee.currency) {
-    return res.status(400).json({
-      success: false,
-      message: "Tuition fee amount and currency are required",
-      field: "tuitionFee",
     });
   }
 
@@ -104,112 +93,107 @@ const validateSuccessChanceInput = (req, res, next) => {
 };
 
 // Add new success chance entry
-router.post(
-  "/add",
-  authenticateToken,
-  validateSuccessChanceInput,
-  async (req, res) => {
-    const userId = req.user.id;
-    // console.log(`Processing request for user ID: ${userId}`);
-    try {
-      const {
-        studyLevel,
-        grade,
-        gradeType,
-        dateOfBirth,
-        nationality,
-        majorSubject,
-        livingCosts,
-        tuitionFee, // Note the naming difference from schema
-        LanguageProficiency, // Note the naming difference from schema
-        years,
-        StudyPreferenced, // Note the naming difference from schema
-      } = req.body;
+router.post("/add", authenticateToken, validateSuccessChanceInput, async (req, res) => {
+  const userId = req.user.id;
+  console.log(`Processing request for user ID: ${userId}`);
+  try {
+    const {
+      studyLevel,
+      grade,
+      dateOfBirth,
+      nationality,
+      majorSubject,
+      livingCosts,
+      tuitionfee, // Note the naming difference from schema
+      LanguageProficiency, // Note the naming difference from schema
+      years,
+      StudyPreferenced, // Note the naming difference from schema
+    } = req.body;
 
-      // Check if user already has an entry
-      const existingEntry = await userSuccessDb.findOne({ userId });
-      if (existingEntry) {
-        return res.status(409).json({
-          success: false,
-          message:
-            "User already has a success chance entry. Use PUT to update.",
-          data: existingEntry,
-        });
-      }
-
-      // Create new entry with normalized field names
-      const newEntry = new userSuccessDb({
-        userId,
-        studyLevel,
-        gradeType: grade.gradeType,
-        grade: parseFloat(grade.score),
-        dateOfBirth,
-        nationality,
-        majorSubject,
-        livingCosts: {
-          amount: parseFloat(livingCosts.amount),
-          currency: livingCosts.currency,
-        },
-        tuitionFee: {
-          amount: parseFloat(tuitionFee.amount),
-          currency: tuitionFee.currency,
-        },
-        languageProficiency: LanguageProficiency
-          ? {
-              test: LanguageProficiency.test,
-              score: LanguageProficiency.score,
-            }
-          : undefined,
-        workExperience: years,
-        studyPreferenced: {
-          country: StudyPreferenced.country,
-          degree: StudyPreferenced.degree,
-          subject: StudyPreferenced.subject,
-        },
-      });
-
-      const saved = await newEntry.save();
-      console.log(`Success chance data saved for user ID: ${userId}`);
-
-      return res.status(201).json({
-        success: true,
-        message: "Success chance data saved successfully",
-        data: saved,
-      });
-    } catch (error) {
-      console.error(
-        `Error saving success chance data for user ID ${userId}:`,
-        error
-      );
-
-      // Handle specific errors
-      if (error.name === "ValidationError") {
-        return res.status(400).json({
-          success: false,
-          message: "Validation error",
-          errors: Object.values(error.errors).map((err) => ({
-            field: err.path,
-            message: err.message,
-          })),
-        });
-      }
-
-      if (error.name === "MongoServerError" && error.code === 11000) {
-        return res.status(409).json({
-          success: false,
-          message: "Duplicate entry error",
-          field: Object.keys(error.keyPattern)[0],
-        });
-      }
-
-      return res.status(500).json({
+    // Check if user already has an entry
+    const existingEntry = await userSuccessDb.findOne({ userId });
+    if (existingEntry) {
+      return res.status(409).json({
         success: false,
-        message: "Server error while saving success chance data",
-        error:
-          process.env.NODE_ENV === "development" ? error.message : undefined,
+        message:
+          "User already has a success chance entry. Use PUT to update.",
+        data: existingEntry,
       });
     }
+
+    // Create new entry with normalized field names
+    const newEntry = new userSuccessDb({
+      userId,
+      studyLevel,
+      gradeType: grade.gradeType,
+      grade: parseFloat(grade.score),
+      dateOfBirth,
+      nationality,
+      majorSubject,
+      livingCosts: {
+        amount: livingCosts.amount,
+        currency: livingCosts.currency,
+      },
+      tuitionFee: {
+        amount: tuitionfee.amount,
+        currency: tuitionfee.currency,
+      },
+      languageProficiency: LanguageProficiency
+        ? {
+          test: LanguageProficiency.test,
+          score: LanguageProficiency.score,
+        }
+        : undefined,
+      workExperience: years,
+      studyPreferenced: {
+        country: StudyPreferenced.country,
+        degree: StudyPreferenced.degree,
+        subject: StudyPreferenced.subject,
+      },
+    });
+
+    const saved = await newEntry.save();
+    console.log(`Success chance data saved for user ID: ${userId}`);
+
+    return res.status(201).json({
+      success: true,
+      message: "Success chance data saved successfully",
+      data: saved,
+    });
+  } catch (error) {
+    console.error(
+      `Error saving success chance data for user ID ${userId}:`,
+      error
+    );
+
+    // Handle specific errors
+    if (error.name === "ValidationError") {
+      return res.status(400).json({
+        success: false,
+        message: "Validation error",
+        errors: Object.values(error.errors).map((err) => ({
+          field: err.path,
+          message: err.message,
+        })),
+      });
+    }
+
+    if (error.name === "MongoServerError" && error.code === 11000) {
+      return res.status(409).json({
+        success: false,
+        message: "Duplicate entry error",
+        field: Object.keys(error.keyPattern)[0],
+      });
+    }
+
+    return res.status(500).json({
+      success: false,
+      message: "Server error while saving success chance data",
+      error:
+        process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
   }
+}
 );
 
 // Get success chance data for authenticated user
