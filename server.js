@@ -9,7 +9,6 @@ const session = require("express-session");
 const cookieParser = require("cookie-parser");
 const helmet = require("helmet"); // For securing HTTP headers
 
-
 // Importing routers
 const signUp = require("./routers/siginUp");
 const signIn = require("./routers/siginIn");
@@ -26,9 +25,10 @@ const scheduleSession = require("./routers/scheduleSession");
 const accommodationBooking = require("./routers/studentDashboard/accommodationBooking");
 const airportPickup = require("./routers/studentDashboard/airportPickup");
 const completeApplication = require("./routers/studentDashboard/completeApplication");
+const adminControls = require("./routers/adminDashboard/adminControls");
 const createAdminRoute = require("./routers/createAdmin");
 const studentData = require("./routers/adminDashboard/studentData");
-const successChance = require('./routers/success-chance');
+const successChance = require("./routers/success-chance");
 // Middleware
 server.use(
   cors({
@@ -36,7 +36,7 @@ server.use(
       "https://wwah.vercel.app",
       "http://localhost:3000",
       "https://www.worldwideadmissionshub.com",
-      "https://www.wwah.ai"
+      "https://www.wwah.ai",
     ],
     credentials: true,
   })
@@ -51,9 +51,9 @@ server.use(
     resave: false,
     saveUninitialized: true,
     cookie: {
-      httpOnly: true,                     // JS can’t tamper with it
+      httpOnly: true, // JS can’t tamper with it
       secure: process.env.NODE_ENV === "production",
-      sameSite: "none",                   // ← allow cross-site send
+      sameSite: "none", // ← allow cross-site send
       maxAge: 5 * 60 * 1000, // 5 minutes
     },
   })
@@ -73,10 +73,11 @@ server.use("/chatZEUS", chatZEUS);
 server.use("/bookappointment", bookAppointment);
 server.use("/contactus", contactUs);
 server.use("/scheduleSession", scheduleSession);
-server.use('/success-chance', successChance);
+server.use("/success-chance", successChance);
 server.use("/studentDashboard/accommodationBooking", accommodationBooking);
 server.use("/studentDashboard/airportPickup", airportPickup);
 server.use("/studentDashboard/completeApplication", completeApplication);
+server.use("/adminDashboard/adminControls", adminControls);
 server.use("/adminDashboard/studentData", studentData);
 // Default route
 server.get("/", async (req, res) => {

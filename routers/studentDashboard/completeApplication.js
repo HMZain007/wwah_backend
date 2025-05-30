@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const stdDashboardController = require("../../controller/StdDashboardController");
 const authenticateToken = require("../../middlewares/authMiddleware");
+const stdDashboardController = require("../../controller/StdDashboardController");
 router.post(
   "/basicInformation",
   authenticateToken,
@@ -48,8 +48,11 @@ router.put(
   authenticateToken,
   stdDashboardController.updateStatus
 );
+router.get("/getStatusUpdate/:studentid",stdDashboardController.getStatusUpdate);
 router.get(
-  "/getStatusUpdate",
-  stdDashboardController.getStatusUpdate
+  "/getStatusUpdateStudent",
+  authenticateToken,
+  stdDashboardController.getStatusUpdateStudent
 );
+
 module.exports = router;
