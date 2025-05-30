@@ -3,7 +3,6 @@ const applicationInfo = require("../database/models/stdDashboard/applicationInfo
 const BasicInfo = require("../database/models/stdDashboard/basicInfoDb");
 const userFiles = require("../database/models/stdDashboard/uploadFilesDb");
 const UserDb = require("../database/models/UserDb");
-
 const {
   upload,
   generatePresignedUrl,
@@ -820,15 +819,42 @@ const stdDashboardController = {
       });
     }
   },
-  // Backend Controller Method (add this to your controller file)
   getStatusUpdate: async (req, res) => {
+    const studentId = req.params.studentid;
+    console.log("DEBUG: Fetching status for student ID:", studentId);
+
     try {
-      const { userId } = req.body;
-      const status = await statusUpdate.findOne({ user: userId });
-      console.log(userId, "User ID for status update");
+      const status = await statusUpdate.findOne({ user: studentId }); // or whatever field matches
+
       if (!status) {
         return res.status(404).json({
-          message: "No status found for this user",
+          message: "No status found for this student",
+          success: false,
+        });
+      }
+
+      return res.status(200).json({
+        message: "Status retrieved successfully",
+        success: true,
+        data: status,
+      });
+    } catch (error) {
+      console.error("Error fetching status:", error);
+      res.status(500).json({
+        message: error.message || "Internal Server Error",
+        success: false,
+      });
+    }
+  },
+  getStatusUpdateStudent: async (req, res) => {
+    const userId = req.user?.id;
+    console.log("DEBUG: Fetching status for user ID:", userId);
+    try {
+      const status = await statusUpdate.findOne({ user: userId }); // or whatever field matches
+
+      if (!status) {
+        return res.status(404).json({
+          message: "No status found for this student",
           success: false,
         });
       }
