@@ -29,6 +29,7 @@ const adminControls = require("./routers/adminDashboard/adminControls");
 const createAdminRoute = require("./routers/createAdmin");
 const studentData = require("./routers/adminDashboard/studentData");
 const successChance = require("./routers/success-chance");
+const sendMail = require("./routers/sendMail");
 // Middleware
 server.use(
   cors({
@@ -79,6 +80,7 @@ server.use("/studentDashboard/airportPickup", airportPickup);
 server.use("/studentDashboard/completeApplication", completeApplication);
 server.use("/adminDashboard/adminControls", adminControls);
 server.use("/adminDashboard/studentData", studentData);
+server.use("/sendMail", sendMail);
 // Default route
 server.get("/", async (req, res) => {
   try {

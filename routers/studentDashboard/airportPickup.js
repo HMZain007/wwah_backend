@@ -48,6 +48,8 @@ let transporter = nodemailer.createTransport({
   },
 });
 router.post("/", upload.single("ticket"), async (req, res) => {
+  console.log("Received request to submit airport pickup form");
+
   try {
     const {
       email,
