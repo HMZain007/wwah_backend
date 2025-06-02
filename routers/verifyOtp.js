@@ -5,7 +5,8 @@ const UserDb = require("../database/models/UserDb");
 // Verify OTP
 router.post("/", async (req, res) => {
   const { otp } = req.body;
-
+  console.log(otp);
+  
   try {
     // Validate input
     if (!otp || typeof otp !== "string" || otp.length !== 6) {
@@ -14,6 +15,8 @@ router.post("/", async (req, res) => {
         success: false,
       });
     }
+    const { email } = req.session; // Get email from session
+    console.log(email, otp);
 
     if (!req.session || !req.session.email) {
       return res.status(400).json({
@@ -22,15 +25,14 @@ router.post("/", async (req, res) => {
       });
     }
 
-    const { email } = req.session; // Get email from session
-
+  
     // Find user with matching email, OTP, and non-expired OTP
     const user = await UserDb.findOne({
       email,
       otp,
       otpExpiration: { $gt: Date.now() },
     });
-
+   
     if (!user) {
       return res.status(400).json({
         message: "Invalid or expired OTP. Please request a new OTP.",
