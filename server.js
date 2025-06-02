@@ -48,18 +48,16 @@ server.use(express.urlencoded({ extended: true })); // Parse URL-encoded data
 server.use(cookieParser());
 server.use(
   session({
-    secret: process.env.SESSION_SECRET || "defaultSecret", // Use environment variable
+    secret: process.env.SESSION_SECRET || "your-secret",
     resave: false,
-    saveUninitialized: true,
+    saveUninitialized: false,
     cookie: {
-      httpOnly: true, // JS can’t tamper with it
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "none", // ← allow cross-site send
-      maxAge: 5 * 60 * 1000, // 5 minutes
+      secure: true, // true if you're using HTTPS
+      httpOnly: true,
+      maxAge: 1000 * 60 * 10, // 10 minutes
     },
   })
 );
-
 // Routes
 server.use("/signup", signUp); // User signup
 server.use("/createAdmin", createAdminRoute); // User signup

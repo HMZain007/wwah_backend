@@ -5,9 +5,8 @@ const crypto = require("crypto");
 const nodemailer = require("nodemailer");
 
 router.post("/", async (req, res) => {
+  const { email } = req.body;
   try {
-    const { email } = req.body;
-
     // Validate email input
     if (!email || !/\S+@\S+\.\S+/.test(email)) {
       return res.status(400).json({ message: "Invalid email address." });
@@ -41,24 +40,48 @@ router.post("/", async (req, res) => {
       subject: "Password Reset OTP",
       text: `Your OTP for password reset is: ${otpToken}. This OTP is valid for 2 minutes.`,
     });
+    console.log(`OTP sent to ${user.email}: ${otpToken}`);
 
-    // Store email in session
-    if (req.session) {
-      req.session.email = email;
-    } else {
-      console.warn("Session not found. Ensure session middleware is set up correctly.");
+    if (!req.session) {
+      return res.status(500).json({
+        message: "Session not available. Please ensure cookies are enabled.",
+      });
     }
 
-    res.status(200).json({ message: "OTP sent to email. Please check your inbox." });
+    // Store email in session
+    req.session.email = email;
+    req.session.otpRequested = true; // Additional flag to track OTP request
+
+    // Save session explicitly (recommended for some session stores)
+    req.session.save((err) => {
+      if (err) {
+        console.error("Session save error:", err);
+        return res.status(500).json({
+          message: "Failed to save session. Please try again.",
+        });
+      }
+
+      res.status(200).json({
+        message: "OTP sent to email. Please check your inbox.",
+        success: true,
+      });
+    });
   } catch (error) {
-    console.error(`[${new Date().toISOString()}] Error in forgotPassword route:`, error);
+    console.error(
+      `[${new Date().toISOString()}] Error in forgotPassword route:`,
+      error
+    );
 
     // Specific error handling for email failures
     if (error.response && error.response.includes("Invalid login")) {
-      return res.status(500).json({ message: "Failed to send OTP. Email configuration issue." });
+      return res
+        .status(500)
+        .json({ message: "Failed to send OTP. Email configuration issue." });
     }
 
-    res.status(500).json({ message: "Internal server error. Please try again later." });
+    res
+      .status(500)
+      .json({ message: "Internal server error. Please try again later." });
   }
 });
 
