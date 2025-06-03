@@ -504,7 +504,7 @@ const stdDashboardController = {
 
       // Use multer middleware for file upload
       upload.array("files", 10)(req, res, async (err) => {
-        if (err) {
+        if (err) { 
           console.error("Multer error:", err);
           return res.status(400).json({
             message: err.message || "File upload failed",
@@ -731,6 +731,7 @@ const stdDashboardController = {
       res.status(500).json({ error: "Internal server error" });
     }
   },
+
   createStatusUpdate: async (req, res) => {
     try {
       const adminId = req.user?.id;
@@ -770,6 +771,7 @@ const stdDashboardController = {
       });
     }
   },
+
   updateStatus: async (req, res) => {
     try {
       const adminId = req.user?.id; // Ensure user is authenticated
@@ -819,6 +821,7 @@ const stdDashboardController = {
       });
     }
   },
+
   getStatusUpdate: async (req, res) => {
     const studentId = req.params.studentid;
     console.log("DEBUG: Fetching status for student ID:", studentId);
@@ -846,6 +849,7 @@ const stdDashboardController = {
       });
     }
   },
+
   getStatusUpdateStudent: async (req, res) => {
     const userId = req.user?.id;
     console.log("DEBUG: Fetching status for user ID:", userId);
