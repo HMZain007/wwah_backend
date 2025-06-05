@@ -667,7 +667,7 @@
 //         <p><strong>Download Link:</strong> <a href="${
 //           presignedUrl || req.file.location
 //         }">View Document</a></p>
-        
+
 //         <hr>
 //         <p><small>Submitted on: ${new Date().toLocaleString()}</small></p>
 //       `,
@@ -1018,37 +1018,30 @@ router.post("/", handleUpload, async (req, res) => {
         <p><strong>Pickup Option:</strong> ${pickupOption}</p>
         <p><strong>Drop-off Location:</strong> ${dropOffLocation}</p>
 
-        ${
-          additionalPreference
-            ? `<h3>Additional Preferences</h3><p>${additionalPreference}</p>`
-            : ""
+        ${additionalPreference
+          ? `<h3>Additional Preferences</h3><p>${additionalPreference}</p>`
+          : ""
         }
 
-        ${
-          Object.keys(parsedFlightDetails).length > 0
-            ? `
+        ${Object.keys(parsedFlightDetails).length > 0
+          ? `
         <h3>Flight Details</h3>
-        <p><strong>Arrival Date:</strong> ${
-          parsedFlightDetails.arrivalDate || "N/A"
-        }</p>
+        <p><strong>Arrival Date:</strong> ${parsedFlightDetails.arrivalDate || "N/A"
+          }</p>
         <p><strong>Time:</strong> ${parsedFlightDetails.time || "N/A"}</p>
-        <p><strong>Airport Name:</strong> ${
-          parsedFlightDetails.airportName || "N/A"
-        }</p>
-        <p><strong>Flight Number:</strong> ${
-          parsedFlightDetails.flightNumber || "N/A"
-        }</p>
-        <p><strong>Airline Name:</strong> ${
-          parsedFlightDetails.airlineName || "N/A"
-        }</p>
+        <p><strong>Airport Name:</strong> ${parsedFlightDetails.airportName || "N/A"
+          }</p>
+        <p><strong>Flight Number:</strong> ${parsedFlightDetails.flightNumber || "N/A"
+          }</p>
+        <p><strong>Airline Name:</strong> ${parsedFlightDetails.airlineName || "N/A"
+          }</p>
         `
-            : ""
+          : ""
         }
 
         <h3>Uploaded Document</h3>
         <p><strong>File:</strong> ${req.file.originalname}</p>
-        <p><strong>Download Link:</strong> <a href="${
-          presignedUrl || req.file.location
+        <p><strong>Download Link:</strong> <a href="${presignedUrl || req.file.location
         }">View Document</a></p>
         
         <hr>

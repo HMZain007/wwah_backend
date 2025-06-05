@@ -8,6 +8,9 @@ const cors = require("cors");
 const session = require("express-session");
 const cookieParser = require("cookie-parser");
 const helmet = require("helmet"); // For securing HTTP headers
+const http = require("http");
+const { Server } = require("socket.io");
+const Chat = require("./database/models/Chat");
 
 // Importing routers
 const signUp = require("./routers/siginUp");
@@ -31,6 +34,44 @@ const studentData = require("./routers/adminDashboard/studentData");
 const successChance = require("./routers/success-chance");
 const sendMail = require("./routers/sendMail");
 // Middleware
+const app = http.createServer(server);
+const io = new Server(app, {
+  cors: {
+    origin: (origin, callback) => {
+      const allowedOrigins = ["http://localhost:3000", "https://wwah.vercel.app"];
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    methods: ["GET", "POST"],
+  },
+});
+
+// Socket.IO logic
+io.on("connection", (socket) => {
+
+  socket.on("join", (email) => {
+    const userEmail = typeof email === "object" && email.email ? email.email : email;
+    socket.join(userEmail);
+  });
+
+  socket.on("send_message", async ({ email, text, sender }) => {
+    const userEmail = typeof email === "object" && email.email ? email.email : email;
+
+    let chat = await Chat.findOne({ userEmail });
+    if (!chat) chat = new Chat({ userEmail, messages: [] });
+
+    const message = { text, sender, timestamp: new Date() };
+    chat.messages.push(message);
+    await chat.save();
+
+    io.to(userEmail).emit("receive_message", message);
+  });
+});
+
+
 server.use(
   cors({
     origin: [
@@ -94,7 +135,20 @@ server.get("/", async (req, res) => {
 server.get("/health", (req, res) => {
   res.status(200).json({ message: "Server is running smoothly" });
 });
-
+server.get("/admin/chats", async (req, res) => {
+  console.log("Fetching all chats for admin");
+  const chats = await Chat.find();
+  res.json(chats);
+});
+server.get("/chat/messages/:email", async (req, res) => {
+  try {
+    const chat = await Chat.findOne({ userEmail: req.params.email });
+    res.json(chat ? chat.messages : []);
+  } catch (err) {
+    console.error("❌ Error fetching chat:", err);
+    res.status(500).json({ message: "Failed to fetch messages" });
+  }
+});
 // Centralized error handler
 server.use((err, req, res, next) => {
   console.error(`Error occurred: ${err.message}`);
@@ -103,6 +157,6 @@ server.use((err, req, res, next) => {
 
 // Starting the server
 const port = process.env.PORT || 8080;
-server.listen(port, () => {
+app.listen(port, () => {
   console.log(`The Server is running at port ${port}`);
 });
