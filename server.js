@@ -33,12 +33,17 @@ const createAdminRoute = require("./routers/createAdmin");
 const studentData = require("./routers/adminDashboard/studentData");
 const successChance = require("./routers/success-chance");
 const sendMail = require("./routers/sendMail");
+const chatRouter = require("./routers/counselorChat");
+const path = require("path");
 // Middleware
 const app = http.createServer(server);
 const io = new Server(app, {
   cors: {
     origin: (origin, callback) => {
-      const allowedOrigins = ["http://localhost:3000", "https://wwah.vercel.app"];
+      const allowedOrigins = [
+        "http://localhost:3000",
+        "https://wwah.vercel.app",
+      ];
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
@@ -50,27 +55,65 @@ const io = new Server(app, {
 });
 
 // Socket.IO logic
-io.on("connection", (socket) => {
+// io.on("connection", (socket) => {
 
+//   socket.on("join", (email) => {
+//     const userEmail = typeof email === "object" && email.email ? email.email : email;
+//     socket.join(userEmail);
+//   });
+
+//   socket.on("send_message", async ({ email, text, sender }) => {
+//     const userEmail = typeof email === "object" && email.email ? email.email : email;
+
+//     let chat = await Chat.findOne({ userEmail });
+//     if (!chat) chat = new Chat({ userEmail, messages: [] });
+
+//     const message = { text, sender, timestamp: new Date() };
+//     chat.messages.push(message);
+//     await chat.save();
+
+//     io.to(userEmail).emit("receive_message", message);
+//   });
+// });
+// Socket.IO logic with S3 support
+io.on("connection", (socket) => {
   socket.on("join", (email) => {
-    const userEmail = typeof email === "object" && email.email ? email.email : email;
+    const userEmail =
+      typeof email === "object" && email.email ? email.email : email;
     socket.join(userEmail);
   });
 
-  socket.on("send_message", async ({ email, text, sender }) => {
-    const userEmail = typeof email === "object" && email.email ? email.email : email;
+  socket.on("send_message", async ({ email, text, sender, file }) => {
+    const userEmail =
+      typeof email === "object" && email.email ? email.email : email;
 
     let chat = await Chat.findOne({ userEmail });
     if (!chat) chat = new Chat({ userEmail, messages: [] });
 
-    const message = { text, sender, timestamp: new Date() };
+    // Prepare message object
+    const message = {
+      text,
+      sender,
+      timestamp: new Date(),
+    };
+
+    // Add file information if present
+    if (file) {
+      message.file = {
+        name: file.name,
+        url: file.url,
+        type: file.type,
+        size: file.size,
+        s3Key: file.s3Key, // Store S3 key for future operations
+      };
+    }
+
     chat.messages.push(message);
     await chat.save();
 
     io.to(userEmail).emit("receive_message", message);
   });
 });
-
 
 server.use(
   cors({
@@ -121,6 +164,8 @@ server.use("/adminDashboard/adminControls", adminControls);
 server.use("/adminDashboard/studentData", studentData);
 server.use("/sendMail", sendMail);
 server.use("/auth", require("./routers/auth"));
+server.use("/uploads", express.static(path.join(__dirname, "uploads")));
+server.use("/chat", chatRouter);
 // Default route
 server.get("/", async (req, res) => {
   try {
