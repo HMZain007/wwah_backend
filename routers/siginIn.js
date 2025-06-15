@@ -44,8 +44,7 @@ router.post("/", async (req, res) => {
       { expiresIn: "1d" }
     );
 
-    // Set token as an HTTP-only cookie
-    res.cookie("authToken", token, {
+    res.cookie('authToken', token, {
       httpOnly: true,
       sameSite: "None",
       secure: true,

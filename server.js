@@ -120,6 +120,7 @@ server.use("/studentDashboard/completeApplication", completeApplication);
 server.use("/adminDashboard/adminControls", adminControls);
 server.use("/adminDashboard/studentData", studentData);
 server.use("/sendMail", sendMail);
+server.use("/auth", require("./routers/auth"));
 // Default route
 server.get("/", async (req, res) => {
   try {

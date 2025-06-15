@@ -19,12 +19,12 @@ const userSchema = new mongoose.Schema(
     },
     phone: {
       type: Number,
-      required: true,
+
       minlength: 11,
     },
     password: {
       type: String,
-      required: true,
+      // required: true,
       minlength: 8,
     },
     referralCode: {
@@ -44,7 +44,12 @@ const userSchema = new mongoose.Schema(
       type: Date,
     },
     otpVerified: { type: Boolean, default: false },
+    profilePic: { type: String },
+    provider: { type: String, enum: ['local', 'google'], default: 'local' },
+    googleId: { type: String, unique: true, sparse: true },
+    isVerified: { type: Boolean, default: false },
   },
+
   { timestamps: true }
 );
 // Create a model
