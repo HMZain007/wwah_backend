@@ -43,6 +43,8 @@ const io = new Server(app, {
       const allowedOrigins = [
         "http://localhost:3000",
         "https://wwah.vercel.app",
+        "https://www.worldwideadmissionshub.com",
+        "https://www.wwah.ai",
       ];
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
