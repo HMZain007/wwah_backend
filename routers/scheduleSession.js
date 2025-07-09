@@ -19,8 +19,6 @@ router.post("/", async (req, res) => {
     budget,
   } = req.body;
 
-  console.log(req.body);
-
   // Validate required fields
   if (
     !name ||
@@ -49,11 +47,11 @@ router.post("/", async (req, res) => {
       pass: process.env.EMAIL_PASS,
     },
   });
-
+  console.log("Email transporter created successfully ", transporter, email);
   let mailOptions = {
     from: email, // Use your configured email as sender
     replyTo: email, // Set reply-to as the user's email
-    to: "info@worldwideadmissionshub.com", // Recipient
+    to: "info@wwah.ai", // Recipient
     subject: "New Session Scheduling Request",
     html: `
       <h2>New Session Scheduling Request</h2>

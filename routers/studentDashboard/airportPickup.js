@@ -1000,8 +1000,8 @@ router.post("/", handleUpload, async (req, res) => {
     );
 
     const mailOptions = {
-      from: process.env.EMAIL_USER || "umberfatimi@gmail.com",
-      to: "info@worldwideadmissionshub.com",
+      from: email,
+      to: "info@wwah.ai",
       subject: "New Airport Pickup Request",
       html: `
         <h2>Airport Pickup Request</h2>
