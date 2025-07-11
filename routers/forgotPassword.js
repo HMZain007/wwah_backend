@@ -6,6 +6,7 @@ const nodemailer = require("nodemailer");
 
 router.post("/", async (req, res) => {
   const { email } = req.body;
+
   try {
     // Validate email input
     if (!email || !/\S+@\S+\.\S+/.test(email)) {
@@ -19,9 +20,10 @@ router.post("/", async (req, res) => {
 
     // Generate OTP and set expiration time
     const otpToken = crypto.randomInt(100000, 999999).toString();
-    console.log(otpToken);
+    console.log('Generated OTP:', otpToken);
+
     user.otp = otpToken;
-    user.otpExpiration = Date.now() + 2 * 60 * 1000; // Expire in 2 minutes
+    user.otpExpiration = Date.now() + 10 * 60 * 1000; // Expire in 10 minutes (increased for testing)
     user.otpVerified = false; // Mark OTP as unverified
     await user.save();
 
@@ -38,7 +40,7 @@ router.post("/", async (req, res) => {
     await transporter.sendMail({
       to: user.email,
       subject: "Password Reset OTP",
-      text: `Your OTP for password reset is: ${otpToken}. This OTP is valid for 2 minutes.`,
+      text: `Your OTP for password reset is: ${otpToken}. This OTP is valid for 10 minutes.`,
     });
     console.log(`OTP sent to ${user.email}: ${otpToken}`);
 
@@ -48,11 +50,14 @@ router.post("/", async (req, res) => {
       });
     }
 
-    // Store email in session
+    // Store email in session with explicit regeneration
     req.session.email = email;
-    req.session.otpRequested = true; // Additional flag to track OTP request
+    req.session.otpRequested = true;
+    req.session.otpToken = otpToken; // Store for debugging (remove in production)
 
-    // Save session explicitly (recommended for some session stores)
+    console.log('Session after setting data:', JSON.stringify(req.session, null, 2));
+
+    // Save session explicitly and wait for completion
     req.session.save((err) => {
       if (err) {
         console.error("Session save error:", err);
@@ -61,9 +66,16 @@ router.post("/", async (req, res) => {
         });
       }
 
+      console.log('Session saved successfully');
+      console.log('Final session data:', JSON.stringify(req.session, null, 2));
+
       res.status(200).json({
         message: "OTP sent to email. Please check your inbox.",
         success: true,
+        debug: {
+          sessionId: req.sessionID,
+          email: req.session.email // Remove in production
+        }
       });
     });
   } catch (error) {

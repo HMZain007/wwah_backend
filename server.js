@@ -56,28 +56,6 @@ const io = new Server(app, {
   },
 });
 
-// Socket.IO logic
-// io.on("connection", (socket) => {
-
-//   socket.on("join", (email) => {
-//     const userEmail = typeof email === "object" && email.email ? email.email : email;
-//     socket.join(userEmail);
-//   });
-
-//   socket.on("send_message", async ({ email, text, sender }) => {
-//     const userEmail = typeof email === "object" && email.email ? email.email : email;
-
-//     let chat = await Chat.findOne({ userEmail });
-//     if (!chat) chat = new Chat({ userEmail, messages: [] });
-
-//     const message = { text, sender, timestamp: new Date() };
-//     chat.messages.push(message);
-//     await chat.save();
-
-//     io.to(userEmail).emit("receive_message", message);
-//   });
-// });
-// Socket.IO logic with S3 support
 io.on("connection", (socket) => {
   socket.on("join", (email) => {
     const userEmail =
@@ -132,13 +110,14 @@ server.use(helmet()); // Add security headers
 server.use(express.json()); // Built-in JSON parser
 server.use(express.urlencoded({ extended: true })); // Parse URL-encoded data
 server.use(cookieParser());
+
 server.use(
   session({
     secret: process.env.SESSION_SECRET || "your-secret",
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: true, // true if you're using HTTPS
+      secure: false, // true if you're using HTTPS
       httpOnly: true,
       maxAge: 1000 * 60 * 10, // 10 minutes
     },
