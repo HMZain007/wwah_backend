@@ -35,7 +35,6 @@ const successChance = require("./routers/success-chance");
 const sendMail = require("./routers/sendMail");
 const chatRouter = require("./routers/counselorChat");
 const favorites = require("./routers/favourites");
-
 const toggleFavorites = require("./routers/favourites");
 
 const path = require("path");
@@ -52,8 +51,6 @@ const corsOptions = {
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
 };
 server.use(cors(corsOptions)); // Enable CORS with specific options
-server.use(bodyParser.json()); // Parse JSON bodies
-server.use(bodyParser.urlencoded({ extended: true })); // Parse URL-encoded bodies
 
 const io = new Server(app, {
   cors: corsOptions,
@@ -204,7 +201,7 @@ server.use(
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: true, // true if you're using HTTPS
+      secure: false, // true if you're using HTTPS
       httpOnly: true,
       maxAge: 1000 * 60 * 10, // 10 minutes
     },
