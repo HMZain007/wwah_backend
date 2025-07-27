@@ -74,18 +74,10 @@ server.use(
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   })
 ); // Adjust origin for production
-server.use(
-  session({
-    secret: process.env.SESSION_SECRET || "your-secret",
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      secure: true, // true if you're using HTTPS
-      httpOnly: true,
-      maxAge: 1000 * 60 * 10, // 10 minutes
-    },
-  })
-);
+
+// ✅ Handle preflight (OPTIONS) requests globally
+server.options("*", cors());
+
 io.on("connection", (socket) => {
   // console.log("🔌 New client connected:", socket.id);
   // ✅ Handle regular room join
@@ -223,7 +215,18 @@ server.use(express.json()); // Built-in JSON parser
 server.use(express.urlencoded({ extended: true })); // Parse URL-encoded data
 server.use(cookieParser());
 
-
+server.use(
+  session({
+    secret: process.env.SESSION_SECRET || "your-secret",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: true, // true if you're using HTTPS
+      httpOnly: true,
+      maxAge: 1000 * 60 * 10, // 10 minutes
+    },
+  })
+);
 // Routes
 server.use("/signup", signUp); // User signup
 server.use("/createAdmin", createAdminRoute); // User signup
