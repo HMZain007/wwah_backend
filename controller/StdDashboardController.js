@@ -54,6 +54,7 @@ const stdDashboardController = {
   },
   // Basic Information Controller
   basicInformation: async (req, res) => {
+    console.log("DEBUG: Fetching basic for user");
     try {
       const userId = req.user?.id; // Safely access req.user and get userId
 
@@ -200,6 +201,7 @@ const stdDashboardController = {
   },
   // update basic info
   updateBasicInformation: async (req, res) => {
+    console.log("DEBUG: Fetching documents for user by update");
     try {
       const userId = req.user?.id; // Ensure user is authenticated
 
@@ -406,6 +408,7 @@ const stdDashboardController = {
     }
   },
   getDocuments: async (req, res) => {
+    console.log("DEBUG: Fetching documents for user");
     try {
       const userId = req.user?.id;
       console.log("DEBUG: User ID:", userId);

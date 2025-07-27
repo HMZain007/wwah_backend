@@ -34,7 +34,6 @@ const studentData = require("./routers/adminDashboard/studentData");
 const successChance = require("./routers/success-chance");
 const sendMail = require("./routers/sendMail");
 const chatRouter = require("./routers/counselorChat");
-const chatRouter = require("./routers/counselorChat");
 const favorites = require("./routers/favourites");
 
 const toggleFavorites = require("./routers/favourites");
@@ -42,32 +41,25 @@ const toggleFavorites = require("./routers/favourites");
 const path = require("path");
 // Middleware
 const app = http.createServer(server);
-server.use(
-  cors({
-    origin: [
-      "https://wwah.vercel.app",
-      "http://localhost:3000",
-      "https://www.worldwideadmissionshub.com",
-      "https://www.wwah.ai",
-    ],
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  })
-); // Adjust origin for production
+const corsOptions = {
+  origin: [
+    "http://localhost:3000",
+    "https://wwah.vercel.app",
+    "https://www.worldwideadmissionshub.com",
+    "https://www.wwah.ai",
+  ],
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+};
+server.use(cors(corsOptions)); // Enable CORS with specific options
+server.use(bodyParser.json()); // Parse JSON bodies
+server.use(bodyParser.urlencoded({ extended: true })); // Parse URL-encoded bodies
+
 const io = new Server(app, {
-  cors: {
-    origin: [
-      "http://localhost:3000",
-      "https://wwah.vercel.app",
-      "https://www.worldwideadmissionshub.com",
-      "https://www.wwah.ai",
-    ],
-    methods: ["GET", "POST"],
-    credentials: true
-  },
+  cors: corsOptions,
 });
 // ✅ Handle preflight (OPTIONS) requests globally
-server.options("*", cors());
+server.options("*", cors(corsOptions));
 
 io.on("connection", (socket) => {
   // console.log("🔌 New client connected:", socket.id);
