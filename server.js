@@ -214,7 +214,7 @@ server.use(
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: false, // true if you're using HTTPS
+      secure: true, // true if you're using HTTPS
       httpOnly: true,
       maxAge: 1000 * 60 * 10, // 10 minutes
     },
