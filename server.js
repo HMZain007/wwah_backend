@@ -34,6 +34,11 @@ const studentData = require("./routers/adminDashboard/studentData");
 const successChance = require("./routers/success-chance");
 const sendMail = require("./routers/sendMail");
 const chatRouter = require("./routers/counselorChat");
+const chatRouter = require("./routers/counselorChat");
+const favorites = require("./routers/favourites");
+
+const toggleFavorites = require("./routers/favourites");
+
 const path = require("path");
 // Middleware
 const app = http.createServer(server);
@@ -57,41 +62,133 @@ const io = new Server(app, {
 });
 
 io.on("connection", (socket) => {
+  // console.log("🔌 New client connected:", socket.id);
+  // ✅ Handle regular room join
   socket.on("join", (email) => {
     const userEmail =
       typeof email === "object" && email.email ? email.email : email;
+    socket.userEmail = userEmail;
     socket.join(userEmail);
+    console.log(`✅ ${userEmail} joined chat room: [${userEmail}]`);
+
+    socket.emit("joined", {
+      email: userEmail,
+      message: "Successfully joined chat room",
+    });
+  });
+
+  // ✅ Handle notification room join (SEPARATE EVENT)
+  socket.on("join_notification_room", ({ userId }) => {
+    const userEmail = userId || socket.userEmail;
+    if (userEmail) {
+      socket.join(`notifications:${userEmail}`);
+      // console.log(
+      //   `🔔 ${userEmail} joined notification room: [notifications:${userEmail}]`
+      // );
+
+      socket.emit("notification_room_joined", {
+        userId: userEmail,
+        message: "Successfully joined notification room",
+      });
+    }
   });
 
   socket.on("send_message", async ({ email, text, sender, file }) => {
     const userEmail =
       typeof email === "object" && email.email ? email.email : email;
 
-    let chat = await Chat.findOne({ userEmail });
-    if (!chat) chat = new Chat({ userEmail, messages: [] });
+    try {
+      let chat = await Chat.findOne({ userEmail });
+      if (!chat) {
+        chat = new Chat({ userEmail, messages: [] });
+      }
 
-    // Prepare message object
-    const message = {
-      text,
-      sender,
-      timestamp: new Date(),
-    };
-
-    // Add file information if present
-    if (file) {
-      message.file = {
-        name: file.name,
-        url: file.url,
-        type: file.type,
-        size: file.size,
-        s3Key: file.s3Key, // Store S3 key for future operations
+      const message = {
+        text,
+        sender,
+        timestamp: new Date(),
       };
+
+      if (file) {
+        message.file = {
+          name: file.name,
+          url: file.url,
+          type: file.type,
+          size: file.size,
+          s3Key: file.s3Key,
+        };
+      }
+
+      chat.messages.push(message);
+      await chat.save();
+
+      // Send message to chat room
+      io.to(userEmail).emit("receive_message", message);
+
+      let notificationRecipient = null;
+
+      if (sender === "user") {
+        // User sent message, notify admin
+        io.to("admin").emit("receive_message", { ...message, userEmail });
+        notificationRecipient = "admin";
+      } else if (sender === "admin") {
+        // Admin sent message, notify the specific user
+        notificationRecipient = userEmail;
+      }
+
+      // ✅ IMPROVED NOTIFICATION LOGIC
+      if (notificationRecipient) {
+        const chatRoomSockets = await io
+          .in(notificationRecipient)
+          .fetchSockets();
+        const isInChatRoom = chatRoomSockets.length > 0;
+
+        // console.log(
+        //   `🔍 Checking if ${notificationRecipient} is in chat room: ${isInChatRoom}`
+        // );
+
+        if (!isInChatRoom) {
+          const notificationData = {
+            message: `New message from ${sender === "admin" ? "Admin" : userEmail
+              }`,
+            sender,
+            username: sender === "admin" ? "Admin" : userEmail,
+            text: message.text,
+            timestamp: message.timestamp,
+            userEmail,
+            recipientEmail: notificationRecipient,
+          };
+
+          io.to(`notifications:${notificationRecipient}`).emit(
+            "new_notification",
+            notificationData
+          );
+          console.log(
+            `🔔 Notification sent to: notifications:${notificationRecipient}`
+          );
+        } else {
+          console.log("👀 Recipient is active in chat, skipping notification");
+        }
+      }
+    } catch (error) {
+      console.error("❌ Error processing message:", error);
+      socket.emit("error", { message: "Failed to process message" });
     }
+  });
 
-    chat.messages.push(message);
-    await chat.save();
+  socket.on("disconnect", () => {
+    console.log(
+      "🔌 Client disconnected:",
+      socket.id,
+      "User:",
+      socket.userEmail
+    );
+  });
 
-    io.to(userEmail).emit("receive_message", message);
+  // ✅ Debug event
+  socket.on("ping", () => {
+    // console.log("🏓 Ping received from client:", socket.id);
+    socket.emit("pong", { timestamp: new Date(), userId: socket.userEmail });
   });
 });
 
@@ -147,6 +244,8 @@ server.use("/sendMail", sendMail);
 server.use("/auth", require("./routers/auth"));
 server.use("/uploads", express.static(path.join(__dirname, "uploads")));
 server.use("/chat", chatRouter);
+server.use("/favorites", toggleFavorites);
+server.use("/favorites/toggle", toggleFavorites);
 // Default route
 server.get("/", async (req, res) => {
   try {

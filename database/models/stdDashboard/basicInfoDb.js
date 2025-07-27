@@ -31,6 +31,7 @@ const familyMemberSchema = new mongoose.Schema({
     type: String,
     trim: true,
   },
+
   phoneNo: {
     type: String,
     trim: true,
@@ -57,6 +58,9 @@ const basicInfoSchema = mongoose.Schema(
       type: String,
     },
     maritalStatus: {
+      type: String,
+    },
+    nativeLanguage: {
       type: String,
     },
     religion: {

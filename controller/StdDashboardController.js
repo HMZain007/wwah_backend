@@ -79,6 +79,7 @@ const stdDashboardController = {
         DOB,
         nationality,
         countryOfResidence,
+        nativeLanguage,
         maritalStatus,
         religion,
         // Address fields
@@ -133,6 +134,7 @@ const stdDashboardController = {
             gender,
             DOB,
             nationality,
+            nativeLanguage,
             countryOfResidence,
             maritalStatus,
             religion,
@@ -222,6 +224,7 @@ const stdDashboardController = {
         "givenName",
         "gender",
         "DOB",
+        "nativeLanguage",
         "nationality",
         "countryOfResidence",
         "maritalStatus",
@@ -432,8 +435,7 @@ const stdDashboardController = {
       const documentsWithUrls = await Promise.all(
         userDocument.documents.map(async (doc) => {
           console.log(
-            `DEBUG: Processing document "${doc.name}" with ${
-              doc.files?.length || 0
+            `DEBUG: Processing document "${doc.name}" with ${doc.files?.length || 0
             } files`
           );
 
@@ -504,7 +506,7 @@ const stdDashboardController = {
 
       // Use multer middleware for file upload
       upload.array("files", 10)(req, res, async (err) => {
-        if (err) { 
+        if (err) {
           console.error("Multer error:", err);
           return res.status(400).json({
             message: err.message || "File upload failed",
