@@ -56,7 +56,7 @@ const io = new Server(app, {
   cors: corsOptions,
 });
 // ✅ Handle preflight (OPTIONS) requests globally
-server.options("*", cors(corsOptions));
+// server.options("*", cors(corsOptions));
 
 io.on("connection", (socket) => {
   // console.log("🔌 New client connected:", socket.id);
@@ -201,7 +201,7 @@ server.use(
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: false, // true if you're using HTTPS
+      secure: true, // true if you're using HTTPS
       httpOnly: true,
       maxAge: 1000 * 60 * 10, // 10 minutes
     },
