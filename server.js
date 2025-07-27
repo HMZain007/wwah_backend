@@ -42,26 +42,6 @@ const toggleFavorites = require("./routers/favourites");
 const path = require("path");
 // Middleware
 const app = http.createServer(server);
-const io = new Server(app, {
-  cors: {
-    origin: (origin, callback) => {
-      const allowedOrigins = [
-        "http://localhost:3000",
-        "https://wwah.vercel.app",
-        "https://www.worldwideadmissionshub.com",
-        "https://www.wwah.ai",
-      ];
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-    methods: ["GET", "POST"],
-
-  },
-});
-
 server.use(
   cors({
     origin: [
@@ -74,7 +54,18 @@ server.use(
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   })
 ); // Adjust origin for production
-
+const io = new Server(app, {
+  cors: {
+    origin: [
+      "http://localhost:3000",
+      "https://wwah.vercel.app",
+      "https://www.worldwideadmissionshub.com",
+      "https://www.wwah.ai",
+    ],
+    methods: ["GET", "POST"],
+    credentials: true
+  },
+});
 // ✅ Handle preflight (OPTIONS) requests globally
 server.options("*", cors());
 
