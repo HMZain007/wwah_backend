@@ -58,9 +58,34 @@ const io = new Server(app, {
       }
     },
     methods: ["GET", "POST"],
+
   },
 });
 
+server.use(
+  cors({
+    origin: [
+      "https://wwah.vercel.app",
+      "http://localhost:3000",
+      "https://www.worldwideadmissionshub.com",
+      "https://www.wwah.ai",
+    ],
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  })
+); // Adjust origin for production
+server.use(
+  session({
+    secret: process.env.SESSION_SECRET || "your-secret",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: true, // true if you're using HTTPS
+      httpOnly: true,
+      maxAge: 1000 * 60 * 10, // 10 minutes
+    },
+  })
+);
 io.on("connection", (socket) => {
   // console.log("🔌 New client connected:", socket.id);
   // ✅ Handle regular room join
@@ -192,34 +217,13 @@ io.on("connection", (socket) => {
   });
 });
 
-server.use(
-  cors({
-    origin: [
-      "https://wwah.vercel.app",
-      "http://localhost:3000",
-      "https://www.worldwideadmissionshub.com",
-      "https://www.wwah.ai",
-    ],
-    credentials: true,
-  })
-); // Adjust origin for production
+
 server.use(helmet()); // Add security headers
 server.use(express.json()); // Built-in JSON parser
 server.use(express.urlencoded({ extended: true })); // Parse URL-encoded data
 server.use(cookieParser());
 
-server.use(
-  session({
-    secret: process.env.SESSION_SECRET || "your-secret",
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      secure: true, // true if you're using HTTPS
-      httpOnly: true,
-      maxAge: 1000 * 60 * 10, // 10 minutes
-    },
-  })
-);
+
 // Routes
 server.use("/signup", signUp); // User signup
 server.use("/createAdmin", createAdminRoute); // User signup
