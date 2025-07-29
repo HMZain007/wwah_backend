@@ -1,7 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const UserDb = require("../database/models/UserDb");
-
+const crypto = require("crypto");
+const nodemailer = require("nodemailer");
 // Verify OTP
 router.post("/", async (req, res) => {
   const { otp } = req.body;
@@ -88,5 +89,55 @@ router.post("/", async (req, res) => {
     });
   }
 });
+
+// In your verifyOtpRouter.js or equivalent
+router.post("/resend", async (req, res) => {
+  try {
+    // Check session for email
+    const email = req.session?.email;
+    console.log('Resend OTP session email:', email, 'Session ID:', req.sessionID);
+    if (!email) {
+      return res.status(400).json({ message: "No email in session." });
+    }
+
+    const user = await UserDb.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    // Generate new OTP
+    const otpToken = crypto.randomInt(100000, 999999).toString();
+    user.otp = otpToken;
+    user.otpExpiration = Date.now() + 10 * 60 * 1000;
+    user.otpVerified = false;
+    await user.save();
+
+    // Send email
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    await transporter.sendMail({
+      to: email,
+      subject: "Resent OTP for Verification",
+      text: `Your new OTP is: ${otpToken}. It will expire in 10 minutes.`,
+    });
+
+    // Update session
+    req.session.otpToken = otpToken;
+
+    console.log(`🔁 OTP resent to ${email}: ${otpToken}`);
+
+    res.status(200).json({ message: "OTP resent successfully." });
+  } catch (error) {
+    console.error("Error resending OTP:", error);
+    res.status(500).json({ message: "Failed to resend OTP." });
+  }
+});
+
 
 module.exports = router;

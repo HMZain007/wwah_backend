@@ -54,8 +54,8 @@ router.post("/", async (req, res) => {
     req.session.email = email;
     req.session.otpRequested = true;
     req.session.otpToken = otpToken; // Store for debugging (remove in production)
-
     console.log('Session after setting data:', JSON.stringify(req.session, null, 2));
+
 
     // Save session explicitly and wait for completion
     req.session.save((err) => {

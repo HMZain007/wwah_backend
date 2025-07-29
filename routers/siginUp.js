@@ -6,6 +6,7 @@ const nodemailer = require("nodemailer");
 const otpSessions = require("../utils/otpStore");
 const UserDb = require("../database/models/UserDb");
 const jwt = require("jsonwebtoken");
+const { send } = require("process");
 
 const router = express.Router();
 const REQUIRED_FIELDS = ["firstName", "lastName", "email", "phone", "password"];
@@ -16,6 +17,13 @@ const emailTransporter = nodemailer.createTransport({
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
+});
+emailTransporter.verify((error, success) => {
+  if (error) {
+    console.log("Email transporter error:", error);
+  } else {
+    console.log("Email transporter is ready to send messages!");
+  }
 });
 
 // ✅ Send Email OTP
@@ -101,8 +109,10 @@ router.post("/send-otp", async (req, res) => {
     } catch (sendError) {
       console.error("Error sending OTP:", sendError);
       otpSessions.delete(sessionId);
+      console.log("OTP session deleted due to send error", sendError);
+
       res.status(500).json({
-        message: "Failed to send OTP. Please try again.",
+        message: `Failed to send OTP.${sendError}`,
       });
     }
   } catch (err) {
@@ -116,6 +126,7 @@ router.post("/verify-otp", async (req, res) => {
   try {
     const { sessionId, emailOtp } = req.body;
     const session = otpSessions.get(sessionId);
+    console.log("Session data:", session, "Session data:" + emailOtp);
     console.log(session, "Session data:");
     if (!session || !emailOtp) {
       return res.status(400).json({
