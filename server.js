@@ -1,3 +1,4 @@
+// server.js
 require("dotenv").config(); // Load environment variables
 // Importing necessary modules
 const express = require("express");
@@ -243,7 +244,10 @@ server.get("/", async (req, res) => {
       .json({ message: `There is some Error in Server: ${error}` });
   }
 });
-
+//for running script for automatically updating embeddings
+// watchCollections().catch((err) =>
+//   console.error("❌ Failed to start Change Stream Watcher:", err)
+// );
 // Health check route
 server.get("/health", (req, res) => {
   res.status(200).json({ message: "Server is running smoothly" });
