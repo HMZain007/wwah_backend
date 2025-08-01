@@ -3,6 +3,7 @@ const applicationInfo = require("../database/models/stdDashboard/applicationInfo
 const BasicInfo = require("../database/models/stdDashboard/basicInfoDb");
 const userFiles = require("../database/models/stdDashboard/uploadFilesDb");
 const UserDb = require("../database/models/UserDb");
+
 const {
   upload,
   generatePresignedUrl,
@@ -226,11 +227,11 @@ const stdDashboardController = {
         "givenName",
         "gender",
         "DOB",
-        "nativeLanguage",
+        // "nativeLanguage",
         "nationality",
         "countryOfResidence",
         "maritalStatus",
-        "religion",
+        // "religion",
         "homeAddress",
         "detailedAddress",
         "country",
@@ -239,10 +240,10 @@ const stdDashboardController = {
         "email",
         "countryCode",
         "phoneNo",
-        "currentHomeAddress",
-        "currentDetailedAddress",
-        "currentCountry",
-        "currentCity",
+        // "currentHomeAddress",
+        // "currentDetailedAddress",
+        // "currentCountry",
+        // "currentCity",
         "currentZipCode",
         "currentEmail",
         "currentCountryCode",
@@ -250,8 +251,8 @@ const stdDashboardController = {
         "hasPassport",
         "passportNumber",
         "passportExpiryDate",
-        "oldPassportNumber",
-        "oldPassportExpiryDate",
+        // "oldPassportNumber",
+        // "oldPassportExpiryDate",
         "hasStudiedAbroad",
         "visitedCountry",
         "studyDuration",
@@ -268,6 +269,7 @@ const stdDashboardController = {
         "sponsorsPhoneNo",
         "familyMembers",
       ];
+
       allowedFields.forEach((field) => {
         if (req.body[field] !== undefined) {
           updatedData[field] = req.body[field];
