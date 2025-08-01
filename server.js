@@ -235,7 +235,7 @@ server.use("/uploads", express.static(path.join(__dirname, "uploads")));
 server.use("/chat", chatRouter);
 server.use("/favorites", toggleFavorites);
 server.use("/favorites/toggle", toggleFavorites);
-server.use("appliedcourses", appliedcourses);
+server.use("appliedcourses", require("./routers/appliedCourses"));
 // Default route
 server.get("/", async (req, res) => {
   try {
