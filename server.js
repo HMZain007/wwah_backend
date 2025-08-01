@@ -37,7 +37,7 @@ const sendMail = require("./routers/sendMail");
 const chatRouter = require("./routers/counselorChat");
 const favorites = require("./routers/favourites");
 const toggleFavorites = require("./routers/favourites");
-const appliedCourses = require("./routers/appliedCourses");
+const appliedcourses = require("./routers/appliedCourses");
 
 const path = require("path");
 // Middleware
@@ -235,7 +235,7 @@ server.use("/uploads", express.static(path.join(__dirname, "uploads")));
 server.use("/chat", chatRouter);
 server.use("/favorites", toggleFavorites);
 server.use("/favorites/toggle", toggleFavorites);
-server.use("appliedCourses", appliedCourses);
+server.use("appliedcourses", appliedcourses);
 // Default route
 server.get("/", async (req, res) => {
   try {
