@@ -38,7 +38,6 @@ const acdemicInfoSchema = mongoose.Schema(
 );
 
 // Create a model
-// const academicInfo = mongoose.model("AcademicInfo", acdemicInfoSchema);
 const academicInfo =
   mongoose.models.AcademicInfo ||
   mongoose.model("AcademicInfo", acdemicInfoSchema);
