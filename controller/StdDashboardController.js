@@ -225,34 +225,37 @@ const stdDashboardController = {
       const allowedFields = [
         "familyName",
         "givenName",
+        "isFamilyNameEmpty",    // ADD THIS
+        "isGivenNameEmpty",     // ADD THIS
         "gender",
         "DOB",
-        // "nativeLanguage",
         "nationality",
         "countryOfResidence",
         "maritalStatus",
-        // "religion",
-        "homeAddress",
-        "detailedAddress",
+        "religion",
+        "nativeLanguage",        // ADD THIS
+        "currentAddress",        // CHANGE from "homeAddress"
+        "permanentAddress",      // CHANGE from "detailedAddress"
         "country",
         "city",
         "zipCode",
         "email",
         "countryCode",
         "phoneNo",
-        // "currentHomeAddress",
-        // "currentDetailedAddress",
-        // "currentCountry",
-        // "currentCity",
+        "currentHomeAddress",
+        "currentDetailedAddress",
+        "currentCountry",
+        "currentCity",
         "currentZipCode",
         "currentEmail",
         "currentCountryCode",
         "currentPhoneNo",
         "hasPassport",
+        "noPassport",           // ADD THIS
         "passportNumber",
         "passportExpiryDate",
-        // "oldPassportNumber",
-        // "oldPassportExpiryDate",
+        "oldPassportNumber",
+        "oldPassportExpiryDate",
         "hasStudiedAbroad",
         "visitedCountry",
         "studyDuration",
@@ -275,6 +278,24 @@ const stdDashboardController = {
           updatedData[field] = req.body[field];
         }
       });
+
+      // THEN apply conditional logic
+      if (req.body.isFamilyNameEmpty === true) {
+        updatedData.familyName = "";
+      }
+
+      if (req.body.isGivenNameEmpty === true) {
+        updatedData.givenName = "";
+      }
+
+      if (req.body.noPassport === true) {
+        updatedData.hasPassport = false;
+        updatedData.passportNumber = "";
+        updatedData.passportExpiryDate = null;
+        updatedData.oldPassportNumber = "";
+        updatedData.oldPassportExpiryDate = null;
+      }
+
       // Update the existing basic information document
       const updatedBasicInfo = await BasicInfo.findOneAndUpdate(
         { user: userId },

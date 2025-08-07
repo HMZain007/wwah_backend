@@ -203,12 +203,13 @@ server.use(
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: true, // truetrue if you're using HTTPS
+      secure: true, // true if you're using HTTPS
       httpOnly: true,
       maxAge: 1000 * 60 * 10, // 10 minutes
     },
   })
 );
+
 // Routes
 server.use("/signup", signUp); // User signup
 server.use("/createAdmin", createAdminRoute); // User signup
@@ -236,6 +237,7 @@ server.use("/chat", chatRouter);
 server.use("/favorites", toggleFavorites);
 server.use("/favorites/toggle", toggleFavorites);
 server.use("/appliedcourses", appliedcourses);
+
 // Default route
 server.get("/", async (req, res) => {
   try {
@@ -246,6 +248,7 @@ server.get("/", async (req, res) => {
       .json({ message: `There is some Error in Server: ${error}` });
   }
 });
+
 //for running script for automatically updating embeddings
 // watchCollections().catch((err) =>
 //   console.error("❌ Failed to start Change Stream Watcher:", err)
@@ -254,11 +257,13 @@ server.get("/", async (req, res) => {
 server.get("/health", (req, res) => {
   res.status(200).json({ message: "Server is running smoothly" });
 });
+
 server.get("/admin/chats", async (req, res) => {
   console.log("Fetching all chats for admin");
   const chats = await Chat.find();
   res.json(chats);
 });
+
 server.get("/chat/messages/:email", async (req, res) => {
   try {
     const chat = await Chat.findOne({ userEmail: req.params.email });
@@ -268,6 +273,7 @@ server.get("/chat/messages/:email", async (req, res) => {
     res.status(500).json({ message: "Failed to fetch messages" });
   }
 });
+
 // Centralized error handler
 server.use((err, req, res, next) => {
   console.error(`Error occurred: ${err.message}`);
@@ -276,6 +282,7 @@ server.use((err, req, res, next) => {
 
 // Starting the server
 const port = process.env.PORT || 8080;
+
 app.listen(port, () => {
   console.log(`The Server is running at port ${port}`);
 });
