@@ -87,6 +87,8 @@ const stdDashboardController = {
         // Address fields
         homeAddress,
         detailedAddress,
+        currentAddress,
+        permanentAddress,
         country,
         city,
         zipCode,
@@ -142,6 +144,8 @@ const stdDashboardController = {
             religion,
             homeAddress,
             detailedAddress,
+            currentAddress,
+            permanentAddress,
             country,
             city,
             zipCode,
