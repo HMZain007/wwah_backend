@@ -205,9 +205,9 @@ server.use(
     saveUninitialized: false,
     cookie: {
       secure: true, // true if you're using HTTPS
+      sameSite: 'none',
       httpOnly: true,
       maxAge: 1000 * 60 * 10, // 10 minutes
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // ✅ This is key
     },
   })
 );
