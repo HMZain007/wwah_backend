@@ -42,17 +42,31 @@ const appliedcourses = require("./routers/appliedCourses");
 const path = require("path");
 // Middleware
 const app = http.createServer(server);
+// ✅ FIXED CORS CONFIGURATION
 const corsOptions = {
-  origin: [
-    "http://localhost:3000",
-    "https://wwah.vercel.app",
-    "https://www.worldwideadmissionshub.com",
-    "https://www.wwah.ai",
-  ],
+  origin: function (origin, callback) {
+    const allowedOrigins = [
+      "http://localhost:3000",
+      "https://wwah.vercel.app",
+      "https://www.worldwideadmissionshub.com",
+      "https://www.wwah.ai",
+    ];
+
+    // Allow requests with no origin (mobile apps, Postman, etc.)
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
 };
-server.use(cors(corsOptions)); // Enable CORS with specific options
+
+server.use(cors(corsOptions));
 
 const io = new Server(app, {
   cors: corsOptions,
@@ -192,7 +206,9 @@ io.on("connection", (socket) => {
 });
 
 
-server.use(helmet()); // Add security headers
+server.use(helmet({
+  crossOriginEmbedderPolicy: false, // ✅ Fix for CORS issues
+}));
 server.use(express.json()); // Built-in JSON parser
 server.use(express.urlencoded({ extended: true })); // Parse URL-encoded data
 server.use(cookieParser());
