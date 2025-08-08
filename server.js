@@ -196,6 +196,7 @@ server.use(helmet()); // Add security headers
 server.use(express.json()); // Built-in JSON parser
 server.use(express.urlencoded({ extended: true })); // Parse URL-encoded data
 server.use(cookieParser());
+server.set("trust proxy", 1); // ✅ required for secure cookies behind proxy
 
 server.use(
   session({
