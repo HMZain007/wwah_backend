@@ -200,18 +200,46 @@ server.set("trust proxy", 1); // ✅ required for secure cookies behind proxy
 
 server.use(
   session({
-    secret: process.env.SESSION_SECRET || "your-secret",
+    secret: process.env.SESSION_SECRET || "your-very-long-secret-key-change-this-in-production",
     resave: false,
     saveUninitialized: false,
+
+    // ✅ USE MONGODB SESSION STORE for persistence across server restarts
+    store: MongoStore.create({
+      mongoUrl: process.env.MONGODB_URI || process.env.DATABASE_URL,
+      collectionName: "sessions",
+      ttl: 60 * 60, // 1 hour in seconds
+      autoRemove: "native",
+    }),
+
     cookie: {
-      secure: true, // true if you're using HTTPS
-      sameSite: 'none',
+      // ✅ DYNAMIC secure setting based on environment
+      secure: process.env.NODE_ENV === "production", // true only in production with HTTPS
+
+      // ✅ FIXED sameSite setting
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+
       httpOnly: true,
-      maxAge: 1000 * 60 * 10, // 10 minutes
+
+      // ✅ INCREASED session timeout for password reset flow
+      maxAge: 1000 * 60 * 60, // 60 minutes instead of 10
     },
+
+    // ✅ ADD session name for better debugging
+    name: "wwah.sessionId",
   })
 );
-
+// ✅ ADD SESSION DEBUGGING MIDDLEWARE (remove in production)
+if (process.env.NODE_ENV !== "production") {
+  server.use((req, res, next) => {
+    console.log("Session Debug:", {
+      sessionID: req.sessionID,
+      session: req.session,
+      cookies: req.cookies,
+    });
+    next();
+  });
+}
 // Routes
 server.use("/signup", signUp); // User signup
 server.use("/createAdmin", createAdminRoute); // User signup
