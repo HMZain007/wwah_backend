@@ -154,6 +154,8 @@ const stdDashboardController = {
             phoneNo,
             currentHomeAddress,
             currentDetailedAddress,
+            homeAddress,
+            detailedAddress,
             currentCountry,
             currentCity,
             currentZipCode,
@@ -239,7 +241,9 @@ const stdDashboardController = {
         "religion",
         "nativeLanguage",        // ADD THIS
         "currentAddress",        // CHANGE from "homeAddress"
-        "permanentAddress",      // CHANGE from "detailedAddress"
+        "permanentAddress",
+        "homeAddress",     // CHANGE from "detailedAddress"
+        "detailedAddress",
         "country",
         "city",
         "zipCode",
