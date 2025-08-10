@@ -93,6 +93,12 @@ const basicInfoSchema = mongoose.Schema(
     currentHomeAddress: {
       type: String,
     },
+    currentAddress: {
+      type: String
+    },
+    permanentAddress: {
+      type: String,
+    },
     currentDetailedAddress: {
       type: String,
     },
