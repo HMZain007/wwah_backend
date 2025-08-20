@@ -36,8 +36,14 @@ const successChance = require("./routers/success-chance");
 const sendMail = require("./routers/sendMail");
 const chatRouter = require("./routers/counselorChat");
 const favorites = require("./routers/favourites");
-const toggleFavorites = require("./routers/favourites");
+// const toggleFavorites = require("./routers/favourites");
 const appliedcourses = require("./routers/appliedCourses");
+const appliedScholarshipRoutes = require("./routers/appliedScholarshipCourses");
+
+const favoritescholarship = require("./routers/favoriteScholarships");
+const favoritesuniversity = require("./routers/favouriteUniversities");
+const toggleFavorites = require("./routers/favourites");
+const getUniversities = require("./routers/getUniversities");
 
 const path = require("path");
 // Middleware
@@ -239,7 +245,8 @@ server.use("/chat", chatRouter);
 server.use("/favorites", toggleFavorites);
 server.use("/favorites/toggle", toggleFavorites);
 server.use("/appliedcourses", appliedcourses);
-
+server.use("/appliedScholarshipCourses", appliedScholarshipRoutes); // Applied scholarships route
+server.use("getUniversities", require("./routers/getUniversities")); // Universities route
 // Default route
 server.get("/", async (req, res) => {
   try {
