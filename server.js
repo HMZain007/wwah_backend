@@ -247,6 +247,12 @@ server.use("/favorites/toggle", toggleFavorites);
 server.use("/appliedcourses", appliedcourses);
 server.use("/appliedScholarshipCourses", appliedScholarshipRoutes); // Applied scholarships route
 server.use("getUniversities", require("./routers/getUniversities")); // Universities route
+server.use("/favorites", toggleFavorites);
+server.use("/scholarships", favoritescholarship);
+server.use("/universities", favoritesuniversity); // Favorites route
+// Scholarships favorites route
+// server.use("/appliedscholarships", require("./routers/appliedScholarships"));
+
 // Default route
 server.get("/", async (req, res) => {
   try {
