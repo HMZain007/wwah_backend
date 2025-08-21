@@ -17,6 +17,7 @@ router.post("/apply", async (req, res) => {
       scholarshipType,
       deadline,
       banner,
+      ScholarshipId, // Added scholarshipId to identify the course
     } = req.body;
     console.log(req.body, "req.body in apply route");
 
@@ -32,6 +33,7 @@ router.post("/apply", async (req, res) => {
       scholarshipType: !scholarshipType,
       deadline: !deadline,
       banner: !banner,
+      ScholarshipId: !ScholarshipId, // Ensure scholarshipId is provided
     };
 
     const hasMissingFields = Object.values(missingFields).some(
@@ -58,7 +60,9 @@ router.post("/apply", async (req, res) => {
     // Check if user has already applied for this course
     const existingApplication = user.appliedScholarshipCourses.find(
       (app) =>
-        app.courseName === courseName && app.universityName === universityName
+        app.courseName === courseName &&
+        app.universityName === universityName &&
+        app.ScholarshipId === ScholarshipId
     );
 
     if (existingApplication) {
@@ -70,6 +74,7 @@ router.post("/apply", async (req, res) => {
 
     // Create new application object
     const newApplication = {
+      ScholarshipId, // Store the scholarship ID for reference
       scholarshipName,
       hostCountry,
       courseName,
