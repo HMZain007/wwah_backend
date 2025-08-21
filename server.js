@@ -44,6 +44,11 @@ const favoritescholarship = require("./routers/favoriteScholarships");
 const favoritesuniversity = require("./routers/favouriteUniversities");
 const toggleFavorites = require("./routers/favourites");
 const getUniversities = require("./routers/getUniversities");
+
+// regferalportal
+const refSignUp = require("./routers/referralPortal/auth/signup");
+const refSignIn = require("./routers/referralPortal/auth/signin");
+const refupdateProfile = require("./routers/referralPortal/refupdateprofile");
 // In your main app.js or server.js
 const path = require("path");
 // Middleware
@@ -253,7 +258,10 @@ server.use("/universities", favoritesuniversity); // Favorites route
 // Scholarships favorites route
 // server.use("/appliedscholarships", require("./routers/appliedScholarships"));
 server.use("/profile", require("./routers/embedding-refresh"));
-
+//ref portal
+server.use("/refportal/signup", refSignUp);
+server.use("/refportal/signin", refSignIn);
+server.use("/refupdateprofile", refupdateProfile);
 // Default route
 server.get("/", async (req, res) => {
   try {
