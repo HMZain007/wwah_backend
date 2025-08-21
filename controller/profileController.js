@@ -8,7 +8,6 @@ const bcrypt = require("bcryptjs");
 const profileController = {
   // Update password
   changePassword: async (req, res) => {
-
     try {
       const { currentPassword, newPassword } = req.body;
       const userId = req.user?.id;
@@ -54,8 +53,11 @@ const profileController = {
   personalInfomation: async (req, res) => {
     const { countryCode, contactNo, dob, nationality, country, city } =
       req.body;
-    console.log(req.body , "update personal information from req.body of personalInfomation controller");
-    
+    console.log(
+      req.body,
+      "update personal information from req.body of personalInfomation controller"
+    );
+
     try {
       const userId = req.user?.id; // Safely access req.user and get userId
       if (!userId) {
@@ -92,46 +94,85 @@ const profileController = {
     }
   },
   // Update Personal Information Controller
+  // updatePersonalInfomation: async (req, res) => {
+  //   const { firstName, lastName, phone } = req.body;
+  //   console.log(
+  //     req.body,
+  //     "update personal information from req.body of updatePersonalInfomation controller"
+  //   );
+  //   try {
+  //     const userId = req.user?.id || req.user?._id;
+  //     console.log(userId);
+  //     if (!userId) {
+  //       return res
+  //         .status(401)
+  //         .json({ message: "Login required.", success: false });
+  //     }
+
+  //     const updatePersonalInformation = await UserDb.findOneAndUpdate(
+  //       { _id: userId }, // Find by user ID
+  //       {
+  //         $set: {
+  //           firstName,
+  //           lastName,
+  //           phone,
+  //         },
+  //       },
+  //       { new: true, upsert: true } // Return the updated document or insert if not found
+  //     );
+
+  //     return res.status(200).json({
+  //       message: "Presonal information updated successfully.",
+  //       success: true,
+  //       data: updatePersonalInformation,
+  //     });
+  //   } catch (error) {
+  //     console.error(`Error updating Presonal information: ${error}`);
+  //     return res.status(500).json({
+  //       message: "Internal server error while updating Presonal information.",
+  //       success: false,
+  //     });
+  //   }
+  // },
   updatePersonalInfomation: async (req, res) => {
-    const { firstName, lastName, phone } = req.body;
-    console.log(
-      req.body,
-      "update personal information from req.body of updatePersonalInfomation controller"
-    );
     try {
-      const userId = req.user?.id || req.user?._id;
-      console.log(userId);
+      const userId = req.user?.id || req.user?._id; // get from auth middleware
+
       if (!userId) {
-        return res
-          .status(401)
-          .json({ message: "Login required.", success: false });
+        return res.status(401).json({
+          message: "Login required.",
+          success: false,
+        });
       }
 
-      const updatePersonalInformation = await UserDb.findOneAndUpdate(
-        { _id: userId }, // Find by user ID
+      const { firstName, lastName, phone, avatarUrl, coverUrl } = req.body;
+
+      const updatedUser = await UserDb.findByIdAndUpdate(
+        userId,
         {
-          $set: {
-            firstName,
-            lastName,
-            phone,
-          },
+          ...(firstName && { firstName }),
+          ...(lastName && { lastName }),
+          ...(phone && { phone }),
+          ...(avatarUrl && { avatarUrl }),
+          ...(coverUrl && { coverUrl }),
         },
-        { new: true, upsert: true } // Return the updated document or insert if not found
+        { new: true }
       );
 
-      return res.status(200).json({
-        message: "Presonal information updated successfully.",
+      res.status(200).json({
         success: true,
-        data: updatePersonalInformation,
+        message: "Personal information updated successfully.",
+        data: updatedUser,
       });
     } catch (error) {
-      console.error(`Error updating Presonal information: ${error}`);
-      return res.status(500).json({
-        message: "Internal server error while updating Presonal information.",
+      console.error(`Error updating personal information: ${error}`);
+      res.status(500).json({
         success: false,
+        message: "Internal server error while updating personal information.",
       });
     }
   },
+
   // Academic Information Controller
   academicInformation: async (req, res) => {
     // Destructure request body
