@@ -72,16 +72,11 @@ const appliedScholarshipCourseSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
-    ScholarshipId: {    
-      type: String,
-      trim: true,
-    },
-    // ✅ NEW: Added status field to track application status
-    status: {
-      type: String,
-      enum: ["pending", "submitted", "approved", "rejected"],
-      default: "pending",
-    },
+    // status: {
+    //   type: String,
+    //   enum: ["pending", "submitted", "approved", "rejected"],
+    //   default: "pending",
+    // },
     applicationStatus: {
       type: Number,
       enum: [1, 2, 3, 4, 5, 6, 7],
