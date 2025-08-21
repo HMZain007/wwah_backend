@@ -1,9 +1,11 @@
 const languageProficiencyDb = require("../database/models/languageProficiency");
 const academicInfoDb = require("../database/models/userAcademicInfoDb");
 const userPeferenceDb = require("../database/models/userPreference");
-const UserDb = require("../database/models/UserDb");
-const workExperience = require("../database/models/workExperience");
 const bcrypt = require("bcryptjs");
+const UserRefDb = require("../database/models/refPortal/refuser");
+const refAcademicInfo = require("../database/models/refPortal/refAcademicInfo");
+const refWorkExperience = require("../database/models/refPortal/refWorkExperience");
+const refPaymentInformation = require("../database/models/refPortal/refPaymentInformation");
 
 const profileController = {
   // Update password
@@ -20,7 +22,7 @@ const profileController = {
       console.log("Request body:", req.body);
 
       // Find user in database
-      const user = await UserDb.findById(userId);
+      const user = await UserRefDb.findById(userId);
       if (!user) {
         return res.status(404).json({ message: "User not found." });
       }
@@ -51,8 +53,16 @@ const profileController = {
 
   // Personal Information Controller
   personalInfomation: async (req, res) => {
-    const { countryCode, contactNo, dob, nationality, country, city } =
-      req.body;
+    const {
+      contactNo,
+      dob,
+      countryCode,
+      country,
+      city,
+      facebook,
+      instagram,
+      linkedin,
+    } = req.body;
     console.log(
       req.body,
       "update personal information from req.body of personalInfomation controller"
@@ -67,16 +77,18 @@ const profileController = {
         });
       }
       // Update user information
-      const user = await UserDb.findOneAndUpdate(
+      const user = await UserRefDb.findOneAndUpdate(
         { _id: userId },
         {
           $set: {
             contactNo,
             dob,
             countryCode,
-            nationality,
             country,
             city,
+            facebook,
+            instagram,
+            linkedin,
           },
         },
         { new: true, upsert: true } // Return the updated document or create a new one
@@ -93,61 +105,53 @@ const profileController = {
       res.status(500).json({ error: "Internal Server Error", success: false });
     }
   },
+
   // Update Personal Information Controller
-
   updatePersonalInfomation: async (req, res) => {
+    const { firstName, lastName, phone } = req.body;
+    console.log(
+      req.body,
+      "update personal information from req.body of updatePersonalInfomation controller"
+    );
     try {
-      const userId = req.user?.id || req.user?._id; // get from auth middleware
-
+      const userId = req.user?.id || req.user?._id;
+      console.log(userId);
       if (!userId) {
-        return res.status(401).json({
-          message: "Login required.",
-          success: false,
-        });
+        return res
+          .status(401)
+          .json({ message: "Login required.", success: false });
       }
 
-      const { firstName, lastName, phone, avatarUrl, coverUrl } = req.body;
-
-      const updatedUser = await UserDb.findByIdAndUpdate(
-        userId,
+      const updatePersonalInformation = await UserRefDb.findOneAndUpdate(
+        { _id: userId }, // Find by user ID
         {
-          ...(firstName && { firstName }),
-          ...(lastName && { lastName }),
-          ...(phone && { phone }),
-          // ONLY ADDITION: Map frontend field names to database schema
-          ...(avatarUrl && { profilePicture: avatarUrl }),
-          ...(coverUrl && { coverPhoto: coverUrl }),
+          $set: {
+            firstName,
+            lastName,
+            phone,
+          },
         },
-        { new: true }
+        { new: true, upsert: true } // Return the updated document or insert if not found
       );
 
-      res.status(200).json({
+      return res.status(200).json({
+        message: "Presonal information updated successfully.",
         success: true,
-        message: "Personal information updated successfully.",
-        data: updatedUser,
+        data: updatePersonalInformation,
       });
     } catch (error) {
-      console.error(`Error updating personal information: ${error}`);
-      res.status(500).json({
+      console.error(`Error updating Presonal information: ${error}`);
+      return res.status(500).json({
+        message: "Internal server error while updating Presonal information.",
         success: false,
-        message: "Internal server error while updating personal information.",
       });
     }
   },
+
   // Academic Information Controller
   academicInformation: async (req, res) => {
     // Destructure request body
-    const {
-      highestQualification,
-      majorSubject,
-      previousGradingScale,
-      previousGradingScore,
-      standardizedTest,
-      standardizedTestScore,
-      institutionName,
-      startDate,
-      endDate,
-    } = req.body;
+    const { currentDegree, program, uniName, currentSemester } = req.body;
     try {
       const userId = req.user?.id;
       if (!userId) {
@@ -158,19 +162,14 @@ const profileController = {
         });
       }
       // Update or insert academic information
-      const academicInformation = await academicInfoDb.findOneAndUpdate(
+      const refAcademicInformation = await refAcademicInfo.findOneAndUpdate(
         { user: userId },
         {
           $set: {
-            highestQualification,
-            majorSubject,
-            previousGradingScale,
-            previousGradingScore,
-            standardizedTest,
-            standardizedTestScore,
-            institutionName,
-            startDate,
-            endDate,
+            currentDegree,
+            program,
+            uniName,
+            currentSemester,
           },
         },
         { new: true, upsert: true } // Return updated document or create if not exists
@@ -180,7 +179,7 @@ const profileController = {
       return res.status(200).json({
         message: "Updated academic information successfully.",
         success: true,
-        academicInformation, // Optionally return updated data
+        refAcademicInformation, // Optionally return updated data
       });
     } catch (error) {
       // Log error for debugging
@@ -207,10 +206,10 @@ const profileController = {
       const userId = req.user.id;
 
       // Fetch academic information
-      const academicInformation = await academicInfoDb.findOne({
+      const refAcademicInformation = await academicInfoDb.findOne({
         user: userId,
       });
-      if (!academicInformation) {
+      if (!refAcademicInformation) {
         return res.status(404).json({
           message: "No academic information found for this user.",
           success: false,
@@ -221,7 +220,7 @@ const profileController = {
       return res.status(200).json({
         message: "Academic information retrieved successfully.",
         success: true,
-        academicInformation,
+        refAcademicInformation,
       });
     } catch (error) {
       // Log the error for debugging
@@ -234,8 +233,8 @@ const profileController = {
       });
     }
   },
-  // update Academic Information
 
+  // update Academic Information
   updateAcademicInformation: async (req, res) => {
     const {
       qualification,
@@ -289,6 +288,7 @@ const profileController = {
       });
     }
   },
+
   // English Proficiency controller
   languageProficiency: async (req, res) => {
     const { proficiencyLevel, proficiencyTest, proficiencyTestScore } =
@@ -477,18 +477,11 @@ const profileController = {
       });
     }
   },
+
   //Work experience
   workExperience: async (req, res) => {
-    const {
-      hasWorkExperience,
-      fullTime,
-      partTime,
-      jobTitle,
-      organizationName,
-      startDate,
-      endDate,
-      employmentType,
-    } = req.body;
+    const { hasWorkExperience, hasBrandAmbassador, jobDescription } = req.body;
+
     try {
       const userId = req.user?.id;
       if (!userId) {
@@ -497,29 +490,44 @@ const profileController = {
           success: false,
         });
       }
+
+      // Log incoming data for debugging
+      console.log("Received data:", {
+        hasWorkExperience,
+        hasBrandAmbassador,
+        jobDescription,
+      });
+
+      // Prepare update fields based on logic
+      const updateFields = {
+        hasWorkExperience,
+        hasBrandAmbassador,
+      };
+
+      // Only set jobDescription if hasWorkExperience is true
+      if (hasWorkExperience && jobDescription) {
+        updateFields.jobDescription = jobDescription;
+      } else {
+        // Clear jobDescription if hasWorkExperience is false or jobDescription is empty
+        updateFields.jobDescription = null;
+      }
+
+      console.log("Update fields:", updateFields);
+
       // Update or insert work experience
-      const work_Experience = await workExperience.findOneAndUpdate(
+      const work_Experience = await refWorkExperience.findOneAndUpdate(
         { user: userId }, // Match user by ID
-        {
-          $set: {
-            hasWorkExperience,
-            fullTime,
-            partTime,
-            jobTitle,
-            organizationName,
-            startDate,
-            endDate,
-            employmentType,
-          },
-        },
+        { $set: updateFields },
         { new: true, upsert: true } // Return updated document or create if not exists
       );
+
+      console.log("Saved document:", work_Experience);
 
       // Success response
       return res.status(200).json({
         message: "Work experience updated successfully.",
         success: true,
-        work_Experience, // Optionally return updated data
+        work_Experience,
       });
     } catch (error) {
       // Log error for debugging
@@ -542,43 +550,32 @@ const profileController = {
           .json({ message: "Login required.", success: false });
       }
 
-      const {
-        hasWorkExperience,
-        experiences, // Should be "fullTime" or "partTime"
-      } = req.body;
+      const { hasWorkExperience, hasBrandAmbassador, jobDescription } =
+        req.body;
 
       // Log input data for debugging
       console.log("User ID:", userId);
       console.log("Request Body:", req.body);
 
-      // Prepare the update object
+      // Prepare the update object based on the specified logic
       const updateFields = {
         hasWorkExperience,
-        fullTime: hasWorkExperience ? experiences[0].isFullTime : false,
-        partTime: hasWorkExperience ? experiences[0].isPartTime : false,
-        employmentType: hasWorkExperience
-          ? experiences[0].isFullTime
-            ? "fullTime"
-            : experiences[0].isPartTime
-            ? "partTime"
-            : null
-          : null,
-
-        jobTitle: hasWorkExperience ? experiences[0].jobTitle : null,
-        organizationName: hasWorkExperience
-          ? experiences[0].organizationName
-          : null,
-        startDate: hasWorkExperience ? experiences[0].dateFrom : new Date(),
-        endDate: hasWorkExperience ? experiences[0].dateTo : new Date(),
+        hasBrandAmbassador, // Independent field - user selects yes/no
       };
 
-      // Remove `undefined` values to prevent MongoDB errors
+      // Logic 1: jobDescription depends on hasWorkExperience
+      if (hasWorkExperience) {
+        updateFields.jobDescription = jobDescription;
+      } else {
+        // Clear jobDescription if hasWorkExperience is false
+        updateFields.jobDescription = null;
+      }
 
       // Log update fields for debugging
       console.log("Update Fields:", updateFields);
 
       // Find and update the work experience
-      const updatedExperience = await workExperience.findOneAndUpdate(
+      const updatedExperience = await refWorkExperience.findOneAndUpdate(
         { user: userId }, // Find the user's experience
         { $set: updateFields },
         { new: true, upsert: true } // Return updated doc & create if not found
@@ -593,6 +590,185 @@ const profileController = {
       console.error(`Error updating User Experience: ${error.message}`);
       return res.status(500).json({
         message: "Internal server error while updating User Experience.",
+        success: false,
+      });
+    }
+  },
+
+  paymentInformation: async (req, res) => {
+    const {
+      preferredPaymentMethod,
+      bankAccountTitle,
+      bankName,
+      accountNumberIban,
+      mobileWalletNumber,
+      accountHolderName,
+      termsAndAgreement,
+    } = req.body;
+
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({
+          message: "Login required to update payment information.",
+          success: false,
+        });
+      }
+
+      // Log incoming data for debugging
+      console.log("Received payment data:", {
+        preferredPaymentMethod,
+        bankAccountTitle,
+        bankName,
+        accountNumberIban,
+        mobileWalletNumber,
+        accountHolderName,
+        termsAndAgreement,
+      });
+
+      // Prepare update fields based on logic
+      const updateFields = {
+        preferredPaymentMethod,
+      };
+
+      // Add termsAndAgreement to updateFields if it's provided
+      if (termsAndAgreement !== undefined) {
+        updateFields.termsAndAgreement = termsAndAgreement;
+      }
+
+      // Logic for bank transfer
+      if (preferredPaymentMethod === "bank_transfer") {
+        updateFields.bankAccountTitle = bankAccountTitle;
+        updateFields.bankName = bankName;
+        updateFields.accountNumberIban = accountNumberIban;
+
+        // Clear mobile wallet fields
+        updateFields.mobileWalletNumber = null;
+        updateFields.accountHolderName = null;
+      }
+      // Logic for mobile wallet options (any option other than 'none' and 'bank_transfer')
+      else if (preferredPaymentMethod && preferredPaymentMethod !== "none") {
+        updateFields.mobileWalletNumber = mobileWalletNumber;
+        updateFields.accountHolderName = accountHolderName;
+
+        // Clear bank transfer fields
+        updateFields.bankAccountTitle = null;
+        updateFields.bankName = null;
+        updateFields.accountNumberIban = null;
+      }
+      // Logic for 'none' option - clear all payment details
+      else if (preferredPaymentMethod === "none") {
+        updateFields.bankAccountTitle = null;
+        updateFields.bankName = null;
+        updateFields.accountNumberIban = null;
+        updateFields.mobileWalletNumber = null;
+        updateFields.accountHolderName = null;
+      }
+
+      console.log("Update fields:", updateFields);
+
+      // Update or insert payment information
+      const paymentInfo = await refPaymentInformation.findOneAndUpdate(
+        { user: userId }, // Match user by ID
+        { $set: updateFields },
+        { new: true, upsert: true } // Return updated document or create if not exists
+      );
+
+      console.log("Saved document:", paymentInfo);
+
+      // Success response
+      return res.status(200).json({
+        message: "Payment information updated successfully.",
+        success: true,
+        paymentInfo,
+      });
+    } catch (error) {
+      // Log error for debugging
+      console.error(`Error updating payment information: ${error}`);
+
+      // Server error response
+      return res.status(500).json({
+        message: "Internal server error while updating payment information.",
+        success: false,
+      });
+    }
+  },
+
+  updatePaymentInformation: async (req, res) => {
+    try {
+      const userId = req.user?.id; // Ensure user is authenticated
+      if (!userId) {
+        return res
+          .status(401)
+          .json({ message: "Login required.", success: false });
+      }
+
+      const {
+        preferredPaymentMethod,
+        bankAccountTitle,
+        bankName,
+        accountNumberIban,
+        mobileWalletNumber,
+        accountHolderName,
+      } = req.body;
+
+      // Log input data for debugging
+      console.log("User ID:", userId);
+      console.log("Request Body:", req.body);
+
+      // Prepare the update object based on the specified logic
+      const updateFields = {
+        preferredPaymentMethod,
+      };
+
+      // Logic 1: Bank transfer fields depend on preferredPaymentMethod being 'bank_transfer'
+      if (preferredPaymentMethod === "bank_transfer") {
+        updateFields.bankAccountTitle = bankAccountTitle;
+        updateFields.bankName = bankName;
+        updateFields.accountNumberIban = accountNumberIban;
+
+        // Clear mobile wallet fields when bank transfer is selected
+        updateFields.mobileWalletNumber = null;
+        updateFields.accountHolderName = null;
+      }
+      // Logic 2: Mobile wallet fields for any option other than 'none' and 'bank_transfer'
+      else if (preferredPaymentMethod && preferredPaymentMethod !== "none") {
+        updateFields.mobileWalletNumber = mobileWalletNumber;
+        updateFields.accountHolderName = accountHolderName;
+
+        // Clear bank transfer fields when mobile wallet is selected
+        updateFields.bankAccountTitle = null;
+        updateFields.bankName = null;
+        updateFields.accountNumberIban = null;
+      }
+      // Logic 3: Clear all payment details when 'none' is selected
+      else {
+        updateFields.bankAccountTitle = null;
+        updateFields.bankName = null;
+        updateFields.accountNumberIban = null;
+        updateFields.mobileWalletNumber = null;
+        updateFields.accountHolderName = null;
+      }
+
+      // Log update fields for debugging
+      console.log("Update Fields:", updateFields);
+
+      // Find and update the payment information
+      const updatedPaymentInfo = await refPaymentInformation.findOneAndUpdate(
+        { user: userId }, // Find the user's payment info
+        { $set: updateFields },
+        { new: true, upsert: true } // Return updated doc & create if not found
+      );
+
+      return res.status(200).json({
+        message: "Payment information updated successfully.",
+        success: true,
+        data: updatedPaymentInfo,
+      });
+    } catch (error) {
+      console.error(`Error updating Payment Information: ${error.message}`);
+      return res.status(500).json({
+        message: "Internal server error while updating payment information.",
         success: false,
       });
     }

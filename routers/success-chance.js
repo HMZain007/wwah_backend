@@ -1,10 +1,9 @@
 const express = require("express");
 const router = express.Router();
-const mongoose = require("mongoose");
-const authenticateToken = require("../middlewares/authMiddleware"); // Adjust path as needed
-const userSuccessDb = require("../database/models/successChance"); // adjust path if needed
-const UserDb = require("../database/models/UserDb"); // Add this import
-const { triggerEmbeddingWebhook } = require("../utils/embedding-hooks"); // Add this import
+const authenticateToken = require("../middlewares/authMiddleware");
+const userSuccessDb = require("../database/models/successChance");
+const UserDb = require("../database/models/UserDb");
+const { triggerEmbeddingWebhooks } = require("../utils/embedding-hooks"); // Fixed import
 
 // Input validation middleware
 const validateSuccessChanceInput = (req, res, next) => {
@@ -16,10 +15,10 @@ const validateSuccessChanceInput = (req, res, next) => {
     nationality,
     majorSubject,
     livingCosts,
-    tuitionFee, // Note: field name mismatch in schema vs request
-    LanguageProficiency, // Note: field name mismatch in schema vs request
+    tuitionFee,
+    LanguageProficiency,
     years,
-    StudyPreferenced, // Note: field name mismatch in schema vs request
+    StudyPreferenced,
   } = req.body;
 
   // Required fields validation
@@ -95,7 +94,7 @@ const validateSuccessChanceInput = (req, res, next) => {
   next();
 };
 
-// Helper function to get combined user data for embeddings
+// Enhanced helper function to get combined user data for embeddings
 const getCombinedUserData = async (userId) => {
   try {
     console.log(`🔍 Getting combined user data for userId: ${userId}`);
@@ -111,17 +110,11 @@ const getCombinedUserData = async (userId) => {
     const successChance = await userSuccessDb.findOne({ userId });
 
     console.log(`📊 Found success chance data:`, !!successChance);
-    if (successChance) {
-      console.log(`📊 Success chance details:`, {
-        studyLevel: successChance.studyLevel,
-        nationality: successChance.nationality,
-        majorSubject: successChance.majorSubject,
-      });
-    }
 
-    // Combine user data with success chance data
+    // Create comprehensive combined data for better embeddings
     const combinedData = {
       _id: userId,
+      // User profile data
       firstName: user.firstName,
       lastName: user.lastName,
       name: user.name,
@@ -129,7 +122,11 @@ const getCombinedUserData = async (userId) => {
       phone: user.phone,
       role: user.role,
       otpVerified: user.otpVerified,
-      // Embed success chance data directly
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+
+      // Success chance data for embedding generation
+      hasSuccessChanceData: !!successChance,
       successChanceData: successChance
         ? {
             studyLevel: successChance.studyLevel,
@@ -143,21 +140,151 @@ const getCombinedUserData = async (userId) => {
             languageProficiency: successChance.languageProficiency,
             workExperience: successChance.workExperience,
             studyPreferenced: successChance.studyPreferenced,
+            // Add computed fields for better embedding context
+            totalBudget:
+              (successChance.livingCosts?.amount || 0) +
+              (successChance.tuitionFee?.amount || 0),
+            hasLanguageProficiency: !!(
+              successChance.languageProficiency?.test &&
+              successChance.languageProficiency?.score
+            ),
+            hasWorkExperience: !!(
+              successChance.workExperience && successChance.workExperience > 0
+            ),
+            profileCompleteness: calculateProfileCompleteness(successChance),
           }
         : null,
-      hasSuccessChanceData: !!successChance,
+
+      // Metadata for embedding generation
+      lastUpdated: new Date(),
+      embeddingContext: {
+        dataSource: "user_profile_with_success_chance",
+        includesAcademicData: !!successChance,
+        includesFinancialData: !!(
+          successChance?.livingCosts && successChance?.tuitionFee
+        ),
+        includesPreferences: !!successChance?.studyPreferenced,
+      },
     };
 
     console.log(`✅ Combined data created for user ${userId}:`, {
       hasUser: !!user,
       hasSuccessChance: !!successChance,
       dataKeys: Object.keys(combinedData),
+      profileCompleteness:
+        combinedData.successChanceData?.profileCompleteness || 0,
     });
 
     return combinedData;
   } catch (error) {
     console.error("❌ Error getting combined user data:", error);
     return null;
+  }
+};
+
+// Helper function to calculate profile completeness for better embeddings
+const calculateProfileCompleteness = (successChance) => {
+  if (!successChance) return 0;
+
+  let completed = 0;
+  let total = 0;
+
+  // Required fields
+  const requiredFields = [
+    "studyLevel",
+    "gradeType",
+    "grade",
+    "dateOfBirth",
+    "nationality",
+    "majorSubject",
+  ];
+  requiredFields.forEach((field) => {
+    total++;
+    if (successChance[field]) completed++;
+  });
+
+  // Optional but valuable fields
+  const optionalFields = ["languageProficiency", "workExperience"];
+  optionalFields.forEach((field) => {
+    total++;
+    if (successChance[field]) completed++;
+  });
+
+  // Nested object fields
+  if (successChance.livingCosts?.amount && successChance.livingCosts?.currency)
+    completed++;
+  total++;
+
+  if (successChance.tuitionFee?.amount && successChance.tuitionFee?.currency)
+    completed++;
+  total++;
+
+  if (
+    successChance.studyPreferenced?.country &&
+    successChance.studyPreferenced?.degree &&
+    successChance.studyPreferenced?.subject
+  )
+    completed++;
+  total++;
+
+  return Math.round((completed / total) * 100);
+};
+
+// Enhanced function to handle embedding updates with retry logic
+const updateUserEmbeddings = async (userId, action = "update") => {
+  const maxRetries = 3;
+  let retryCount = 0;
+
+  while (retryCount < maxRetries) {
+    try {
+      console.log(
+        `🔄 Attempting to update embeddings for user ${userId} (attempt ${
+          retryCount + 1
+        })`
+      );
+
+      const combinedUserData = await getCombinedUserData(userId);
+      if (!combinedUserData) {
+        throw new Error(`Failed to get combined user data for user ${userId}`);
+      }
+
+      const results = await triggerEmbeddingWebhooks(
+        action,
+        "userdbs",
+        userId.toString(),
+        combinedUserData
+      );
+
+      // Check if at least one webhook succeeded
+      const successfulWebhooks = results.filter(
+        (result) => result.status === "fulfilled" && result.value?.success
+      );
+
+      if (successfulWebhooks.length > 0) {
+        console.log(`✅ Embeddings updated successfully for user ${userId}`);
+        return { success: true, results };
+      } else {
+        throw new Error("All embedding webhooks failed");
+      }
+    } catch (error) {
+      retryCount++;
+      console.error(
+        `❌ Embedding update attempt ${retryCount} failed for user ${userId}:`,
+        error.message
+      );
+
+      if (retryCount >= maxRetries) {
+        console.error(
+          `❌ All embedding update attempts failed for user ${userId}`
+        );
+        return { success: false, error: error.message };
+      }
+
+      // Wait before retry (exponential backoff)
+      await new Promise((resolve) =>
+        setTimeout(resolve, Math.pow(2, retryCount) * 1000)
+      );
+    }
   }
 };
 
@@ -190,7 +317,7 @@ router.post(
         return res.status(409).json({
           success: false,
           message:
-            "User already has a success chance entry. Use PUT to update.",
+            "User already has a success chance entry. Use PATCH to update.",
           data: existingEntry,
         });
       }
@@ -205,11 +332,11 @@ router.post(
         nationality,
         majorSubject,
         livingCosts: {
-          amount: livingCosts.amount,
+          amount: parseFloat(livingCosts.amount),
           currency: livingCosts.currency,
         },
         tuitionFee: {
-          amount: tuitionfee.amount,
+          amount: parseFloat(tuitionfee.amount),
           currency: tuitionfee.currency,
         },
         languageProficiency: LanguageProficiency
@@ -218,7 +345,7 @@ router.post(
               score: LanguageProficiency.score,
             }
           : undefined,
-        workExperience: years,
+        workExperience: years ? parseInt(years, 10) : undefined,
         studyPreferenced: {
           country: StudyPreferenced.country,
           degree: StudyPreferenced.degree,
@@ -229,45 +356,27 @@ router.post(
       const saved = await newEntry.save();
       console.log(`✅ Success chance data saved for user ID: ${userId}`);
 
-      // 🚀 Trigger user embedding update with combined data
-      try {
-        console.log(`🔄 Triggering user embedding update for user ${userId}`);
+      // 🚀 Trigger enhanced embedding update
+      const embeddingResult = await updateUserEmbeddings(userId, "update");
 
-        const combinedUserData = await getCombinedUserData(userId);
-        if (combinedUserData) {
-          console.log(`📤 Sending combined data to webhook:`, {
-            userId: combinedUserData._id,
-            hasSuccessChanceData: combinedUserData.hasSuccessChanceData,
-            successChanceDataKeys: combinedUserData.successChanceData
-              ? Object.keys(combinedUserData.successChanceData)
-              : [],
-          });
-
-          await triggerEmbeddingWebhook(
-            "update", // Use update to replace existing embedding
-            "userdbs",
-            userId.toString(),
-            combinedUserData
-          );
-          console.log(`✅ User embedding webhook triggered for user ${userId}`);
-        } else {
-          console.error(
-            `❌ Failed to get combined user data for user ${userId}`
-          );
-        }
-      } catch (embeddingError) {
-        console.error(
-          "❌ Error updating user embedding after success chance creation:",
-          embeddingError
+      if (!embeddingResult.success) {
+        console.warn(
+          `⚠️ Embedding update failed but success chance data was saved for user ${userId}`
         );
-        // Don't fail the main operation if embedding update fails
       }
 
       return res.status(201).json({
         success: true,
-        message:
-          "Success chance data saved successfully and user embedding updated",
+        message: "Success chance data saved successfully",
         data: saved,
+        embeddingUpdate: embeddingResult.success ? "success" : "failed",
+        metadata: {
+          profileCompleteness: calculateProfileCompleteness(saved),
+          hasLanguageProficiency: !!(
+            LanguageProficiency?.test && LanguageProficiency?.score
+          ),
+          hasWorkExperience: !!(years && years > 0),
+        },
       });
     } catch (error) {
       console.error(
@@ -308,9 +417,18 @@ router.post(
 router.patch("/update", authenticateToken, async (req, res) => {
   const userId = req.user.id;
   console.log(`📝 Processing success chance update for user ID: ${userId}`);
-  console.log(`📝 Update data:`, req.body);
 
   try {
+    const existingEntry = await userSuccessDb.findOne({ userId });
+    if (!existingEntry) {
+      return res.status(404).json({
+        success: false,
+        message: "No success chance data found to update. Use POST to create.",
+      });
+    }
+
+    // Build update object from request body
+    const updateFields = {};
     const {
       studyLevel,
       grade,
@@ -325,27 +443,13 @@ router.patch("/update", authenticateToken, async (req, res) => {
       studyPreferenced,
     } = req.body;
 
-    // Check if entry exists
-    const existingEntry = await userSuccessDb.findOne({ userId });
-    console.log(`📊 Found existing entry:`, !!existingEntry);
-
-    if (!existingEntry) {
-      return res.status(404).json({
-        success: false,
-        message: "No success chance data found to update. Use POST to create.",
-      });
-    }
-
-    // Create update object
-    const updateFields = {};
-
-    if (dateOfBirth) updateFields.dateOfBirth = dateOfBirth;
-    if (nationality) updateFields.nationality = nationality;
-    if (years !== undefined) updateFields.workExperience = years;
     if (studyLevel) updateFields.studyLevel = studyLevel;
-    if (majorSubject) updateFields.majorSubject = majorSubject;
     if (gradeType) updateFields.gradeType = gradeType;
     if (grade) updateFields.grade = parseFloat(grade);
+    if (dateOfBirth) updateFields.dateOfBirth = dateOfBirth;
+    if (nationality) updateFields.nationality = nationality;
+    if (majorSubject) updateFields.majorSubject = majorSubject;
+    if (years !== undefined) updateFields.workExperience = parseInt(years, 10);
 
     if (livingCosts && typeof livingCosts === "object") {
       updateFields.livingCosts = {
@@ -381,9 +485,6 @@ router.patch("/update", authenticateToken, async (req, res) => {
       };
     }
 
-    console.log(`📝 Update fields:`, updateFields);
-
-    // Update the entry
     const updatedEntry = await userSuccessDb.findOneAndUpdate(
       { userId },
       { $set: updateFields },
@@ -392,40 +493,18 @@ router.patch("/update", authenticateToken, async (req, res) => {
 
     console.log(`✅ Success chance data updated for user ID: ${userId}`);
 
-    // 🚀 Trigger user embedding update with combined data
-    try {
-      console.log(`🔄 Triggering user embedding update for user ${userId}`);
-
-      const combinedUserData = await getCombinedUserData(userId);
-      if (combinedUserData) {
-        console.log(
-          `📤 Sending updated combined data to webhook for user ${userId}`
-        );
-
-        await triggerEmbeddingWebhook(
-          "update",
-          "userdbs",
-          userId.toString(),
-          combinedUserData
-        );
-        console.log(
-          `✅ User embedding webhook triggered after update for user ${userId}`
-        );
-      } else {
-        console.error(`❌ Failed to get combined user data for user ${userId}`);
-      }
-    } catch (embeddingError) {
-      console.error(
-        "❌ Error updating user embedding after success chance update:",
-        embeddingError
-      );
-    }
+    // 🚀 Trigger enhanced embedding update
+    const embeddingResult = await updateUserEmbeddings(userId, "update");
 
     return res.status(200).json({
       success: true,
-      message:
-        "Success chance data updated successfully and user embedding updated",
+      message: "Success chance data updated successfully",
       data: updatedEntry,
+      embeddingUpdate: embeddingResult.success ? "success" : "failed",
+      metadata: {
+        profileCompleteness: calculateProfileCompleteness(updatedEntry),
+        fieldsUpdated: Object.keys(updateFields),
+      },
     });
   } catch (error) {
     console.error(
@@ -470,6 +549,14 @@ router.get("/", authenticateToken, async (req, res) => {
     return res.status(200).json({
       success: true,
       data,
+      metadata: {
+        profileCompleteness: calculateProfileCompleteness(data),
+        lastUpdated: data.updatedAt,
+        hasLanguageProficiency: !!(
+          data.languageProficiency?.test && data.languageProficiency?.score
+        ),
+        hasWorkExperience: !!(data.workExperience && data.workExperience > 0),
+      },
     });
   } catch (error) {
     console.error("Error fetching success chance data:", error);
@@ -479,6 +566,7 @@ router.get("/", authenticateToken, async (req, res) => {
     });
   }
 });
+
 // Delete success chance data
 router.delete("/delete", authenticateToken, async (req, res) => {
   const userId = req.user.id;
@@ -493,32 +581,13 @@ router.delete("/delete", authenticateToken, async (req, res) => {
       });
     }
 
-    // 🚀 Trigger user embedding update with combined data (without success chance data)
-    try {
-      const combinedUserData = await getCombinedUserData(userId);
-      if (combinedUserData) {
-        await triggerEmbeddingWebhook(
-          "update",
-          "userdbs",
-          userId.toString(),
-          combinedUserData
-        );
-        console.log(
-          `✅ User embedding updated after success chance deletion for user ${userId}`
-        );
-      }
-    } catch (embeddingError) {
-      console.error(
-        "Error updating user embedding after success chance deletion:",
-        embeddingError
-      );
-      // Don't fail the main operation if embedding update fails
-    }
+    // 🚀 Trigger embedding update (user data without success chance)
+    const embeddingResult = await updateUserEmbeddings(userId, "update");
 
     return res.status(200).json({
       success: true,
-      message:
-        "Success chance data deleted successfully and user embedding updated",
+      message: "Success chance data deleted successfully",
+      embeddingUpdate: embeddingResult.success ? "success" : "failed",
     });
   } catch (error) {
     console.error(

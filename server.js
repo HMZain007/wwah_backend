@@ -45,6 +45,11 @@ const favoritesuniversity = require("./routers/favouriteUniversities");
 const toggleFavorites = require("./routers/favourites");
 const getUniversities = require("./routers/getUniversities");
 
+// regferalportal
+const refSignUp = require("./routers/referralPortal/auth/signup");
+const refSignIn = require("./routers/referralPortal/auth/signin");
+const refupdateProfile = require("./routers/referralPortal/refupdateprofile");
+// In your main app.js or server.js
 const path = require("path");
 // Middleware
 const app = http.createServer(server);
@@ -56,7 +61,7 @@ const corsOptions = {
     "https://www.wwah.ai",
   ],
   credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
 };
 server.use(cors(corsOptions)); // Enable CORS with specific options
 
@@ -154,8 +159,9 @@ io.on("connection", (socket) => {
 
         if (!isInChatRoom) {
           const notificationData = {
-            message: `New message from ${sender === "admin" ? "Admin" : userEmail
-              }`,
+            message: `New message from ${
+              sender === "admin" ? "Admin" : userEmail
+            }`,
             sender,
             username: sender === "admin" ? "Admin" : userEmail,
             text: message.text,
@@ -197,7 +203,6 @@ io.on("connection", (socket) => {
   });
 });
 
-
 server.use(helmet()); // Add security headers
 server.use(express.json()); // Built-in JSON parser
 server.use(express.urlencoded({ extended: true })); // Parse URL-encoded data
@@ -211,7 +216,7 @@ server.use(
     saveUninitialized: false,
     cookie: {
       secure: true, // true if you're using HTTPS
-      sameSite: 'none',
+      sameSite: "none",
       httpOnly: true,
       maxAge: 1000 * 60 * 10, // 10 minutes
     },
@@ -252,7 +257,11 @@ server.use("/scholarships", favoritescholarship);
 server.use("/universities", favoritesuniversity); // Favorites route
 // Scholarships favorites route
 // server.use("/appliedscholarships", require("./routers/appliedScholarships"));
-
+server.use("/profile", require("./routers/embedding-refresh"));
+//ref portal
+server.use("/refportal/signup", refSignUp);
+server.use("/refportal/signin", refSignIn);
+server.use("/refupdateprofile", refupdateProfile);
 // Default route
 server.get("/", async (req, res) => {
   try {
