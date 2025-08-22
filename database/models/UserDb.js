@@ -7,13 +7,11 @@ const appliedCourseSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-    // ✅ FIXED: Changed from String with enum to Number
     applicationStatus: {
       type: Number,
       enum: [1, 2, 3, 4, 5, 6, 7],
       default: 1,
     },
-    // ✅ NEW: Added checkbox field initially set to false
     isConfirmed: {
       type: Boolean,
       default: false,
@@ -72,14 +70,39 @@ const appliedScholarshipCourseSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
-    // status: {
-    //   type: String,
-    //   enum: ["pending", "submitted", "approved", "rejected"],
-    //   default: "pending",
-    // },
+    ScholarshipId: {
+      type: String,
+      trim: true,
+    },
+    status: {
+      type: String,
+      enum: [
+        "pending",
+        "submitted",
+        "approved",
+        "rejected",
+        "incomplete-application",
+        "complete-application",
+        "awaiting-course-confirmation",
+        "pay-application-fee",
+        "in-process",
+        "application-withdrawn",
+        "application-successful",
+        "application-unsuccessful",
+        "visa-in-process",
+        "visa-rejected",
+        "ready-to-fly",
+      ],
+      default: "pending",
+    },
     applicationStatus: {
       type: Number,
-      enum: [1, 2, 3, 4, 5, 6, 7],
+      enum: [1, 2, 3, 4, 5, 6, 7], // Progress tracking steps
+      default: 1,
+    },
+    statusId: {
+      type: Number,
+      enum: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], // Detailed status from APPLICATION_STATUS
       default: 1,
     },
     isConfirmed: {
@@ -195,7 +218,6 @@ const userSchema = new mongoose.Schema(
       type: Date,
     },
 
-    // ✅ MISSING FIELDS - These were in the commented schema but missing from the active one
     name: {
       type: String,
     },
@@ -216,17 +238,15 @@ const userSchema = new mongoose.Schema(
       type: Date,
     },
     otpVerified: { type: Boolean, default: false },
-    profilePic: { type: String }, // Note: You have both profilePic and profilePicture
+    profilePic: { type: String },
     provider: { type: String, enum: ["local", "google"], default: "local" },
     googleId: { type: String, unique: true, sparse: true },
     isVerified: { type: Boolean, default: false },
 
-    // ✅ CRITICAL MISSING FIELDS - These are required for your React component
     favouriteCourse: { type: [String], default: [] },
     favouriteScholarship: { type: [String], default: [] },
     favouriteUniversity: { type: [String], default: [] },
 
-    // ✅ MOST IMPORTANT - This was completely missing from your current schema
     appliedCourses: {
       type: [appliedCourseSchema],
       default: [],
@@ -237,7 +257,6 @@ const userSchema = new mongoose.Schema(
       default: [],
     },
 
-    // Migration tracking (optional)
     migrationVersion: {
       type: Number,
       default: 0,
@@ -247,7 +266,7 @@ const userSchema = new mongoose.Schema(
     },
   },
   {
-    timestamps: true, // This adds createdAt and updatedAt automatically
+    timestamps: true,
     toJSON: {
       transform: function (doc, ret) {
         // Remove sensitive fields when converting to JSON
