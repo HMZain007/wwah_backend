@@ -1,4 +1,4 @@
-// /routers/appliedCourses.js - FIXED VERSION
+// /routers/appliedCourses.js
 const express = require("express");
 const router = express.Router();
 const UserDb = require("../database/models/UserDb");
@@ -438,82 +438,6 @@ router.get("/ids", authenticateToken, async (req, res) => {
   }
 });
 
-// ✅ DELETE route to remove a specific applied course (SCHEMA ALIGNED)
-// router.delete("/remove", authenticateToken, async (req, res) => {
-//   try {
-//     const { courseId } = req.body;
-//     const userId = req.user?.id || req.userId;
-
-//     if (!courseId) {
-//       return res.status(400).json({
-//         success: false,
-//         message: "Course ID is required",
-//       });
-//     }
-
-//     const courseIdString = courseId.toString();
-//     const user = await UserDb.findById(userId);
-
-//     if (!user) {
-//       return res.status(404).json({
-//         success: false,
-//         message: "User not found",
-//       });
-//     }
-
-//     // Check if course exists (handle both formats)
-//     const courseIds = extractCourseIds(user.appliedCourses || []);
-
-//     if (!courseIds.includes(courseIdString)) {
-//       return res.status(404).json({
-//         success: false,
-//         message: "Course not found in applied courses",
-//         data: {
-//           courseId: courseIdString,
-//           currentAppliedCourses: courseIds,
-//         },
-//       });
-//     }
-
-//     // Remove from applied courses (handle both string and object formats)
-//     const updatedUser = await UserDb.findByIdAndUpdate(
-//       userId,
-//       {
-//         $pull: {
-//           appliedCourses: {
-//             $or: [
-//               courseIdString, // Remove string format
-//               { courseId: courseIdString }, // Remove object format
-//             ],
-//           },
-//         },
-//       },
-//       { new: true }
-//     );
-
-//     const remainingCourseIds = extractCourseIds(
-//       updatedUser.appliedCourses || []
-//     );
-
-//     res.json({
-//       success: true,
-//       message: "Course removed from applied courses successfully",
-//       data: {
-//         removedCourseId: courseIdString,
-//         appliedCourses: normalizeAppliedCourses(updatedUser.appliedCourses),
-//         appliedCourseIds: remainingCourseIds,
-//         totalAppliedCourses: remainingCourseIds.length,
-//       },
-//     });
-//   } catch (error) {
-//     console.error("❌ Error removing applied course:", error);
-//     res.status(500).json({
-//       success: false,
-//       message: "Internal Server Error",
-//       error: process.env.NODE_ENV === "development" ? error.message : undefined,
-//     });
-//   }
-// });
 router.delete("/remove", authenticateToken, async (req, res) => {
   try {
     const { courseId } = req.body;

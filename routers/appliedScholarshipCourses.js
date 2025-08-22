@@ -111,7 +111,68 @@ router.post("/apply", async (req, res) => {
     });
   }
 });
+router.get("/confirmed-applications/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
 
+    console.log(userId, "backend user for confirmed scholarships");
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "User ID is required",
+      });
+    }
+
+    const user = await UserDb.findById(userId).select(
+      "appliedScholarshipCourses"
+    );
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Filter only confirmed scholarship applications
+    const confirmedApplications = (user.appliedScholarshipCourses || [])
+      .filter((app) => app.isConfirmed === true)
+      .sort((a, b) => new Date(b.appliedDate) - new Date(a.appliedDate));
+
+    console.log(
+      `Found ${confirmedApplications.length} confirmed applications out of ${user.appliedScholarshipCourses.length} total`
+    );
+
+    // Apply pagination
+    const skip = (page - 1) * limit;
+    const applications = confirmedApplications.slice(skip, skip + limit);
+    const total = confirmedApplications.length;
+
+    res.status(200).json({
+      success: true,
+      message: "Confirmed scholarship courses fetched successfully",
+      data: {
+        applications,
+        pagination: {
+          currentPage: page,
+          totalPages: Math.ceil(total / limit),
+          totalApplications: total,
+          hasNextPage: page < Math.ceil(total / limit),
+          hasPrevPage: page > 1,
+        },
+      },
+    });
+  } catch (error) {
+    console.error("❌ Error fetching confirmed scholarship courses:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+});
 // Get all applied courses for a user
 router.get("/my-applications/:userId", async (req, res) => {
   try {
@@ -278,7 +339,11 @@ router.get("/scholarship-courses/:userId", async (req, res) => {
 router.put("/tracking/:applicationId", async (req, res) => {
   try {
     const { applicationId } = req.params;
-    const { applicationStatus, userId: targetUserId } = req.body;
+    const {
+      applicationStatus, // For progress tracking (step number)
+      statusId, // For status dropdown
+      userId: targetUserId,
+    } = req.body;
 
     // For admin updates, use the provided userId, otherwise use authenticated user
     const userId = targetUserId || req.user?.id || req.userId;
@@ -286,6 +351,7 @@ router.put("/tracking/:applicationId", async (req, res) => {
     console.log("📝 Scholarship status update request:", {
       applicationId,
       applicationStatus,
+      statusId,
       userId,
       targetUserId,
       isAdminUpdate: !!targetUserId,
@@ -298,7 +364,7 @@ router.put("/tracking/:applicationId", async (req, res) => {
       });
     }
 
-    // Validate applicationStatus
+    // Validate applicationStatus (progress step)
     if (
       applicationStatus &&
       ![1, 2, 3, 4, 5, 6, 7].includes(Number(applicationStatus))
@@ -306,6 +372,17 @@ router.put("/tracking/:applicationId", async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "applicationStatus must be a number between 1 and 7",
+      });
+    }
+
+    // Validate statusId (if provided)
+    if (
+      statusId &&
+      ![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].includes(Number(statusId))
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "statusId must be a number between 1 and 11",
       });
     }
 
@@ -317,7 +394,7 @@ router.put("/tracking/:applicationId", async (req, res) => {
       });
     }
 
-    // ✅ FIXED: Find the scholarship application using _id
+    // Find the scholarship application using _id
     const application = user.appliedScholarshipCourses.id(applicationId);
 
     if (!application) {
@@ -338,50 +415,75 @@ router.put("/tracking/:applicationId", async (req, res) => {
     console.log("🔍 Found application:", {
       applicationId,
       currentStatus: application.applicationStatus,
-      newStatus: Number(applicationStatus),
+      newTrackStep: Number(applicationStatus),
+      newStatusId: statusId ? Number(statusId) : null,
     });
 
-    // ✅ FIXED: Update the application status and related fields
-    const oldStatus = application.applicationStatus;
-    application.applicationStatus = Number(applicationStatus);
+    // Store old values for response
+    const oldApplicationStatus = application.applicationStatus;
+    const oldStatus = application.status;
+
+    // Update the application progress step (if provided)
+    if (applicationStatus) {
+      application.applicationStatus = Number(applicationStatus);
+    }
+
+    // Update additional status field based on statusId (if provided)
+    if (statusId) {
+      // Map statusId to status labels based on APPLICATION_STATUS array
+      const statusMap = {
+        1: "incomplete-application",
+        2: "complete-application",
+        3: "awaiting-course-confirmation",
+        4: "pay-application-fee",
+        5: "in-process",
+        6: "application-withdrawn",
+        7: "application-successful",
+        8: "application-unsuccessful",
+        9: "visa-in-process",
+        10: "visa-rejected",
+        11: "ready-to-fly",
+      };
+
+      application.status = statusMap[Number(statusId)] || "pending";
+
+      // You might want to store the statusId separately for reference
+      // Add this field to your schema if needed
+      application.statusId = Number(statusId);
+    }
+
+    // Always update the timestamp
     application.updatedAt = new Date();
 
-    // Update the legacy status field based on the step
-    const statusMap = {
-      1: "pending",
-      2: "pending",
-      3: "submitted",
-      4: "under review",
-      5: "shortlisted",
-      6: "decision pending",
-      7: "final decision",
-    };
-    application.status = statusMap[Number(applicationStatus)] || "pending";
-
     console.log("💾 Updating application with:", {
+      oldApplicationStatus,
+      newApplicationStatus: application.applicationStatus,
       oldStatus,
-      newStatus: application.applicationStatus,
-      status: application.status,
+      newStatus: application.status,
+      statusId: application.statusId,
       updatedAt: application.updatedAt,
     });
 
-    // ✅ CRITICAL: Mark the subdocument array as modified before saving
+    // Mark the subdocument array as modified before saving
     user.markModified("appliedScholarshipCourses");
 
     // Save the user document
     const updatedUser = await user.save();
 
-    // ✅ VERIFICATION: Get the updated application to confirm changes
+    // Get the updated application to confirm changes
     const verifiedApplication =
       updatedUser.appliedScholarshipCourses.id(applicationId);
 
     console.log("✅ Application updated successfully:", {
       applicationId,
+      oldApplicationStatus,
+      newApplicationStatus: verifiedApplication.applicationStatus,
       oldStatus,
-      newStatus: verifiedApplication.applicationStatus,
-      newStatusLabel: verifiedApplication.status,
+      newStatus: verifiedApplication.status,
+      statusId: verifiedApplication.statusId,
       verifiedUpdate:
-        verifiedApplication.applicationStatus === Number(applicationStatus),
+        verifiedApplication.applicationStatus ===
+        (applicationStatus ? Number(applicationStatus) : oldApplicationStatus),
     });
 
     res.json({
@@ -390,12 +492,23 @@ router.put("/tracking/:applicationId", async (req, res) => {
       data: {
         application: verifiedApplication.toObject(),
         updatedApplicationId: applicationId,
-        oldApplicationStatus: oldStatus,
-        newApplicationStatus: Number(applicationStatus),
-        newStatusLabel: statusMap[Number(applicationStatus)],
+        changes: {
+          applicationStatus: {
+            old: oldApplicationStatus,
+            new: verifiedApplication.applicationStatus,
+            changed:
+              applicationStatus &&
+              verifiedApplication.applicationStatus !== oldApplicationStatus,
+          },
+          status: {
+            old: oldStatus,
+            new: verifiedApplication.status,
+            changed: statusId && verifiedApplication.status !== oldStatus,
+          },
+          statusId: statusId ? Number(statusId) : null,
+        },
         updatedAt: verifiedApplication.updatedAt,
-        isVerified:
-          verifiedApplication.applicationStatus === Number(applicationStatus),
+        isVerified: true,
       },
     });
   } catch (error) {
@@ -452,6 +565,126 @@ router.delete("/:applicationId", async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Internal server error",
+    });
+  }
+});
+router.put("/confirm/:applicationId", async (req, res) => {
+  try {
+    const { applicationId } = req.params;
+    const { isConfirmed, userId: targetUserId } = req.body;
+
+    // For admin updates, use the provided userId, otherwise use authenticated user
+    const userId = targetUserId || req.user?.id || req.userId;
+
+    console.log("📝 Scholarship course confirmation update request:", {
+      applicationId,
+      isConfirmed,
+      userId,
+      targetUserId,
+      isAdminUpdate: !!targetUserId,
+    });
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "User ID is required for confirmation update",
+      });
+    }
+
+    // Validate isConfirmed (should be boolean)
+    if (typeof isConfirmed !== "boolean") {
+      return res.status(400).json({
+        success: false,
+        message: "isConfirmed must be a boolean value (true or false)",
+      });
+    }
+
+    const user = await UserDb.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Find the scholarship application using _id
+    const application = user.appliedScholarshipCourses.id(applicationId);
+
+    if (!application) {
+      return res.status(404).json({
+        success: false,
+        message: "Scholarship application not found",
+        debug: {
+          applicationId,
+          availableApplications: user.appliedScholarshipCourses.map((app) => ({
+            id: app._id,
+            scholarshipName: app.scholarshipName,
+            courseName: app.courseName,
+            currentConfirmation: app.isConfirmed,
+          })),
+        },
+      });
+    }
+
+    console.log("🔍 Found scholarship application:", {
+      applicationId,
+      scholarshipName: application.scholarshipName,
+      courseName: application.courseName,
+      currentConfirmation: application.isConfirmed,
+      newConfirmation: isConfirmed,
+    });
+
+    // Update the scholarship confirmation status
+    const oldConfirmation = application.isConfirmed;
+    application.isConfirmed = isConfirmed;
+    application.updatedAt = new Date();
+
+    console.log("💾 Updating scholarship application with:", {
+      oldConfirmation,
+      newConfirmation: application.isConfirmed,
+      updatedAt: application.updatedAt,
+    });
+
+    // Mark the subdocument array as modified before saving
+    user.markModified("appliedScholarshipCourses");
+
+    // Save the user document
+    const updatedUser = await user.save();
+
+    // Verification: Get the updated application to confirm changes
+    const verifiedApplication =
+      updatedUser.appliedScholarshipCourses.id(applicationId);
+
+    console.log("✅ Scholarship confirmation updated successfully:", {
+      applicationId,
+      scholarshipName: verifiedApplication.scholarshipName,
+      oldConfirmation,
+      newConfirmation: verifiedApplication.isConfirmed,
+      verifiedUpdate: verifiedApplication.isConfirmed === isConfirmed,
+    });
+
+    res.json({
+      success: true,
+      message: `Scholarship course ${
+        isConfirmed ? "confirmed" : "unconfirmed"
+      } successfully`,
+      data: {
+        application: verifiedApplication.toObject(),
+        updatedApplicationId: applicationId,
+        scholarshipName: verifiedApplication.scholarshipName,
+        courseName: verifiedApplication.courseName,
+        oldConfirmation: oldConfirmation,
+        newConfirmation: isConfirmed,
+        updatedAt: verifiedApplication.updatedAt,
+        isVerified: verifiedApplication.isConfirmed === isConfirmed,
+      },
+    });
+  } catch (error) {
+    console.error("❌ Error updating scholarship course confirmation:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   }
 });
