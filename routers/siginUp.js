@@ -231,6 +231,7 @@ router.post("/complete-signup", async (req, res) => {
       email: session.email,
       phone: session.phone,
       password: hashedPassword,
+      provider: "local",
       isEmailVerified: true,
       referralCode: session.referralCode,
       createdAt: new Date(),

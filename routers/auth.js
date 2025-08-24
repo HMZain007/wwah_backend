@@ -49,7 +49,6 @@ router.post("/google-login", async (req, res) => {
         profilePic: picture,
         provider: "google",
         googleId: googleId,
-        // Set default values for required fields from your schema
         phone: "", // You might want to request this separately
         isVerified: true, // Google accounts are pre-verified
       });

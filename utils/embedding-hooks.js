@@ -9,8 +9,7 @@ const FRONTEND_URLS =
     : [process.env.NEXTJS_APP_URL]; // Development fallback
 
 const WEBHOOK_SECRET =
-  process.env.WEBHOOK_SECRET ||
-  "8f3fda4b91822b4a0d5b2a27947f9f21a8cbbd1a124a20aa8b2f76f0e6cfac12";
+  process.env.WEBHOOK_SECRET || "8f3fda4b91822b4a0d5b2a27947f9f21a8cbbd1a124a20aa8b2f76f0e6cfac12";
 
 // Helper function to trigger webhooks on all frontends
 async function triggerEmbeddingWebhooks(
@@ -87,8 +86,14 @@ async function triggerEmbeddingWebhooks(
 class ExpressDbHooks {
   static async createUser(userData) {
     try {
-      // Create user in database first
-      const newUser = new UserDb(userData);
+      if ((userData.provider || "local") === "local" && !userData.password) {
+        throw new Error("Password is required for local users");
+      }
+
+      const newUser = new UserDb({
+        ...userData,
+        provider: userData.provider || "local", // default to local if not provided
+      });
       await newUser.save();
 
       // Trigger embedding creation on all frontends
