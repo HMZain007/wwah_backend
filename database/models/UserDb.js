@@ -77,6 +77,7 @@ const appliedScholarshipCourseSchema = new mongoose.Schema(
       default: Date.now,
     },
     ScholarshipId: {
+    ScholarshipId: {
       type: String,
       trim: true,
     },
@@ -99,10 +100,33 @@ const appliedScholarshipCourseSchema = new mongoose.Schema(
         "visa-rejected",
         "ready-to-fly",
       ],
+      enum: [
+        "pending",
+        "submitted",
+        "approved",
+        "rejected",
+        "incomplete-application",
+        "complete-application",
+        "awaiting-course-confirmation",
+        "pay-application-fee",
+        "in-process",
+        "application-withdrawn",
+        "application-successful",
+        "application-unsuccessful",
+        "visa-in-process",
+        "visa-rejected",
+        "ready-to-fly",
+      ],
       default: "pending",
     },
     applicationStatus: {
       type: Number,
+      enum: [1, 2, 3, 4, 5, 6, 7], // Progress tracking steps
+      default: 1,
+    },
+    statusId: {
+      type: Number,
+      enum: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], // Detailed status from APPLICATION_STATUS
       enum: [1, 2, 3, 4, 5, 6, 7], // Progress tracking steps
       default: 1,
     },
@@ -269,6 +293,7 @@ const userSchema = new mongoose.Schema(
     },
   },
   {
+    timestamps: true,
     timestamps: true,
     toJSON: {
       transform: function (doc, ret) {
