@@ -12,6 +12,11 @@ const appliedCourseSchema = new mongoose.Schema(
       enum: [1, 2, 3, 4, 5, 6, 7],
       default: 1,
     },
+    statusId: {
+      type: Number,
+      enum: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+      default: 1,
+    },
     isConfirmed: {
       type: Boolean,
       default: false,
