@@ -12,6 +12,11 @@ const appliedCourseSchema = new mongoose.Schema(
       enum: [1, 2, 3, 4, 5, 6, 7],
       default: 1,
     },
+    statusId: {
+      type: Number,
+      enum: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+      default: 1,
+    },
     isConfirmed: {
       type: Boolean,
       default: false,
@@ -56,7 +61,6 @@ const appliedScholarshipCourseSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-
     scholarshipType: {
       type: String,
       required: true,
@@ -136,11 +140,10 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
     },
-    // ✅ Password only required for local accounts
-    password: { type: String, required: function () { return this.provider === "local"; } },
-    provider: { type: String, enum: ["local", "google"], default: "local" },
-    googleId: { type: String, unique: true, sparse: true },
-    isVerified: { type: Boolean, default: false },
+    password: {
+      type: String,
+      required: true,
+    },
     phone: {
       type: Number,
     },
@@ -241,6 +244,10 @@ const userSchema = new mongoose.Schema(
     },
     otpVerified: { type: Boolean, default: false },
     profilePic: { type: String },
+    provider: { type: String, enum: ["local", "google"], default: "local" },
+    googleId: { type: String, unique: true, sparse: true },
+    isVerified: { type: Boolean, default: false },
+
     favouriteCourse: { type: [String], default: [] },
     favouriteScholarship: { type: [String], default: [] },
     favouriteUniversity: { type: [String], default: [] },

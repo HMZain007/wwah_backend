@@ -12,14 +12,16 @@ function normalizeAppliedCourses(appliedCourses = []) {
       return {
         courseId: item,
         applicationStatus: 1, // Default to first status
+        statusId: 1, // ✅ CRITICAL: Default statusId
         isConfirmed: false, // Default confirmation status
       };
     }
 
-    // Return only schema fields
+    // Return only schema fields - ENSURE statusId is included
     return {
       courseId: item.courseId,
       applicationStatus: item.applicationStatus || 1,
+      statusId: item.statusId || 1, // ✅ CRITICAL: Always include statusId
       isConfirmed: item.isConfirmed || false,
       createdAt: item.createdAt,
       updatedAt: item.updatedAt,
@@ -98,8 +100,10 @@ router.get("/", authenticateToken, async (req, res) => {
       });
     }
 
-    // Normalize the data to ensure consistent object format with ONLY schema fields
+    // Normalize the data to ensure consistent object format with ALL schema fields
     const normalizedCourses = normalizeAppliedCourses(user.appliedCourses);
+
+    console.log("✅ Normalized courses with statusId:", normalizedCourses); // Debug log
 
     res.json({
       success: true,
@@ -245,11 +249,10 @@ router.post("/", authenticateToken, async (req, res) => {
   }
 });
 
-// ✅ FIXED: PUT route to update tracking status for a specific course (ADMIN & USER)
 router.put("/tracking/:courseId", async (req, res) => {
   try {
     const { courseId } = req.params;
-    const { applicationStatus, userId: targetUserId } = req.body;
+    const { applicationStatus, statusId, userId: targetUserId } = req.body;
 
     // For admin updates, use the provided userId, otherwise use authenticated user
     const userId = targetUserId || req.user?.id || req.userId;
@@ -257,6 +260,7 @@ router.put("/tracking/:courseId", async (req, res) => {
     console.log("📝 Status update request:", {
       courseId,
       applicationStatus,
+      statusId,
       userId,
       targetUserId,
       isAdminUpdate: !!targetUserId,
@@ -277,6 +281,17 @@ router.put("/tracking/:courseId", async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "applicationStatus must be a number between 1 and 7",
+      });
+    }
+
+    // Validate statusId
+    if (
+      statusId &&
+      ![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].includes(Number(statusId))
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "statusId must be a number between 1 and 11",
       });
     }
 
@@ -314,13 +329,20 @@ router.put("/tracking/:courseId", async (req, res) => {
       // Convert string format to object format
       user.appliedCourses[courseIndex] = {
         courseId: user.appliedCourses[courseIndex],
-        applicationStatus: Number(applicationStatus),
+        applicationStatus: applicationStatus ? Number(applicationStatus) : 1,
+        statusId: statusId ? Number(statusId) : 1,
+        isConfirmed: false, // ✅ CRITICAL: Include isConfirmed
         updatedAt: new Date(),
       };
     } else {
       // Update existing object
-      user.appliedCourses[courseIndex].applicationStatus =
-        Number(applicationStatus);
+      if (applicationStatus !== undefined) {
+        user.appliedCourses[courseIndex].applicationStatus =
+          Number(applicationStatus);
+      }
+      if (statusId !== undefined) {
+        user.appliedCourses[courseIndex].statusId = Number(statusId);
+      }
       user.appliedCourses[courseIndex].updatedAt = new Date();
     }
 
@@ -329,17 +351,27 @@ router.put("/tracking/:courseId", async (req, res) => {
 
     console.log("✅ Course status updated successfully:", {
       courseId,
-      newStatus: applicationStatus,
+      newApplicationStatus: applicationStatus,
+      newStatusId: statusId,
       userId,
+      updatedCourse: user.appliedCourses[courseIndex], // Log the actual updated course
     });
+
+    // ✅ CRITICAL: Return the normalized courses with ALL fields
+    const normalizedCourses = normalizeAppliedCourses(
+      updatedUser.appliedCourses
+    );
 
     res.json({
       success: true,
       message: "Course tracking updated successfully",
       data: {
-        appliedCourses: normalizeAppliedCourses(updatedUser.appliedCourses),
+        appliedCourses: normalizedCourses, // ✅ Return normalized courses with statusId
         updatedCourseId: courseId,
-        newApplicationStatus: Number(applicationStatus),
+        newApplicationStatus: applicationStatus
+          ? Number(applicationStatus)
+          : undefined,
+        newStatusId: statusId ? Number(statusId) : undefined,
       },
     });
   } catch (error) {
@@ -641,6 +673,99 @@ router.put("/confirm/:courseId", authenticateToken, async (req, res) => {
       success: false,
       message: "Internal Server Error",
       error: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
+  }
+});
+
+router.get("/confirmed/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "User ID is required",
+      });
+    }
+
+    const user = await UserDb.findById(userId).select("appliedCourses");
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Filter for confirmed courses only
+    const allAppliedCourses = normalizeAppliedCourses(
+      user.appliedCourses || []
+    );
+    const confirmedCourses = allAppliedCourses.filter(
+      (course) => course.isConfirmed === true
+    );
+
+    console.log("✅ Confirmed courses filter result:", {
+      totalAppliedCourses: allAppliedCourses.length,
+      confirmedCourses: confirmedCourses.length,
+      confirmedCourseIds: confirmedCourses.map((c) => c.courseId),
+    });
+
+    res.json({
+      success: true,
+      message: "Confirmed applied courses fetched successfully",
+      data: {
+        appliedCourses: confirmedCourses,
+        totalConfirmedCourses: confirmedCourses.length,
+        totalAppliedCourses: allAppliedCourses.length,
+        confirmedCourseIds: confirmedCourses.map((course) => course.courseId),
+      },
+    });
+  } catch (error) {
+    console.error("❌ Error fetching confirmed applied courses:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+});
+
+// ✅ GET route to fetch confirmed courses for authenticated user
+router.get("/my-confirmed", authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user?.id || req.userId;
+    const user = await UserDb.findById(userId).select("appliedCourses");
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Filter for confirmed courses only
+    const allAppliedCourses = normalizeAppliedCourses(
+      user.appliedCourses || []
+    );
+    const confirmedCourses = allAppliedCourses.filter(
+      (course) => course.isConfirmed === true
+    );
+
+    res.json({
+      success: true,
+      message: "Confirmed applied courses fetched successfully",
+      data: {
+        appliedCourses: confirmedCourses,
+        totalConfirmedCourses: confirmedCourses.length,
+        totalAppliedCourses: allAppliedCourses.length,
+        confirmedCourseIds: confirmedCourses.map((course) => course.courseId),
+      },
+    });
+  } catch (error) {
+    console.error("❌ Error fetching confirmed applied courses:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
     });
   }
 });
