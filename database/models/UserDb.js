@@ -140,10 +140,10 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
     },
-    password: {
-      type: String,
-      required: true,
-    },
+    password: { type: String, required: function () { return this.provider === "local"; } },
+    provider: { type: String, enum: ["local", "google"], default: "local" },
+    googleId: { type: String, unique: true, sparse: true },
+    isVerified: { type: Boolean, default: false },
     phone: {
       type: Number,
     },
@@ -244,9 +244,7 @@ const userSchema = new mongoose.Schema(
     },
     otpVerified: { type: Boolean, default: false },
     profilePic: { type: String },
-    provider: { type: String, enum: ["local", "google"], default: "local" },
-    googleId: { type: String, unique: true, sparse: true },
-    isVerified: { type: Boolean, default: false },
+
 
     favouriteCourse: { type: [String], default: [] },
     favouriteScholarship: { type: [String], default: [] },
