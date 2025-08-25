@@ -36,6 +36,9 @@ const appliedScholarshipCourseSchema = new mongoose.Schema(
     banner: {
       type: String,
     },
+    logo: {
+      type: String,
+    },
     hostCountry: {
       type: String,
       required: true,
