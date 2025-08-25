@@ -17,6 +17,7 @@ router.post("/apply", async (req, res) => {
       scholarshipType,
       deadline,
       banner,
+      logo,
       ScholarshipId, // Added scholarshipId to identify the course
     } = req.body;
     console.log(req.body, "req.body in apply route");
@@ -33,6 +34,7 @@ router.post("/apply", async (req, res) => {
       scholarshipType: !scholarshipType,
       deadline: !deadline,
       banner: !banner,
+      logo:!logo,
       ScholarshipId: !ScholarshipId, // Ensure scholarshipId is provided
     };
 
@@ -84,6 +86,7 @@ router.post("/apply", async (req, res) => {
       scholarshipType,
       deadline,
       banner,
+      logo,
       appliedDate: new Date(),
       status: "pending",
     };
