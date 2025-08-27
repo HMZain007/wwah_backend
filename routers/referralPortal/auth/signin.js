@@ -70,7 +70,7 @@ router.post("/", async (req, res) => {
   } catch (error) {
     // Log the error and send a generic response
     console.error(
-      `[${new Date().toISOString()}] Backend error: ${error.message}`
+      `${new Date().toISOString()}] Backend error: ${error.message}`
     );
     return res.status(500).json({
       message: "An internal server error occurred.",

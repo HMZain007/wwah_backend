@@ -54,6 +54,7 @@ const profileController = {
   // Personal Information Controller
   personalInfomation: async (req, res) => {
     const {
+      fullName,
       contactNo,
       dob,
       countryCode,
@@ -81,6 +82,7 @@ const profileController = {
         { _id: userId },
         {
           $set: {
+            fullName,
             contactNo,
             dob,
             countryCode,
