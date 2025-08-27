@@ -12,7 +12,6 @@ const userSuccessDb = require('../database/models/successChance');
 router.get("/data", authenticateToken, async (req, res) => {
   console.log("Fetching user data...");
   const id = req.user.id;
-
   try {
     // Fetch basic user information
     const basicInfo = await UserDb.findById(id);

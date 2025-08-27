@@ -48,7 +48,19 @@ const getUniversities = require("./routers/getUniversities");
 // regferalportal
 const refSignUp = require("./routers/referralPortal/auth/signup");
 const refSignIn = require("./routers/referralPortal/auth/signin");
+const refProfile = require("./routers/referralPortal/refProfile");
 const refupdateProfile = require("./routers/referralPortal/refupdateprofile");
+const refPortalAuth = require("./routers/referralPortal/refPortalAuth");
+const refforget = require("./routers/referralPortal/auth/forget");
+const refverifyOtp = require("./routers/referralPortal/auth/verifyotp");
+const refresetpassword = require("./routers/referralPortal/auth/resetpassword");
+// const refPaymentInformation = require("./routers/referralPortal/refPaymentInformationRoutes");
+// const refCommissionRoutes = require("./routers/referralPortal/commissionRoutes");
+const refcontact = require("./routers/referralPortal/refcontact");
+
+// Middleware for parsing request bodies
+server.use(bodyParser.json());
+server.use(bodyParser.urlencoded({ extended: true }));
 // In your main app.js or server.js
 const path = require("path");
 // Middleware
@@ -227,7 +239,7 @@ server.use(
 server.use("/signup", signUp); // User signup
 server.use("/createAdmin", createAdminRoute); // User signup
 server.use("/signin", signIn); // User signin
-server.use("/profile", profile); // User profile
+server.use("/profile", profile);
 server.use("/forgotpassword", forgotPassword); // Forgot password
 server.use("/verifyOtp", verifyOtp); // Verify OTP
 server.use("/resetpassword", resetPassword); // Reset password
@@ -262,6 +274,13 @@ server.use("/profile", require("./routers/embedding-refresh"));
 server.use("/refportal/signup", refSignUp);
 server.use("/refportal/signin", refSignIn);
 server.use("/refupdateprofile", refupdateProfile);
+server.use("/refprofile", refProfile);
+server.use("/refportal/auth", refPortalAuth);
+server.use("/refportal", refPortalAuth);
+server.use("/refportal/forgotpassword", refforget);
+server.use("/refportal/verifyotp", refverifyOtp);
+server.use("/refportal/resetpassword", refresetpassword);
+server.use("/refcontact", refcontact);
 // Default route
 server.get("/", async (req, res) => {
   try {
