@@ -109,47 +109,152 @@ const profileController = {
   },
 
   // Update Personal Information Controller
+  // updatePersonalInfomation: async (req, res) => {
+  //   const { firstName, lastName, phone } = req.body;
+  //   console.log(
+  //     req.body,
+  //     "update personal information from req.body of updatePersonalInfomation controller"
+  //   );
+  //   try {
+  //     const userId = req.user?.id || req.user?._id;
+  //     console.log(userId);
+  //     if (!userId) {
+  //       return res
+  //         .status(401)
+  //         .json({ message: "Login required.", success: false });
+  //     }
+
+  //     const updatePersonalInformation = await UserRefDb.findOneAndUpdate(
+  //       { _id: userId }, // Find by user ID
+  //       {
+  //         $set: {
+  //           firstName,
+  //           lastName,
+  //           phone,
+  //         },
+  //       },
+  //       { new: true, upsert: true } // Return the updated document or insert if not found
+  //     );
+
+  //     return res.status(200).json({
+  //       message: "Presonal information updated successfully.",
+  //       success: true,
+  //       data: updatePersonalInformation,
+  //     });
+  //   } catch (error) {
+  //     console.error(`Error updating Presonal information: ${error}`);
+  //     return res.status(500).json({
+  //       message: "Internal server error while updating Presonal information.",
+  //       success: false,
+  //     });
+  //   }
+  // },
   updatePersonalInfomation: async (req, res) => {
-    const { firstName, lastName, phone } = req.body;
-    console.log(
-      req.body,
-      "update personal information from req.body of updatePersonalInfomation controller"
-    );
+    console.log("=== UPDATE PERSONAL INFORMATION START ===");
+    console.log("Request body:", req.body);
+    console.log("User from token:", req.user);
+
+    const {
+      firstName,
+      lastName,
+      phone,
+      profilePictureUrl, // Frontend sends this
+      coverPhotoUrl, // Frontend sends this
+    } = req.body;
+
     try {
       const userId = req.user?.id || req.user?._id;
-      console.log(userId);
+      console.log("User ID:", userId);
+
       if (!userId) {
+        console.log("No user ID found - unauthorized");
         return res
           .status(401)
           .json({ message: "Login required.", success: false });
       }
 
+      // Prepare update object - map frontend field names to database field names
+      const updateFields = {};
+
+      if (firstName !== undefined) updateFields.firstName = firstName;
+      if (lastName !== undefined) updateFields.lastName = lastName;
+      if (phone !== undefined) updateFields.phone = phone;
+
+      // Map frontend field names to database field names
+      if (profilePictureUrl !== undefined) {
+        updateFields.profilePicture = profilePictureUrl; // Database field name
+        console.log("Setting profilePicture to:", profilePictureUrl);
+      }
+      if (coverPhotoUrl !== undefined) {
+        updateFields.coverPhoto = coverPhotoUrl; // Database field name
+        console.log("Setting coverPhoto to:", coverPhotoUrl);
+      }
+
+      console.log("Update fields prepared:", updateFields);
+      console.log("Searching for user with ID:", userId);
+
+      // Find user first to verify it exists
+      const existingUser = await UserRefDb.findById(userId);
+      if (!existingUser) {
+        console.log("User not found with ID:", userId);
+        return res
+          .status(404)
+          .json({ message: "User not found.", success: false });
+      }
+
+      console.log("Existing user found:", {
+        id: existingUser._id,
+        email: existingUser.email,
+        currentProfilePicture: existingUser.profilePicture,
+        currentCoverPhoto: existingUser.coverPhoto,
+      });
+
+      // Update user information
       const updatePersonalInformation = await UserRefDb.findOneAndUpdate(
         { _id: userId }, // Find by user ID
-        {
-          $set: {
-            firstName,
-            lastName,
-            phone,
-          },
-        },
-        { new: true, upsert: true } // Return the updated document or insert if not found
+        { $set: updateFields },
+        { new: true, runValidators: true } // Return the updated document and run validators
       );
 
+      console.log(
+        "Update result:",
+        updatePersonalInformation ? "Success" : "Failed"
+      );
+
+      if (!updatePersonalInformation) {
+        console.log("Update failed - user not found or update unsuccessful");
+        return res.status(404).json({
+          message: "User not found or update failed.",
+          success: false,
+        });
+      }
+
+      console.log("Updated user data:", {
+        id: updatePersonalInformation._id,
+        profilePicture: updatePersonalInformation.profilePicture,
+        coverPhoto: updatePersonalInformation.coverPhoto,
+        firstName: updatePersonalInformation.firstName,
+        lastName: updatePersonalInformation.lastName,
+      });
+
+      console.log("=== UPDATE PERSONAL INFORMATION SUCCESS ===");
       return res.status(200).json({
-        message: "Presonal information updated successfully.",
+        message: "Personal information updated successfully.",
         success: true,
         data: updatePersonalInformation,
       });
     } catch (error) {
-      console.error(`Error updating Presonal information: ${error}`);
+      console.error("=== UPDATE PERSONAL INFORMATION ERROR ===");
+      console.error("Error details:", error);
+      console.error("Error stack:", error.stack);
+
       return res.status(500).json({
-        message: "Internal server error while updating Presonal information.",
+        message: "Internal server error while updating personal information.",
         success: false,
+        error: error.message,
       });
     }
   },
-
   // Academic Information Controller
   academicInformation: async (req, res) => {
     // Destructure request body
