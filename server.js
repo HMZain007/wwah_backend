@@ -57,6 +57,7 @@ const refresetpassword = require("./routers/referralPortal/auth/resetpassword");
 // const refPaymentInformation = require("./routers/referralPortal/refPaymentInformationRoutes");
 // const refCommissionRoutes = require("./routers/referralPortal/commissionRoutes");
 const refcontact = require("./routers/referralPortal/refcontact");
+const mbaData = require("./routers/adminDashboard/mbaData");
 
 // Middleware for parsing request bodies
 server.use(bodyParser.json());
@@ -281,6 +282,8 @@ server.use("/refportal/forgotpassword", refforget);
 server.use("/refportal/verifyotp", refverifyOtp);
 server.use("/refportal/resetpassword", refresetpassword);
 server.use("/refcontact", refcontact);
+server.use("/adminDashboard/mbaData", mbaData);
+
 // Default route
 server.get("/", async (req, res) => {
   try {

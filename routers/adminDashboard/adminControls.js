@@ -1,20 +1,3 @@
-// const express = require("express");
-// const router = express.Router();
-// const authenticateToken = require("../../middlewares/authMiddleware");
-// const adminDashboardController = require("../../controller/adminDashboardController");
-
-// router.post(
-//   "/createPaymentTrack",
-//   authenticateToken,
-//   adminDashboardController.createPaymentTrack
-// );
-// router.get(
-//   "/getPayments/:studentid",
-//   adminDashboardController.getPayments
-// );
-
-// module.exports = router;
-
 const express = require("express");
 const router = express.Router();
 const authenticateToken = require("../../middlewares/authMiddleware");
