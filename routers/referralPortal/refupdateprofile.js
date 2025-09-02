@@ -45,5 +45,18 @@ router.put(
   profileController.changePassword
 );
 
+// **ADDITION: Add GET route for payment information**
+router.get(
+  "/getPaymentInformation",
+  authenticateToken,
+  profileController.getPaymentInformation
+);
+// **ADDITION: Add PATCH route for updating payment information**
+router.patch(
+  "/updatePaymentInformation",
+  authenticateToken,
+  profileController.updatePaymentInformation
+);
+
 
 module.exports = router;
