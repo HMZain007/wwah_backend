@@ -7,6 +7,7 @@ const UserDb = require("../database/models/UserDb");
 const jwt = require("jsonwebtoken");
 const { send } = require("process");
 const { ExpressDbHooks } = require("../utils/embedding-hooks");
+const UserRefDb = require("../database/models/refPortal/refuser");
 
 const router = express.Router();
 const REQUIRED_FIELDS = ["firstName", "lastName", "email", "phone", "password"];
@@ -186,8 +187,109 @@ router.post("/verify-otp", async (req, res) => {
     });
   }
 });
+const processReferralCode = async (referralCode, studentData) => {
+  try {
+    if (!referralCode || referralCode.trim() === "") {
+      console.log("No referral code provided, skipping referral processing");
+      return { success: true, message: "No referral code provided" };
+    }
 
-// ✅ Complete Registration with Embedding Integration
+    console.log("Processing referral code:", referralCode.trim());
+
+    // Find the MBA with the matching referral code
+    const mbaUser = await UserRefDb.findOne({
+      referralCode: referralCode.trim(),
+    });
+
+    if (!mbaUser) {
+      console.log("Invalid referral code:", referralCode);
+      return {
+        success: false,
+        message: "Invalid referral code. Please check and try again.",
+      };
+    }
+
+    console.log("Found MBA for referral code:", {
+      mbaName: mbaUser.firstName + " " + mbaUser.lastName,
+      referralCode: mbaUser.referralCode,
+      currentReferrals: mbaUser.totalReferrals || 0,
+      mbaCreatedAt: mbaUser.createdAt, // Log MBA's original creation date
+    });
+
+    // Check if student is already in this MBA's referrals (prevent duplicates)
+    const existingReferral = mbaUser.referrals.find(
+      (ref) => ref.id === studentData._id.toString()
+    );
+
+    if (existingReferral) {
+      console.log("Student already referred by this MBA");
+      return { success: true, message: "Student already referred by this MBA" };
+    }
+
+    const currentTimestamp = new Date();
+
+    // Create referral object to add to MBA's referrals array
+    const newReferral = {
+      firstName: studentData.firstName,
+      lastName: studentData.lastName,
+      id: studentData._id.toString(),
+      profilePicture: studentData.profilePicture || null,
+      createdAt: currentTimestamp, // When this referral was made
+      status: "pending",
+    };
+
+    // Update object for MBA - including lastReferralAt timestamp
+    const updateData = {
+      $push: { referrals: newReferral },
+      $inc: { totalReferrals: 1 },
+      lastReferralAt: currentTimestamp, // Track when MBA last made a referral
+      firstReferralAt: mbaUser.firstReferralAt || null, // Preserve existing firstReferralAt
+    };
+
+    // If this is MBA's first referral, also set firstReferralAt
+    if (!mbaUser.totalReferrals || mbaUser.totalReferrals === 0) {
+      updateData.firstReferralAt = currentTimestamp;
+    }
+
+    // Add student to MBA's referrals array and increment totalReferrals
+    const updatedMBA = await UserRefDb.findByIdAndUpdate(
+      mbaUser._id,
+      updateData,
+      { new: true }
+    );
+
+    console.log("Successfully added student to MBA referrals:", {
+      mbaId: mbaUser._id,
+      mbaName: mbaUser.firstName + " " + mbaUser.lastName,
+      mbaCreatedAt: mbaUser.createdAt,
+      firstReferralAt: updatedMBA.firstReferralAt,
+      lastReferralAt: updatedMBA.lastReferralAt,
+      studentId: studentData._id,
+      studentName: studentData.firstName + " " + studentData.lastName,
+      newTotalReferrals: updatedMBA.totalReferrals,
+      referralCreatedAt: currentTimestamp,
+    });
+
+    return {
+      success: true,
+      message: "Referral processed successfully",
+      mbaUser: {
+        firstName: mbaUser.firstName,
+        lastName: mbaUser.lastName,
+        referralCode: mbaUser.referralCode,
+        totalReferrals: updatedMBA.totalReferrals,
+        createdAt: mbaUser.createdAt, // MBA's original account creation
+        firstReferralAt: updatedMBA.firstReferralAt, // When MBA made their first referral
+        lastReferralAt: updatedMBA.lastReferralAt, // When MBA made their latest referral
+      },
+    };
+  } catch (error) {
+    console.error("Error processing referral code:", error);
+    return { success: false, message: "Failed to process referral code" };
+  }
+};
+
+// ✅ Updated Complete Registration with Referral Processing
 router.post("/complete-signup", async (req, res) => {
   try {
     const { sessionId, password: providedPassword } = req.body;
@@ -233,14 +335,47 @@ router.post("/complete-signup", async (req, res) => {
       password: hashedPassword,
       provider: "local",
       isEmailVerified: true,
-      referralCode: session.referralCode,
+      referralCode: session.referralCode, // Store the referral code used by student
       createdAt: new Date(),
     };
 
     // 🚀 Create user with embedding integration
-    console.log("Creating user with embeddings...");
+    console.log("Creating student user with embeddings...");
     const newUser = await ExpressDbHooks.createUser(userData);
-    console.log("User created successfully with embeddings:", newUser._id);
+
+    console.log(
+      "Student user created successfully with embeddings:",
+      newUser._id
+    );
+
+    // 🆕 Process referral code if provided
+    let referralProcessed = false;
+    let referralMessage = "";
+    let mbaInfo = null;
+
+    if (session.referralCode) {
+      console.log(
+        "Processing referral code for student:",
+        session.referralCode
+      );
+
+      const referralResult = await processReferralCode(
+        session.referralCode,
+        newUser
+      );
+
+      if (referralResult.success && referralResult.mbaUser) {
+        console.log("Referral processing successful:", referralResult.message);
+        referralProcessed = true;
+        mbaInfo = referralResult.mbaUser;
+        referralMessage = `Successfully referred by ${referralResult.mbaUser.firstName} ${referralResult.mbaUser.lastName}`;
+      } else {
+        console.log("Referral processing failed:", referralResult.message);
+        referralMessage = referralResult.message;
+        // Note: We don't fail the signup if referral processing fails
+        // The account is still created, but referral might not be tracked
+      }
+    }
 
     // Generate JWT token
     const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET_KEY, {
@@ -257,14 +392,21 @@ router.post("/complete-signup", async (req, res) => {
 
     // Clean up session
     otpSessions.delete(sessionId);
-    console.log("User successfully signed up with embeddings");
+    console.log(
+      "Student user successfully signed up with embeddings and referral processing complete"
+    );
 
-    // Success response
+    // Success response with enhanced referral information
     res.status(201).json({
       message: "User successfully signed up and embeddings created",
       success: true,
       signup: true,
       token,
+      referral: {
+        processed: referralProcessed,
+        message: referralMessage,
+        mbaInfo: mbaInfo, // Include MBA details with timestamps
+      },
       data: {
         _id: newUser._id,
         firstName: newUser.firstName,
@@ -272,10 +414,12 @@ router.post("/complete-signup", async (req, res) => {
         email: newUser.email,
         phone: newUser.phone,
         isEmailVerified: newUser.isEmailVerified,
+        referralCodeUsed: session.referralCode || null,
+        createdAt: newUser.createdAt, // Student's account creation time
       },
     });
   } catch (err) {
-    console.error("Complete signup error:", err);
+    console.error("Complete student signup error:", err);
 
     // More specific error handling
     if (err.code === 11000) {
@@ -292,6 +436,336 @@ router.post("/complete-signup", async (req, res) => {
     });
   }
 });
+// const processReferralCode = async (referralCode, studentData) => {
+//   try {
+//     if (!referralCode || referralCode.trim() === "") {
+//       console.log("No referral code provided, skipping referral processing");
+//       return { success: true, message: "No referral code provided" };
+//     }
+
+//     console.log("Processing referral code:", referralCode.trim());
+
+//     // Find the MBA with the matching referral code
+//     const mbaUser = await UserRefDb.findOne({
+//       referralCode: referralCode.trim(),
+//     });
+
+//     if (!mbaUser) {
+//       console.log("Invalid referral code:", referralCode);
+//       return {
+//         success: false,
+//         message: "Invalid referral code. Please check and try again.",
+//       };
+//     }
+
+//     console.log("Found MBA for referral code:", {
+//       mbaName: mbaUser.firstName + " " + mbaUser.lastName,
+//       referralCode: mbaUser.referralCode,
+//       currentReferrals: mbaUser.totalReferrals || 0,
+//     });
+
+//     // Check if student is already in this MBA's referrals (prevent duplicates)
+//     const existingReferral = mbaUser.referrals.find(
+//       (ref) => ref.id === studentData._id.toString()
+//     );
+
+//     if (existingReferral) {
+//       console.log("Student already referred by this MBA");
+//       return { success: true, message: "Student already referred by this MBA" };
+//     }
+
+//     // Create referral object to add to MBA's referrals array
+//     const newReferral = {
+//       firstName: studentData.firstName,
+//       lastName: studentData.lastName,
+//       id: studentData._id.toString(),
+//       profilePicture: studentData.profilePicture || null,
+//       createdAt: new Date(),
+//       status: "pending",
+//     };
+
+//     // Add student to MBA's referrals array and increment totalReferrals
+//     const updatedMBA = await UserRefDb.findByIdAndUpdate(
+//       mbaUser._id,
+//       {
+//         $push: { referrals: newReferral },
+//         $inc: { totalReferrals: 1 },
+//       },
+//       { new: true }
+//     );
+
+//     console.log("Successfully added student to MBA referrals:", {
+//       mbaId: mbaUser._id,
+//       mbaName: mbaUser.firstName + " " + mbaUser.lastName,
+//       studentId: studentData._id,
+//       studentName: studentData.firstName + " " + studentData.lastName,
+//       newTotalReferrals: updatedMBA.totalReferrals,
+//     });
+
+//     return {
+//       success: true,
+//       message: "Referral processed successfully",
+//       mbaUser: {
+//         firstName: mbaUser.firstName,
+//         lastName: mbaUser.lastName,
+//         referralCode: mbaUser.referralCode,
+//         totalReferrals: updatedMBA.totalReferrals,
+//       },
+//     };
+//   } catch (error) {
+//     console.error("Error processing referral code:", error);
+//     return { success: false, message: "Failed to process referral code" };
+//   }
+// };
+
+// // ✅ Updated Complete Registration with Referral Processing
+// router.post("/complete-signup", async (req, res) => {
+//   try {
+//     const { sessionId, password: providedPassword } = req.body;
+//     const session = otpSessions.get(sessionId);
+//     console.log(
+//       "Session data for completion:",
+//       session ? "Found" : "Not found"
+//     );
+
+//     if (!session || !session.verified) {
+//       return res.status(400).json({
+//         message: "Invalid session or OTP not verified",
+//         success: false,
+//       });
+//     }
+
+//     if (new Date() > session.expiresAt) {
+//       otpSessions.delete(sessionId);
+//       return res.status(400).json({
+//         message: "Session expired",
+//         success: false,
+//       });
+//     }
+
+//     // Use password from session or provided password (for flexibility)
+//     const passwordToUse = providedPassword || session.password;
+
+//     if (!passwordToUse || passwordToUse.length < 8) {
+//       return res.status(400).json({
+//         message: "Password must be at least 8 characters long",
+//         success: false,
+//       });
+//     }
+
+//     const hashedPassword = await bcrypt.hash(passwordToUse, 12);
+
+//     // Create user data object
+//     const userData = {
+//       firstName: session.firstName,
+//       lastName: session.lastName,
+//       email: session.email,
+//       phone: session.phone,
+//       password: hashedPassword,
+//       provider: "local",
+//       isEmailVerified: true,
+//       referralCode: session.referralCode, // Store the referral code used by student
+//       createdAt: new Date(),
+//     };
+
+//     // 🚀 Create user with embedding integration
+//     console.log("Creating student user with embeddings...");
+//     const newUser = await ExpressDbHooks.createUser(userData);
+
+//     console.log(
+//       "Student user created successfully with embeddings:",
+//       newUser._id
+//     );
+
+//     // 🆕 Process referral code if provided
+//     let referralProcessed = false;
+//     let referralMessage = "";
+
+//     if (session.referralCode) {
+//       console.log(
+//         "Processing referral code for student:",
+//         session.referralCode
+//       );
+
+//       const referralResult = await processReferralCode(
+//         session.referralCode,
+//         newUser
+//       );
+
+//       if (referralResult.success && referralResult.mbaUser) {
+//         console.log("Referral processing successful:", referralResult.message);
+//         referralProcessed = true;
+//         referralMessage = `Successfully referred by ${referralResult.mbaUser.firstName} ${referralResult.mbaUser.lastName}`;
+//       } else {
+//         console.log("Referral processing failed:", referralResult.message);
+//         referralMessage = referralResult.message;
+//         // Note: We don't fail the signup if referral processing fails
+//         // The account is still created, but referral might not be tracked
+//       }
+//     }
+
+//     // Generate JWT token
+//     const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET_KEY, {
+//       expiresIn: "1h",
+//     });
+
+//     // Set cookie
+//     res.cookie("authToken", token, {
+//       httpOnly: true,
+//       sameSite: "None",
+//       secure: true,
+//       maxAge: 24 * 60 * 60 * 1000, // 1 day
+//     });
+
+//     // Clean up session
+//     otpSessions.delete(sessionId);
+//     console.log(
+//       "Student user successfully signed up with embeddings and referral processing complete"
+//     );
+
+//     // Success response with referral information
+//     res.status(201).json({
+//       message: "User successfully signed up and embeddings created",
+//       success: true,
+//       signup: true,
+//       token,
+//       referral: {
+//         processed: referralProcessed,
+//         message: referralMessage,
+//       },
+//       data: {
+//         _id: newUser._id,
+//         firstName: newUser.firstName,
+//         lastName: newUser.lastName,
+//         email: newUser.email,
+//         phone: newUser.phone,
+//         isEmailVerified: newUser.isEmailVerified,
+//         referralCodeUsed: session.referralCode || null,
+//       },
+//     });
+//   } catch (err) {
+//     console.error("Complete student signup error:", err);
+
+//     // More specific error handling
+//     if (err.code === 11000) {
+//       // Duplicate key error
+//       return res.status(409).json({
+//         message: "Email is already registered",
+//         success: false,
+//       });
+//     }
+
+//     res.status(500).json({
+//       message: "Failed to create account. Please try again.",
+//       success: false,
+//     });
+//   }
+// });
+// router.post("/complete-signup", async (req, res) => {
+//   try {
+//     const { sessionId, password: providedPassword } = req.body;
+//     const session = otpSessions.get(sessionId);
+//     console.log(
+//       "Session data for completion:",
+//       session ? "Found" : "Not found"
+//     );
+
+//     if (!session || !session.verified) {
+//       return res.status(400).json({
+//         message: "Invalid session or OTP not verified",
+//         success: false,
+//       });
+//     }
+
+//     if (new Date() > session.expiresAt) {
+//       otpSessions.delete(sessionId);
+//       return res.status(400).json({
+//         message: "Session expired",
+//         success: false,
+//       });
+//     }
+
+//     // Use password from session or provided password (for flexibility)
+//     const passwordToUse = providedPassword || session.password;
+
+//     if (!passwordToUse || passwordToUse.length < 8) {
+//       return res.status(400).json({
+//         message: "Password must be at least 8 characters long",
+//         success: false,
+//       });
+//     }
+
+//     const hashedPassword = await bcrypt.hash(passwordToUse, 12);
+
+//     // Create user data object
+//     const userData = {
+//       firstName: session.firstName,
+//       lastName: session.lastName,
+//       email: session.email,
+//       phone: session.phone,
+//       password: hashedPassword,
+//       provider: "local",
+//       isEmailVerified: true,
+//       referralCode: session.referralCode,
+//       createdAt: new Date(),
+//     };
+
+//     // 🚀 Create user with embedding integration
+//     console.log("Creating user with embeddings...");
+//     const newUser = await ExpressDbHooks.createUser(userData);
+
+//     console.log("User created successfully with embeddings:", newUser._id);
+
+//     // Generate JWT token
+//     const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET_KEY, {
+//       expiresIn: "1h",
+//     });
+
+//     // Set cookie
+//     res.cookie("authToken", token, {
+//       httpOnly: true,
+//       sameSite: "None",
+//       secure: true,
+//       maxAge: 24 * 60 * 60 * 1000, // 1 day
+//     });
+
+//     // Clean up session
+//     otpSessions.delete(sessionId);
+//     console.log("User successfully signed up with embeddings");
+
+//     // Success response
+//     res.status(201).json({
+//       message: "User successfully signed up and embeddings created",
+//       success: true,
+//       signup: true,
+//       token,
+//       data: {
+//         _id: newUser._id,
+//         firstName: newUser.firstName,
+//         lastName: newUser.lastName,
+//         email: newUser.email,
+//         phone: newUser.phone,
+//         isEmailVerified: newUser.isEmailVerified,
+//       },
+//     });
+//   } catch (err) {
+//     console.error("Complete signup error:", err);
+
+//     // More specific error handling
+//     if (err.code === 11000) {
+//       // Duplicate key error
+//       return res.status(409).json({
+//         message: "Email is already registered",
+//         success: false,
+//       });
+//     }
+
+//     res.status(500).json({
+//       message: "Failed to create account. Please try again.",
+//       success: false,
+//     });
+//   }
+// });
 
 // ✅ Resend OTP (email only)
 router.post("/resend-otp", async (req, res) => {

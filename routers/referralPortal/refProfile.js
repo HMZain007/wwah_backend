@@ -20,7 +20,7 @@ router.get("/", authenticateToken, async (req, res) => {
     const workExp = await refWorkExperience.findOne({
       user: req.user.id,
     });
-    console.log(AcademmicInfo, "user from backend");
+    // console.log(AcademmicInfo, "user from backend");
     if (!user) {
       res.status(404).json({ message: "User not found Why" });
     } else res.json({ user, AcademmicInfo, paymentInfo, workExp });

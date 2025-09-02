@@ -28,7 +28,37 @@ emailTransporter.verify((error, success) => {
     console.log("Email transporter is ready to send messages!");
   }
 });
+const generateNextRefId = async () => {
+  try {
+    // Find the user with the highest refId
+    const lastUser = await UserRefDb.findOne({}, { refId: 1 })
+      .sort({ refId: -1 })
+      .lean();
 
+    // If no users exist, start with 1, otherwise increment
+    const nextRefId = lastUser && lastUser.refId ? lastUser.refId + 1 : 1;
+
+    return nextRefId;
+  } catch (error) {
+    console.error("Error generating refId:", error);
+    throw new Error("Failed to generate reference ID");
+  }
+};
+const generateReferralCode = (firstName, refId) => {
+  try {
+    // Get first 3 letters of first name in lowercase
+    const namePrefix = firstName.toLowerCase().substring(0, 3);
+
+    // Format refId as 3-digit string with leading zeros
+    const formattedRefId = refId.toString().padStart(3, "0");
+
+    // Combine: REF + namePrefix + formattedRefId
+    return `REF${namePrefix}${formattedRefId}`;
+  } catch (error) {
+    console.error("Error generating referral code:", error);
+    throw new Error("Failed to generate referral code");
+  }
+};
 // ✅ Send Email OTP
 const sendEmailOTP = async (email, otp) => {
   const mailOptions = {
@@ -56,8 +86,23 @@ const createUser = async (userData) => {
   try {
     console.log("Creating new user...");
 
+    // Generate unique refId
+    const refId = await generateNextRefId();
+    console.log("Generated refId:", refId);
+
+    // Generate referral code
+    const referralCode = generateReferralCode(userData.firstName, refId);
+    console.log("Generated referral code:", referralCode);
+
+    // Add refId and referralCode to userData
+    const userDataWithIds = {
+      ...userData,
+      refId,
+      referralCode,
+    };
+
     // Create new user instance
-    const newUser = new UserRefDb(userData);
+    const newUser = new UserRefDb(userDataWithIds);
 
     // Save user to database
     const savedUser = await newUser.save();
