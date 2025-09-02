@@ -4,6 +4,7 @@ const userPeferenceDb = require("../database/models/userPreference");
 const UserDb = require("../database/models/UserDb");
 const workExperience = require("../database/models/workExperience");
 const bcrypt = require("bcryptjs");
+const UserRefDb = require("../database/models/refPortal/refuser");
 
 const profileController = {
   // Update password
@@ -120,6 +121,52 @@ const profileController = {
         },
         { new: true }
       );
+      // 🆕 If profile picture was updated, sync it to MBA referrals
+      if (avatarUrl) {
+        try {
+          const updateResult = await UserRefDb.updateMany(
+            { "referrals.id": userId.toString() },
+            {
+              $set: {
+                "referrals.$.profilePicture": avatarUrl,
+                // Also update name if changed
+                ...(firstName && { "referrals.$.firstName": firstName }),
+                ...(lastName && { "referrals.$.lastName": lastName }),
+              },
+            }
+          );
+
+          console.log(
+            `Updated profile picture in ${updateResult.modifiedCount} MBA referral records`
+          );
+        } catch (syncError) {
+          console.error(
+            "Error syncing profile picture to MBA referrals:",
+            syncError
+          );
+          // Don't fail the main update if sync fails
+        }
+      }
+
+      // 🆕 If name was updated, sync it to MBA referrals (even without avatar update)
+      if ((firstName || lastName) && !avatarUrl) {
+        try {
+          const updateFields = {};
+          if (firstName) updateFields["referrals.$.firstName"] = firstName;
+          if (lastName) updateFields["referrals.$.lastName"] = lastName;
+
+          const updateResult = await UserRefDb.updateMany(
+            { "referrals.id": userId.toString() },
+            { $set: updateFields }
+          );
+
+          console.log(
+            `Updated name in ${updateResult.modifiedCount} MBA referral records`
+          );
+        } catch (syncError) {
+          console.error("Error syncing name to MBA referrals:", syncError);
+        }
+      }
 
       res.status(200).json({
         success: true,
