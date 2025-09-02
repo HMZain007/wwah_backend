@@ -880,5 +880,39 @@ const profileController = {
       });
     }
   },
+  // **ADDITION: Get Payment Information Controller**
+  getPaymentInformation: async (req, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({
+          message: "Login required to get payment information.",
+          success: false,
+        });
+      }
+      // Fetch payment information
+      const paymentInfo = await refPaymentInformation.findOne({
+        user: userId,
+      });
+      if (!paymentInfo) {
+        return res.status(404).json({
+          message: "No payment information found for this user.",
+          success: false,
+        });
+      }
+      // Success response
+      return res.status(200).json({
+        message: "Payment information retrieved successfully.",
+        success: true,
+        data: paymentInfo,
+      });
+    } catch (error) {
+      console.error("Error retrieving payment information:", error);
+      return res.status(500).json({
+        message: "Internal server error while retrieving payment information.",
+        success: false,
+      });
+    }
+  },
 };
 module.exports = profileController;
