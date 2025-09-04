@@ -1,629 +1,11 @@
-// const express = require("express");
-// const router = express.Router();
-// const authenticateToken = require("../middlewares/authMiddleware");
-// const userSuccessDb = require("../database/models/successChance");
-// const UserDb = require("../database/models/UserDb");
-// const { triggerEmbeddingWebhooks } = require("../utils/embedding-hooks"); // Fixed import
-
-// // Input validation middleware
-// const validateSuccessChanceInput = (req, res, next) => {
-//   console.log("Validating input for success chance data:", req.body);
-//   const {
-//     studyLevel,
-//     grade,
-//     dateOfBirth,
-//     nationality,
-//     majorSubject,
-//     livingCosts,
-//     tuitionFee,
-//     LanguageProficiency,
-//     years,
-//     StudyPreferenced,
-//   } = req.body;
-
-//   // Required fields validation
-//   const requiredFields = [
-//     { field: studyLevel, name: "Study Level" },
-//     { field: grade, name: "Grade" },
-//     { field: dateOfBirth, name: "Date of Birth" },
-//     { field: nationality, name: "Nationality" },
-//     { field: majorSubject, name: "Major Subject" },
-//   ];
-
-//   // Check required fields
-//   for (const { field, name } of requiredFields) {
-//     if (!field) {
-//       return res.status(400).json({
-//         success: false,
-//         message: `${name} is required`,
-//         field: name.toLowerCase().replace(/\s+/g, "_"),
-//       });
-//     }
-//   }
-
-//   // Validate grade object
-//   if (!grade || !grade.gradeType || !grade.score) {
-//     return res.status(400).json({
-//       success: false,
-//       message: "Grade type and score are required",
-//       field: "grade",
-//     });
-//   }
-
-//   // Validate living costs
-//   if (!livingCosts || !livingCosts.amount || !livingCosts.currency) {
-//     return res.status(400).json({
-//       success: false,
-//       message: "Living costs amount and currency are required",
-//       field: "livingCosts",
-//     });
-//   }
-
-//   // Validate Study Preferences
-//   if (
-//     !StudyPreferenced ||
-//     !StudyPreferenced.country ||
-//     !StudyPreferenced.degree ||
-//     !StudyPreferenced.subject
-//   ) {
-//     return res.status(400).json({
-//       success: false,
-//       message: "Study preferences (country, degree, and subject) are required",
-//       field: "StudyPreferenced",
-//     });
-//   }
-
-//   // Additional validations
-//   if (grade.score && isNaN(parseFloat(grade.score))) {
-//     return res.status(400).json({
-//       success: false,
-//       message: "Grade score must be a number",
-//       field: "grade.score",
-//     });
-//   }
-
-//   // Date of birth validation
-//   const dobRegex = /^\d{4}-\d{2}-\d{2}$/;
-//   if (dateOfBirth && !dobRegex.test(dateOfBirth)) {
-//     return res.status(400).json({
-//       success: false,
-//       message: "Date of birth must be in YYYY-MM-DD format",
-//       field: "dateOfBirth",
-//     });
-//   }
-//   next();
-// };
-
-// // Enhanced helper function to get combined user data for embeddings
-// const getCombinedUserData = async (userId) => {
-//   try {
-//     console.log(`🔍 Getting combined user data for userId: ${userId}`);
-
-//     // Get user data
-//     const user = await UserDb.findById(userId);
-//     if (!user) {
-//       console.error(`❌ User not found for userId: ${userId}`);
-//       return null;
-//     }
-
-//     // Get success chance data
-//     const successChance = await userSuccessDb.findOne({ userId });
-
-//     console.log(`📊 Found success chance data:`, !!successChance);
-
-//     // Create comprehensive combined data for better embeddings
-//     const combinedData = {
-//       _id: userId,
-//       // User profile data
-//       firstName: user.firstName,
-//       lastName: user.lastName,
-//       name: user.name,
-//       email: user.email,
-//       phone: user.phone,
-//       role: user.role,
-//       otpVerified: user.otpVerified,
-//       createdAt: user.createdAt,
-//       updatedAt: user.updatedAt,
-
-//       // Success chance data for embedding generation
-//       hasSuccessChanceData: !!successChance,
-//       successChanceData: successChance
-//         ? {
-//             studyLevel: successChance.studyLevel,
-//             gradeType: successChance.gradeType,
-//             grade: successChance.grade,
-//             dateOfBirth: successChance.dateOfBirth,
-//             nationality: successChance.nationality,
-//             majorSubject: successChance.majorSubject,
-//             livingCosts: successChance.livingCosts,
-//             tuitionFee: successChance.tuitionFee,
-//             languageProficiency: successChance.languageProficiency,
-//             workExperience: successChance.workExperience,
-//             studyPreferenced: successChance.studyPreferenced,
-//             // Add computed fields for better embedding context
-//             totalBudget:
-//               (successChance.livingCosts?.amount || 0) +
-//               (successChance.tuitionFee?.amount || 0),
-//             hasLanguageProficiency: !!(
-//               successChance.languageProficiency?.test &&
-//               successChance.languageProficiency?.score
-//             ),
-//             hasWorkExperience: !!(
-//               successChance.workExperience && successChance.workExperience > 0
-//             ),
-//             profileCompleteness: calculateProfileCompleteness(successChance),
-//           }
-//         : null,
-
-//       // Metadata for embedding generation
-//       lastUpdated: new Date(),
-//       embeddingContext: {
-//         dataSource: "user_profile_with_success_chance",
-//         includesAcademicData: !!successChance,
-//         includesFinancialData: !!(
-//           successChance?.livingCosts && successChance?.tuitionFee
-//         ),
-//         includesPreferences: !!successChance?.studyPreferenced,
-//       },
-//     };
-
-//     console.log(`✅ Combined data created for user ${userId}:`, {
-//       hasUser: !!user,
-//       hasSuccessChance: !!successChance,
-//       dataKeys: Object.keys(combinedData),
-//       profileCompleteness:
-//         combinedData.successChanceData?.profileCompleteness || 0,
-//     });
-
-//     return combinedData;
-//   } catch (error) {
-//     console.error("❌ Error getting combined user data:", error);
-//     return null;
-//   }
-// };
-
-// // Helper function to calculate profile completeness for better embeddings
-// const calculateProfileCompleteness = (successChance) => {
-//   if (!successChance) return 0;
-
-//   let completed = 0;
-//   let total = 0;
-
-//   // Required fields
-//   const requiredFields = [
-//     "studyLevel",
-//     "gradeType",
-//     "grade",
-//     "dateOfBirth",
-//     "nationality",
-//     "majorSubject",
-//   ];
-//   requiredFields.forEach((field) => {
-//     total++;
-//     if (successChance[field]) completed++;
-//   });
-
-//   // Optional but valuable fields
-//   const optionalFields = ["languageProficiency", "workExperience"];
-//   optionalFields.forEach((field) => {
-//     total++;
-//     if (successChance[field]) completed++;
-//   });
-
-//   // Nested object fields
-//   if (successChance.livingCosts?.amount && successChance.livingCosts?.currency)
-//     completed++;
-//   total++;
-
-//   if (successChance.tuitionFee?.amount && successChance.tuitionFee?.currency)
-//     completed++;
-//   total++;
-
-//   if (
-//     successChance.studyPreferenced?.country &&
-//     successChance.studyPreferenced?.degree &&
-//     successChance.studyPreferenced?.subject
-//   )
-//     completed++;
-//   total++;
-
-//   return Math.round((completed / total) * 100);
-// };
-
-// // Enhanced function to handle embedding updates with retry logic
-// const updateUserEmbeddings = async (userId, action = "update") => {
-//   const maxRetries = 3;
-//   let retryCount = 0;
-
-//   while (retryCount < maxRetries) {
-//     try {
-//       console.log(
-//         `🔄 Attempting to update embeddings for user ${userId} (attempt ${
-//           retryCount + 1
-//         })`
-//       );
-
-//       const combinedUserData = await getCombinedUserData(userId);
-//       if (!combinedUserData) {
-//         throw new Error(`Failed to get combined user data for user ${userId}`);
-//       }
-
-//       const results = await triggerEmbeddingWebhooks(
-//         action,
-//         "userdbs",
-//         userId.toString(),
-//         combinedUserData
-//       );
-
-//       // Check if at least one webhook succeeded
-//       const successfulWebhooks = results.filter(
-//         (result) => result.status === "fulfilled" && result.value?.success
-//       );
-
-//       if (successfulWebhooks.length > 0) {
-//         console.log(`✅ Embeddings updated successfully for user ${userId}`);
-//         return { success: true, results };
-//       } else {
-//         throw new Error("All embedding webhooks failed");
-//       }
-//     } catch (error) {
-//       retryCount++;
-//       console.error(
-//         `❌ Embedding update attempt ${retryCount} failed for user ${userId}:`,
-//         error.message
-//       );
-
-//       if (retryCount >= maxRetries) {
-//         console.error(
-//           `❌ All embedding update attempts failed for user ${userId}`
-//         );
-//         return { success: false, error: error.message };
-//       }
-
-//       // Wait before retry (exponential backoff)
-//       await new Promise((resolve) =>
-//         setTimeout(resolve, Math.pow(2, retryCount) * 1000)
-//       );
-//     }
-//   }
-// };
-
-// // Add new success chance entry
-// router.post(
-//   "/add",
-//   authenticateToken,
-//   validateSuccessChanceInput,
-//   async (req, res) => {
-//     const userId = req.user.id;
-//     console.log(`📝 Processing success chance creation for user ID: ${userId}`);
-
-//     try {
-//       const {
-//         studyLevel,
-//         grade,
-//         dateOfBirth,
-//         nationality,
-//         majorSubject,
-//         livingCosts,
-//         tuitionfee,
-//         LanguageProficiency,
-//         years,
-//         StudyPreferenced,
-//       } = req.body;
-
-//       // Check if user already has an entry
-//       const existingEntry = await userSuccessDb.findOne({ userId });
-//       if (existingEntry) {
-//         return res.status(409).json({
-//           success: false,
-//           message:
-//             "User already has a success chance entry. Use PATCH to update.",
-//           data: existingEntry,
-//         });
-//       }
-
-//       // Create new entry
-//       const newEntry = new userSuccessDb({
-//         userId,
-//         studyLevel,
-//         gradeType: grade.gradeType,
-//         grade: parseFloat(grade.score),
-//         dateOfBirth,
-//         nationality,
-//         majorSubject,
-//         livingCosts: {
-//           amount: parseFloat(livingCosts.amount),
-//           currency: livingCosts.currency,
-//         },
-//         tuitionFee: {
-//           amount: parseFloat(tuitionfee.amount),
-//           currency: tuitionfee.currency,
-//         },
-//         languageProficiency: LanguageProficiency
-//           ? {
-//               test: LanguageProficiency.test,
-//               score: LanguageProficiency.score,
-//             }
-//           : undefined,
-//         workExperience: years ? parseInt(years, 10) : undefined,
-//         studyPreferenced: {
-//           country: StudyPreferenced.country,
-//           degree: StudyPreferenced.degree,
-//           subject: StudyPreferenced.subject,
-//         },
-//       });
-
-//       const saved = await newEntry.save();
-//       console.log(`✅ Success chance data saved for user ID: ${userId}`);
-
-//       // 🚀 Trigger enhanced embedding update
-//       const embeddingResult = await updateUserEmbeddings(userId, "update");
-
-//       if (!embeddingResult.success) {
-//         console.warn(
-//           `⚠️ Embedding update failed but success chance data was saved for user ${userId}`
-//         );
-//       }
-
-//       return res.status(201).json({
-//         success: true,
-//         message: "Success chance data saved successfully",
-//         data: saved,
-//         embeddingUpdate: embeddingResult.success ? "success" : "failed",
-//         metadata: {
-//           profileCompleteness: calculateProfileCompleteness(saved),
-//           hasLanguageProficiency: !!(
-//             LanguageProficiency?.test && LanguageProficiency?.score
-//           ),
-//           hasWorkExperience: !!(years && years > 0),
-//         },
-//       });
-//     } catch (error) {
-//       console.error(
-//         `❌ Error saving success chance data for user ID ${userId}:`,
-//         error
-//       );
-
-//       if (error.name === "ValidationError") {
-//         return res.status(400).json({
-//           success: false,
-//           message: "Validation error",
-//           errors: Object.values(error.errors).map((err) => ({
-//             field: err.path,
-//             message: err.message,
-//           })),
-//         });
-//       }
-
-//       if (error.name === "MongoServerError" && error.code === 11000) {
-//         return res.status(409).json({
-//           success: false,
-//           message: "Duplicate entry error",
-//           field: Object.keys(error.keyPattern)[0],
-//         });
-//       }
-
-//       return res.status(500).json({
-//         success: false,
-//         message: "Server error while saving success chance data",
-//         error:
-//           process.env.NODE_ENV === "development" ? error.message : undefined,
-//       });
-//     }
-//   }
-// );
-
-// // Update success chance data
-// router.patch("/update", authenticateToken, async (req, res) => {
-//   const userId = req.user.id;
-//   console.log(`📝 Processing success chance update for user ID: ${userId}`);
-
-//   try {
-//     const existingEntry = await userSuccessDb.findOne({ userId });
-//     if (!existingEntry) {
-//       return res.status(404).json({
-//         success: false,
-//         message: "No success chance data found to update. Use POST to create.",
-//       });
-//     }
-
-//     // Build update object from request body
-//     const updateFields = {};
-//     const {
-//       studyLevel,
-//       grade,
-//       gradeType,
-//       dateOfBirth,
-//       nationality,
-//       majorSubject,
-//       livingCosts,
-//       tuitionFee,
-//       languageProficiency,
-//       years,
-//       studyPreferenced,
-//     } = req.body;
-
-//     if (studyLevel) updateFields.studyLevel = studyLevel;
-//     if (gradeType) updateFields.gradeType = gradeType;
-//     if (grade) updateFields.grade = parseFloat(grade);
-//     if (dateOfBirth) updateFields.dateOfBirth = dateOfBirth;
-//     if (nationality) updateFields.nationality = nationality;
-//     if (majorSubject) updateFields.majorSubject = majorSubject;
-//     if (years !== undefined) updateFields.workExperience = parseInt(years, 10);
-
-//     if (livingCosts && typeof livingCosts === "object") {
-//       updateFields.livingCosts = {
-//         amount:
-//           parseFloat(livingCosts.amount) || existingEntry.livingCosts.amount,
-//         currency: livingCosts.currency || existingEntry.livingCosts.currency,
-//       };
-//     }
-
-//     if (tuitionFee && typeof tuitionFee === "object") {
-//       updateFields.tuitionFee = {
-//         amount:
-//           parseFloat(tuitionFee.amount) || existingEntry.tuitionFee.amount,
-//         currency: tuitionFee.currency || existingEntry.tuitionFee.currency,
-//       };
-//     }
-
-//     if (languageProficiency && typeof languageProficiency === "object") {
-//       updateFields.languageProficiency = {
-//         test: languageProficiency.test,
-//         score: languageProficiency.score,
-//       };
-//     }
-
-//     if (studyPreferenced && typeof studyPreferenced === "object") {
-//       updateFields.studyPreferenced = {
-//         country:
-//           studyPreferenced.country || existingEntry.studyPreferenced?.country,
-//         degree:
-//           studyPreferenced.degree || existingEntry.studyPreferenced?.degree,
-//         subject:
-//           studyPreferenced.subject || existingEntry.studyPreferenced?.subject,
-//       };
-//     }
-
-//     const updatedEntry = await userSuccessDb.findOneAndUpdate(
-//       { userId },
-//       { $set: updateFields },
-//       { new: true, runValidators: true }
-//     );
-
-//     console.log(`✅ Success chance data updated for user ID: ${userId}`);
-
-//     // 🚀 Trigger enhanced embedding update
-//     const embeddingResult = await updateUserEmbeddings(userId, "update");
-
-//     return res.status(200).json({
-//       success: true,
-//       message: "Success chance data updated successfully",
-//       data: updatedEntry,
-//       embeddingUpdate: embeddingResult.success ? "success" : "failed",
-//       metadata: {
-//         profileCompleteness: calculateProfileCompleteness(updatedEntry),
-//         fieldsUpdated: Object.keys(updateFields),
-//       },
-//     });
-//   } catch (error) {
-//     console.error(
-//       `❌ Error updating success chance data for user ID ${userId}:`,
-//       error
-//     );
-
-//     if (error.name === "ValidationError") {
-//       return res.status(400).json({
-//         success: false,
-//         message: "Validation error",
-//         errors: Object.values(error.errors).map((err) => ({
-//           field: err.path,
-//           message: err.message,
-//         })),
-//       });
-//     }
-
-//     return res.status(500).json({
-//       success: false,
-//       message: "Server error while updating success chance data",
-//       error: process.env.NODE_ENV === "development" ? error.message : undefined,
-//     });
-//   }
-// });
-
-// // Get success chance data for authenticated user
-// router.get("/", authenticateToken, async (req, res) => {
-//   console.log(`Fetching success chance data for user ID: ${req.user.id}`);
-
-//   try {
-//     const userId = req.user.id;
-//     const data = await userSuccessDb.findOne({ userId });
-
-//     if (!data) {
-//       return res.status(404).json({
-//         success: false,
-//         message: "No success chance data found for this user",
-//       });
-//     }
-
-//     return res.status(200).json({
-//       success: true,
-//       data,
-//       metadata: {
-//         profileCompleteness: calculateProfileCompleteness(data),
-//         lastUpdated: data.updatedAt,
-//         hasLanguageProficiency: !!(
-//           data.languageProficiency?.test && data.languageProficiency?.score
-//         ),
-//         hasWorkExperience: !!(data.workExperience && data.workExperience > 0),
-//       },
-//     });
-//   } catch (error) {
-//     console.error("Error fetching success chance data:", error);
-//     return res.status(500).json({
-//       success: false,
-//       message: "Server error while fetching success chance data",
-//     });
-//   }
-// });
-
-// // Delete success chance data
-// router.delete("/delete", authenticateToken, async (req, res) => {
-//   const userId = req.user.id;
-
-//   try {
-//     const result = await userSuccessDb.findOneAndDelete({ userId });
-
-//     if (!result) {
-//       return res.status(404).json({
-//         success: false,
-//         message: "No success chance data found to delete",
-//       });
-//     }
-
-//     // 🚀 Trigger embedding update (user data without success chance)
-//     const embeddingResult = await updateUserEmbeddings(userId, "update");
-
-//     return res.status(200).json({
-//       success: true,
-//       message: "Success chance data deleted successfully",
-//       embeddingUpdate: embeddingResult.success ? "success" : "failed",
-//     });
-//   } catch (error) {
-//     console.error(
-//       `Error deleting success chance data for user ID ${userId}:`,
-//       error
-//     );
-//     return res.status(500).json({
-//       success: false,
-//       message: "Server error while deleting success chance data",
-//     });
-//   }
-// });
-
-// module.exports = router;
 const express = require("express");
 const router = express.Router();
 const authenticateToken = require("../middlewares/authMiddleware");
 const userSuccessDb = require("../database/models/successChance");
 const UserDb = require("../database/models/UserDb");
-const { triggerEmbeddingWebhooks } = require("../utils/embedding-hooks");
+const { triggerEmbeddingWebhooks } = require("../utils/embedding-hooks"); // Fixed import
 
-// Helper function to safely parse numeric values
-const parseNumericValue = (value, fallback = 0) => {
-  if (value === null || value === undefined || value === '') return fallback;
-  const parsed = parseFloat(value);
-  return isNaN(parsed) ? fallback : parsed;
-};
-
-// Helper function to safely parse integer values
-const parseIntegerValue = (value, fallback = 0) => {
-  if (value === null || value === undefined || value === '') return fallback;
-  const parsed = parseInt(value, 10);
-  return isNaN(parsed) ? fallback : parsed;
-};
-
-// Enhanced input validation middleware
+// Input validation middleware
 const validateSuccessChanceInput = (req, res, next) => {
   console.log("Validating input for success chance data:", req.body);
   const {
@@ -634,18 +16,10 @@ const validateSuccessChanceInput = (req, res, next) => {
     majorSubject,
     livingCosts,
     tuitionFee,
-    tuitionfee, // Handle both variations
     LanguageProficiency,
-    languageProficiency, // Handle both variations
     years,
     StudyPreferenced,
-    studyPreferenced, // Handle both variations
   } = req.body;
-
-  // Normalize the tuitionFee field (handle both tuitionFee and tuitionfee)
-  const normalizedTuitionFee = tuitionFee || tuitionfee;
-  const normalizedLanguageProficiency = languageProficiency || LanguageProficiency;
-  const normalizedStudyPreferenced = studyPreferenced || StudyPreferenced;
 
   // Required fields validation
   const requiredFields = [
@@ -667,67 +41,45 @@ const validateSuccessChanceInput = (req, res, next) => {
     }
   }
 
-  // Validate grade - can be either object or direct value
-  if (grade) {
-    if (typeof grade === 'object') {
-      // Handle object format: { gradeType: "...", score: "..." }
-      if (!grade.gradeType || (!grade.score && grade.score !== 0)) {
-        return res.status(400).json({
-          success: false,
-          message: "Grade type and score are required when grade is an object",
-          field: "grade",
-        });
-      }
-      
-      // Validate score is numeric
-      const scoreValue = parseNumericValue(grade.score);
-      if (grade.score && scoreValue === 0 && grade.score !== 0 && grade.score !== '0') {
-        return res.status(400).json({
-          success: false,
-          message: "Grade score must be a valid number",
-          field: "grade.score",
-        });
-      }
-    } else {
-      // Handle direct numeric/string value
-      const gradeValue = parseNumericValue(grade);
-      if (grade && gradeValue === 0 && grade !== 0 && grade !== '0') {
-        return res.status(400).json({
-          success: false,
-          message: "Grade must be a valid number",
-          field: "grade",
-        });
-      }
-    }
-  }
-
-  // Validate living costs (only if provided)
-  if (livingCosts && (!livingCosts.amount || !livingCosts.currency)) {
+  // Validate grade object
+  if (!grade || !grade.gradeType || !grade.score) {
     return res.status(400).json({
       success: false,
-      message: "Living costs amount and currency are required when livingCosts is provided",
+      message: "Grade type and score are required",
+      field: "grade",
+    });
+  }
+
+  // Validate living costs
+  if (!livingCosts || !livingCosts.amount || !livingCosts.currency) {
+    return res.status(400).json({
+      success: false,
+      message: "Living costs amount and currency are required",
       field: "livingCosts",
     });
   }
 
-  // Validate tuition fee (only if provided)
-  if (normalizedTuitionFee && (!normalizedTuitionFee.amount || !normalizedTuitionFee.currency)) {
+  // Validate Study Preferences
+  if (
+    !StudyPreferenced ||
+    !StudyPreferenced.country ||
+    !StudyPreferenced.degree ||
+    !StudyPreferenced.subject
+  ) {
     return res.status(400).json({
       success: false,
-      message: "Tuition fee amount and currency are required when tuitionFee is provided",
-      field: "tuitionFee",
+      message: "Study preferences (country, degree, and subject) are required",
+      field: "StudyPreferenced",
     });
   }
 
-  // Validate Study Preferences (only if provided)
-  if (normalizedStudyPreferenced) {
-    if (!normalizedStudyPreferenced.country || !normalizedStudyPreferenced.degree || !normalizedStudyPreferenced.subject) {
-      return res.status(400).json({
-        success: false,
-        message: "Study preferences (country, degree, and subject) are required when studyPreferenced is provided",
-        field: "studyPreferenced",
-      });
-    }
+  // Additional validations
+  if (grade.score && isNaN(parseFloat(grade.score))) {
+    return res.status(400).json({
+      success: false,
+      message: "Grade score must be a number",
+      field: "grade.score",
+    });
   }
 
   // Date of birth validation
@@ -739,14 +91,6 @@ const validateSuccessChanceInput = (req, res, next) => {
       field: "dateOfBirth",
     });
   }
-
-  // Attach normalized values to request for use in route handlers
-  req.normalizedData = {
-    tuitionFee: normalizedTuitionFee,
-    languageProficiency: normalizedLanguageProficiency,
-    studyPreferenced: normalizedStudyPreferenced,
-  };
-
   next();
 };
 
@@ -944,140 +288,99 @@ const updateUserEmbeddings = async (userId, action = "update") => {
   }
 };
 
-// Helper function to extract and normalize grade data
-const normalizeGradeData = (grade, gradeType = null) => {
-  if (typeof grade === 'object' && grade !== null) {
-    return {
-      gradeType: grade.gradeType || gradeType,
-      score: parseNumericValue(grade.score)
-    };
-  } else {
-    return {
-      gradeType: gradeType,
-      score: parseNumericValue(grade)
-    };
-  }
-};
-
-// Add/Update success chance entry (handles both create and update)
+// Add new success chance entry
 router.post(
   "/add",
   authenticateToken,
   validateSuccessChanceInput,
   async (req, res) => {
     const userId = req.user.id;
-    console.log(`📝 Processing success chance for user ID: ${userId}`);
+    console.log(`📝 Processing success chance creation for user ID: ${userId}`);
 
     try {
       const {
         studyLevel,
         grade,
-        gradeType,
         dateOfBirth,
         nationality,
         majorSubject,
         livingCosts,
+        tuitionfee,
+        LanguageProficiency,
         years,
+        StudyPreferenced,
       } = req.body;
-
-      // Use normalized data from middleware
-      const { tuitionFee, languageProficiency, studyPreferenced } = req.normalizedData;
 
       // Check if user already has an entry
       const existingEntry = await userSuccessDb.findOne({ userId });
-      
-      // Normalize grade data
-      const normalizedGrade = normalizeGradeData(grade, gradeType);
+      if (existingEntry) {
+        return res.status(409).json({
+          success: false,
+          message:
+            "User already has a success chance entry. Use PATCH to update.",
+          data: existingEntry,
+        });
+      }
 
-      // Prepare the data object
-      const successData = {
+      // Create new entry
+      const newEntry = new userSuccessDb({
         userId,
         studyLevel,
-        gradeType: normalizedGrade.gradeType,
-        grade: normalizedGrade.score,
+        gradeType: grade.gradeType,
+        grade: parseFloat(grade.score),
         dateOfBirth,
         nationality,
         majorSubject,
-        workExperience: years ? parseIntegerValue(years) : undefined,
-      };
-
-      // Add optional fields only if provided
-      if (livingCosts) {
-        successData.livingCosts = {
-          amount: parseNumericValue(livingCosts.amount),
+        livingCosts: {
+          amount: parseFloat(livingCosts.amount),
           currency: livingCosts.currency,
-        };
-      }
+        },
+        tuitionFee: {
+          amount: parseFloat(tuitionfee.amount),
+          currency: tuitionfee.currency,
+        },
+        languageProficiency: LanguageProficiency
+          ? {
+              test: LanguageProficiency.test,
+              score: LanguageProficiency.score,
+            }
+          : undefined,
+        workExperience: years ? parseInt(years, 10) : undefined,
+        studyPreferenced: {
+          country: StudyPreferenced.country,
+          degree: StudyPreferenced.degree,
+          subject: StudyPreferenced.subject,
+        },
+      });
 
-      if (tuitionFee) {
-        successData.tuitionFee = {
-          amount: parseNumericValue(tuitionFee.amount),
-          currency: tuitionFee.currency,
-        };
-      }
-
-      if (languageProficiency && (languageProficiency.test || languageProficiency.score)) {
-        successData.languageProficiency = {
-          test: languageProficiency.test,
-          score: languageProficiency.score,
-        };
-      }
-
-      if (studyPreferenced) {
-        successData.studyPreferenced = {
-          country: studyPreferenced.country,
-          degree: studyPreferenced.degree,
-          subject: studyPreferenced.subject,
-        };
-      }
-
-      let saved;
-      let isUpdate = false;
-
-      if (existingEntry) {
-        // Update existing entry
-        console.log(`📝 Updating existing success chance data for user ID: ${userId}`);
-        saved = await userSuccessDb.findOneAndUpdate(
-          { userId },
-          { $set: successData },
-          { new: true, runValidators: true }
-        );
-        isUpdate = true;
-      } else {
-        // Create new entry
-        console.log(`📝 Creating new success chance data for user ID: ${userId}`);
-        const newEntry = new userSuccessDb(successData);
-        saved = await newEntry.save();
-      }
-
-      console.log(`✅ Success chance data ${isUpdate ? 'updated' : 'created'} for user ID: ${userId}`);
+      const saved = await newEntry.save();
+      console.log(`✅ Success chance data saved for user ID: ${userId}`);
 
       // 🚀 Trigger enhanced embedding update
       const embeddingResult = await updateUserEmbeddings(userId, "update");
 
       if (!embeddingResult.success) {
         console.warn(
-          `⚠️ Embedding update failed but success chance data was ${isUpdate ? 'updated' : 'saved'} for user ${userId}`
+          `⚠️ Embedding update failed but success chance data was saved for user ${userId}`
         );
       }
 
-      return res.status(isUpdate ? 200 : 201).json({
+      return res.status(201).json({
         success: true,
-        message: `Success chance data ${isUpdate ? 'updated' : 'saved'} successfully`,
+        message: "Success chance data saved successfully",
         data: saved,
-        isUpdate,
         embeddingUpdate: embeddingResult.success ? "success" : "failed",
         metadata: {
           profileCompleteness: calculateProfileCompleteness(saved),
           hasLanguageProficiency: !!(
-            languageProficiency?.test && languageProficiency?.score
+            LanguageProficiency?.test && LanguageProficiency?.score
           ),
           hasWorkExperience: !!(years && years > 0),
         },
       });
     } catch (error) {
       console.error(
-        `❌ Error processing success chance data for user ID ${userId}:`,
+        `❌ Error saving success chance data for user ID ${userId}:`,
         error
       );
 
@@ -1102,7 +405,7 @@ router.post(
 
       return res.status(500).json({
         success: false,
-        message: "Server error while processing success chance data",
+        message: "Server error while saving success chance data",
         error:
           process.env.NODE_ENV === "development" ? error.message : undefined,
       });
@@ -1110,7 +413,7 @@ router.post(
   }
 );
 
-// Update success chance data (PATCH method for partial updates)
+// Update success chance data
 router.patch("/update", authenticateToken, async (req, res) => {
   const userId = req.user.id;
   console.log(`📝 Processing success chance update for user ID: ${userId}`);
@@ -1120,7 +423,7 @@ router.patch("/update", authenticateToken, async (req, res) => {
     if (!existingEntry) {
       return res.status(404).json({
         success: false,
-        message: "No success chance data found to update. Use POST /add to create.",
+        message: "No success chance data found to update. Use POST to create.",
       });
     }
 
@@ -1135,72 +438,51 @@ router.patch("/update", authenticateToken, async (req, res) => {
       majorSubject,
       livingCosts,
       tuitionFee,
-      tuitionfee, // Handle both variations
       languageProficiency,
-      LanguageProficiency, // Handle both variations
       years,
       studyPreferenced,
-      StudyPreferenced, // Handle both variations
     } = req.body;
 
-    // Normalize field names
-    const normalizedTuitionFee = tuitionFee || tuitionfee;
-    const normalizedLanguageProficiency = languageProficiency || LanguageProficiency;
-    const normalizedStudyPreferenced = studyPreferenced || StudyPreferenced;
-
     if (studyLevel) updateFields.studyLevel = studyLevel;
+    if (gradeType) updateFields.gradeType = gradeType;
+    if (grade) updateFields.grade = parseFloat(grade);
     if (dateOfBirth) updateFields.dateOfBirth = dateOfBirth;
     if (nationality) updateFields.nationality = nationality;
     if (majorSubject) updateFields.majorSubject = majorSubject;
-    if (years !== undefined) updateFields.workExperience = parseIntegerValue(years);
-
-    // Handle grade updates (can be object or direct value)
-    if (grade !== undefined || gradeType !== undefined) {
-      const normalizedGrade = normalizeGradeData(grade, gradeType);
-      if (normalizedGrade.gradeType) updateFields.gradeType = normalizedGrade.gradeType;
-      if (normalizedGrade.score !== undefined) updateFields.grade = normalizedGrade.score;
-    }
+    if (years !== undefined) updateFields.workExperience = parseInt(years, 10);
 
     if (livingCosts && typeof livingCosts === "object") {
       updateFields.livingCosts = {
         amount:
-          parseNumericValue(livingCosts.amount) || existingEntry.livingCosts?.amount || 0,
-        currency: livingCosts.currency || existingEntry.livingCosts?.currency,
+          parseFloat(livingCosts.amount) || existingEntry.livingCosts.amount,
+        currency: livingCosts.currency || existingEntry.livingCosts.currency,
       };
     }
 
-    if (normalizedTuitionFee && typeof normalizedTuitionFee === "object") {
+    if (tuitionFee && typeof tuitionFee === "object") {
       updateFields.tuitionFee = {
         amount:
-          parseNumericValue(normalizedTuitionFee.amount) || existingEntry.tuitionFee?.amount || 0,
-        currency: normalizedTuitionFee.currency || existingEntry.tuitionFee?.currency,
+          parseFloat(tuitionFee.amount) || existingEntry.tuitionFee.amount,
+        currency: tuitionFee.currency || existingEntry.tuitionFee.currency,
       };
     }
 
-    if (normalizedLanguageProficiency && typeof normalizedLanguageProficiency === "object") {
+    if (languageProficiency && typeof languageProficiency === "object") {
       updateFields.languageProficiency = {
-        test: normalizedLanguageProficiency.test || existingEntry.languageProficiency?.test,
-        score: normalizedLanguageProficiency.score || existingEntry.languageProficiency?.score,
+        test: languageProficiency.test,
+        score: languageProficiency.score,
       };
     }
 
-    if (normalizedStudyPreferenced && typeof normalizedStudyPreferenced === "object") {
+    if (studyPreferenced && typeof studyPreferenced === "object") {
       updateFields.studyPreferenced = {
         country:
-          normalizedStudyPreferenced.country || existingEntry.studyPreferenced?.country,
+          studyPreferenced.country || existingEntry.studyPreferenced?.country,
         degree:
-          normalizedStudyPreferenced.degree || existingEntry.studyPreferenced?.degree,
+          studyPreferenced.degree || existingEntry.studyPreferenced?.degree,
         subject:
-          normalizedStudyPreferenced.subject || existingEntry.studyPreferenced?.subject,
+          studyPreferenced.subject || existingEntry.studyPreferenced?.subject,
       };
-    }
-
-    // Only update if there are fields to update
-    if (Object.keys(updateFields).length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: "No valid fields provided for update",
-      });
     }
 
     const updatedEntry = await userSuccessDb.findOneAndUpdate(
