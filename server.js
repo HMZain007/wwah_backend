@@ -60,6 +60,7 @@ const refcontact = require("./routers/referralPortal/refcontact");
 const mbaData = require("./routers/adminDashboard/mbaData");
 const referrals = require("./routers/adminDashboard/referrals");
 const commisionRoutes = require("./routers/referralPortal/commissionRoutes");
+const EmailRoutes = require("./routers/referralPortal/emailroutes");
 // Middleware for parsing request bodies
 server.use(bodyParser.json());
 server.use(bodyParser.urlencoded({ extended: true }));
@@ -286,6 +287,7 @@ server.use("/refcontact", refcontact);
 server.use("/adminDashboard/mbaData", mbaData);
 server.use("/adminDashboard/referrals", referrals);
 server.use("/refportal/commission", commisionRoutes);
+server.use("/refportal/email", EmailRoutes);
 // Default route
 server.get("/", async (req, res) => {
   try {

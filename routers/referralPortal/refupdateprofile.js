@@ -11,11 +11,12 @@ router.post(
 router.get(
   "/academicInformation",
   authenticateToken,
-  profileController.getAcademicInformation      
+  profileController.getAcademicInformation
 );
 router.post(
   "/academicInformation",
   authenticateToken,
+
   profileController.academicInformation
 );
 router.post(
@@ -57,6 +58,5 @@ router.patch(
   authenticateToken,
   profileController.updatePaymentInformation
 );
-
 
 module.exports = router;
