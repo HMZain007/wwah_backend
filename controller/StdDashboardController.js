@@ -206,11 +206,11 @@ const stdDashboardController = {
       });
     }
   },
-  // update basic info
+  // Replace your existing updateBasicInformation method with this enhanced version
   updateBasicInformation: async (req, res) => {
-    console.log("DEBUG: Fetching documents for user by update");
+    console.log("DEBUG: Updating basic information for user");
     try {
-      const userId = req.user?.id; // Ensure user is authenticated
+      const userId = req.user?.id;
 
       if (!userId) {
         return res.status(401).json({
@@ -218,6 +218,7 @@ const stdDashboardController = {
           success: false,
         });
       }
+
       // Check if the user's basic information exists
       const existingBasicInfo = await BasicInfo.findOne({ user: userId });
       if (!existingBasicInfo) {
@@ -226,23 +227,24 @@ const stdDashboardController = {
           success: false,
         });
       }
+
       // Extract only provided fields from the request body
       const updatedData = {};
       const allowedFields = [
         "familyName",
         "givenName",
-        "isFamilyNameEmpty",    // ADD THIS
-        "isGivenNameEmpty",     // ADD THIS
+        "isFamilyNameEmpty",
+        "isGivenNameEmpty",
         "gender",
         "DOB",
         "nationality",
         "countryOfResidence",
         "maritalStatus",
         "religion",
-        "nativeLanguage",        // ADD THIS
-        "currentAddress",        // CHANGE from "homeAddress"
+        "nativeLanguage",
+        "currentAddress",
         "permanentAddress",
-        "homeAddress",     // CHANGE from "detailedAddress"
+        "homeAddress",
         "detailedAddress",
         "country",
         "city",
@@ -259,7 +261,7 @@ const stdDashboardController = {
         "currentCountryCode",
         "currentPhoneNo",
         "hasPassport",
-        "noPassport",           // ADD THIS
+        "noPassport",
         "passportNumber",
         "passportExpiryDate",
         "oldPassportNumber",
@@ -279,15 +281,19 @@ const stdDashboardController = {
         "sponsorsCountryCode",
         "sponsorsPhoneNo",
         "familyMembers",
+        // Add submission tracking fields
+        "isSubmitted",
+        "submittedAt"
       ];
 
+      // Only include fields that are actually provided in the request
       allowedFields.forEach((field) => {
         if (req.body[field] !== undefined) {
           updatedData[field] = req.body[field];
         }
       });
 
-      // THEN apply conditional logic
+      // Apply conditional logic after basic field extraction
       if (req.body.isFamilyNameEmpty === true) {
         updatedData.familyName = "";
       }
@@ -304,12 +310,29 @@ const stdDashboardController = {
         updatedData.oldPassportExpiryDate = null;
       }
 
+      // Handle date fields - convert string dates to Date objects if needed
+      const dateFields = ['DOB', 'passportExpiryDate', 'oldPassportExpiryDate', 'visaExpiryDate'];
+      dateFields.forEach(field => {
+        if (updatedData[field] && typeof updatedData[field] === 'string') {
+          try {
+            updatedData[field] = new Date(updatedData[field]);
+          } catch (error) {
+            console.error(`Error converting ${field} to Date:`, error);
+            // Keep the original value if conversion fails
+          }
+        }
+      });
+
+      // Add update timestamp
+      updatedData.updatedAt = new Date();
+
       // Update the existing basic information document
       const updatedBasicInfo = await BasicInfo.findOneAndUpdate(
         { user: userId },
         { $set: updatedData },
         { new: true }
       );
+
       return res.status(200).json({
         message: "Basic Information Updated Successfully",
         success: true,
@@ -435,6 +458,359 @@ const stdDashboardController = {
       res.status(500).json({
         message: errorMessage,
         success: false,
+      });
+    }
+  },
+  // Add these new methods to your stdDashboardController
+
+  // Update single basic info field
+  updateBasicInfoField: async (req, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({
+          message: "Login First to update field",
+          success: false,
+        });
+      }
+
+      // Validate that only one field is being updated
+      const fieldKeys = Object.keys(req.body);
+      if (fieldKeys.length !== 1) {
+        return res.status(400).json({
+          success: false,
+          message: 'Only one field can be updated at a time'
+        });
+      }
+
+      const fieldKey = fieldKeys[0];
+      const fieldValue = req.body[fieldKey];
+
+      // Define allowed fields for basic info
+      const allowedFields = [
+        'familyName', 'givenName', 'nationality', 'DOB', 'countryOfResidence',
+        'gender', 'maritalStatus', 'religion', 'nativeLanguage',
+        'currentAddress', 'permanentAddress', 'city', 'zipCode', 'email',
+        'countryCode', 'phoneNo', 'passportNumber', 'passportExpiryDate',
+        'oldPassportNumber', 'oldPassportExpiryDate', 'visitedCountry',
+        'institution', 'visaType', 'visaExpiryDate', 'durationOfStudyAbroad',
+        'sponsorName', 'sponsorRelationship', 'sponsorsNationality',
+        'sponsorsOccupation', 'sponsorsEmail', 'sponsorsCountryCode', 'sponsorsPhoneNo'
+      ];
+
+      if (!allowedFields.includes(fieldKey)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid field name'
+        });
+      }
+
+      // Update the specific field
+      const result = await BasicInfo.findOneAndUpdate(
+        { user: userId },
+        { [fieldKey]: fieldValue },
+        { new: true, upsert: true }
+      );
+
+      res.json({
+        success: true,
+        message: `${fieldKey} updated successfully`,
+        data: result
+      });
+
+    } catch (error) {
+      console.error('Error updating basic info field:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to update field'
+      });
+    }
+  },
+
+  // Update single application info field
+  updateApplicationInfoField: async (req, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({
+          message: "Login First to update field",
+          success: false,
+        });
+      }
+
+      // Validate that only one field is being updated
+      const fieldKeys = Object.keys(req.body);
+      if (fieldKeys.length !== 1) {
+        return res.status(400).json({
+          success: false,
+          message: 'Only one field can be updated at a time'
+        });
+      }
+
+      const fieldKey = fieldKeys[0];
+      const fieldValue = req.body[fieldKey];
+
+      // Define allowed fields for application info
+      const allowedFields = [
+        'countryOfStudy', 'proficiencyLevel', 'proficiencyTest', 'overAllScore',
+        'listeningScore', 'readingScore', 'writingScore', 'speakingScore',
+        'standardizedTest', 'standardizedOverallScore', 'standardizedSubScore'
+      ];
+
+      if (!allowedFields.includes(fieldKey)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid field name'
+        });
+      }
+
+      // Update the specific field
+      const result = await applicationInfo.findOneAndUpdate(
+        { user: userId },
+        { [fieldKey]: fieldValue },
+        { new: true, upsert: true }
+      );
+
+      res.json({
+        success: true,
+        message: `${fieldKey} updated successfully`,
+        data: result
+      });
+
+    } catch (error) {
+      console.error('Error updating application info field:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to update field'
+      });
+    }
+  },
+
+  // Update family members array
+  updateFamilyMembers: async (req, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({
+          message: "Login First to update family members",
+          success: false,
+        });
+      }
+
+      const { familyMembers } = req.body;
+
+      if (!Array.isArray(familyMembers)) {
+        return res.status(400).json({
+          success: false,
+          message: 'familyMembers must be an array'
+        });
+      }
+
+      // Validate each family member object
+      for (const member of familyMembers) {
+        const requiredFields = ['name', 'relationship', 'nationality', 'occupation', 'email', 'phoneNo'];
+        const missingFields = requiredFields.filter(field => !member[field]);
+
+        if (missingFields.length > 0) {
+          return res.status(400).json({
+            success: false,
+            message: `Missing required fields in family member: ${missingFields.join(', ')}`
+          });
+        }
+      }
+
+      const result = await BasicInfo.findOneAndUpdate(
+        { user: userId },
+        { familyMembers: familyMembers },
+        { new: true, upsert: true }
+      );
+
+      res.json({
+        success: true,
+        message: 'Family members updated successfully',
+        data: result
+      });
+
+    } catch (error) {
+      console.error('Error updating family members:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to update family members'
+      });
+    }
+  },
+
+  // Update educational background array
+  updateEducationalBackground: async (req, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({
+          message: "Login First to update educational background",
+          success: false,
+        });
+      }
+
+      const { educationalBackground } = req.body;
+
+      if (!Array.isArray(educationalBackground)) {
+        return res.status(400).json({
+          success: false,
+          message: 'educationalBackground must be an array'
+        });
+      }
+
+      // Validate each education object
+      for (const education of educationalBackground) {
+        const requiredFields = ['highestDegree', 'subjectName', 'institutionAttended', 'marks'];
+        const missingFields = requiredFields.filter(field => !education[field]);
+
+        if (missingFields.length > 0) {
+          return res.status(400).json({
+            success: false,
+            message: `Missing required fields in educational background: ${missingFields.join(', ')}`
+          });
+        }
+      }
+
+      const result = await applicationInfo.findOneAndUpdate(
+        { user: userId },
+        { educationalBackground: educationalBackground },
+        { new: true, upsert: true }
+      );
+
+      res.json({
+        success: true,
+        message: 'Educational background updated successfully',
+        data: result
+      });
+
+    } catch (error) {
+      console.error('Error updating educational background:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to update educational background'
+      });
+    }
+  },
+
+  // Update work experience array
+  updateWorkExperience: async (req, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({
+          message: "Login First to update work experience",
+          success: false,
+        });
+      }
+
+      const { workExperience } = req.body;
+
+      if (!Array.isArray(workExperience)) {
+        return res.status(400).json({
+          success: false,
+          message: 'workExperience must be an array'
+        });
+      }
+
+      // Validate each work experience object
+      for (const work of workExperience) {
+        const requiredFields = ['jobTitle', 'organizationName', 'employmentType'];
+        const missingFields = requiredFields.filter(field => !work[field]);
+
+        if (missingFields.length > 0) {
+          return res.status(400).json({
+            success: false,
+            message: `Missing required fields in work experience: ${missingFields.join(', ')}`
+          });
+        }
+      }
+
+      const result = await applicationInfo.findOneAndUpdate(
+        { user: userId },
+        { workExperience: workExperience },
+        { new: true, upsert: true }
+      );
+
+      res.json({
+        success: true,
+        message: 'Work experience updated successfully',
+        data: result
+      });
+
+    } catch (error) {
+      console.error('Error updating work experience:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to update work experience'
+      });
+    }
+  },
+
+  // Final application submission
+  finalSubmission: async (req, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({
+          message: "Login First to submit application",
+          success: false,
+        });
+      }
+
+      const { basicInfo, applicationInfo: appInfo, submittedAt } = req.body;
+
+      // Validate that both basic info and application info exist
+      const existingBasicInfo = await BasicInfo.findOne({ user: userId });
+      const existingAppInfo = await applicationInfo.findOne({ user: userId });
+
+      if (!existingBasicInfo || !existingAppInfo) {
+        return res.status(400).json({
+          success: false,
+          message: 'Please complete all required sections before submitting'
+        });
+      }
+
+      // Update submission status and timestamp
+      await Promise.all([
+        BasicInfo.findOneAndUpdate(
+          { user: userId },
+          {
+            submittedAt: submittedAt || new Date().toISOString(),
+            isSubmitted: true
+          }
+        ),
+        applicationInfo.findOneAndUpdate(
+          { user: userId },
+          {
+            submittedAt: submittedAt || new Date().toISOString(),
+            isSubmitted: true
+          }
+        )
+      ]);
+
+      // Create or update application status
+      await statusUpdate.findOneAndUpdate(
+        { user: userId },
+        {
+          applicationStatus: 2, // Submitted status
+          updatedAt: new Date()
+        },
+        { upsert: true }
+      );
+
+      res.json({
+        success: true,
+        message: 'Application submitted successfully!',
+        submittedAt: submittedAt || new Date().toISOString()
+      });
+
+    } catch (error) {
+      console.error('Error submitting final application:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to submit application'
       });
     }
   },

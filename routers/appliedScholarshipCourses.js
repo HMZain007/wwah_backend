@@ -19,6 +19,7 @@ router.post("/apply", async (req, res) => {
       banner,
       logo,
       ScholarshipId, // Added scholarshipId to identify the course
+      successChances
     } = req.body;
     console.log(req.body, "req.body in apply route");
 
@@ -36,6 +37,7 @@ router.post("/apply", async (req, res) => {
       banner: !banner,
       logo:!logo,
       ScholarshipId: !ScholarshipId, // Ensure scholarshipId is provided
+  
     };
 
     const hasMissingFields = Object.values(missingFields).some(
@@ -87,6 +89,7 @@ router.post("/apply", async (req, res) => {
       deadline,
       banner,
       logo,
+      successChances,
       appliedDate: new Date(),
       status: "pending",
     };
