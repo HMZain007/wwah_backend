@@ -3,6 +3,73 @@ const express = require("express");
 const router = express.Router();
 const Commission = require("../../database/models/refPortal/Commission");
 const UserRefDb = require("../../database/models/refPortal/refuser");
+const axios = require("axios"); // Add this import for calling the email route
+// At the top of CommissionRoutes.js, add the email functionality
+const nodemailer = require("nodemailer");
+
+// Create the email function directly in this file
+const sendWithdrawalEmail = async (user, commission) => {
+  try {
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const mailOptions = {
+      from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
+      to: "info@wwah.ai",
+      subject: `Withdrawal Request - ${user.firstName} ${user.lastName} (${commission.month})`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+          <div style="text-align: center; margin-bottom: 30px;">
+            <h2 style="color: #d32f2f; margin: 0;">Withdrawal Request Notification</h2>
+            <p style="color: #666; margin: 5px 0;">World Wide Admissions Hub</p>
+          </div>
+          
+          <div style="background-color: #f9f9f9; padding: 20px; border-radius: 6px; margin-bottom: 20px;">
+            <h3 style="color: #333; margin-top: 0;">MBA Details:</h3>
+            <p><strong>Name:</strong> ${user.firstName} ${user.lastName}</p>
+            <p><strong>MBA ID:</strong> ${user._id}</p>
+            <p><strong>Email:</strong> ${user.email || "N/A"}</p>
+          </div>
+          
+          <div style="background-color: #f0f8ff; padding: 20px; border-radius: 6px; margin-bottom: 20px;">
+            <h3 style="color: #333; margin-top: 0;">Commission Details:</h3>
+            <p><strong>Month:</strong> ${commission.month}</p>
+            <p><strong>Amount Requested:</strong> Rs. ${commission.amount.toLocaleString()}</p>
+            <p><strong>Number of Referrals:</strong> ${commission.referrals}</p>
+            <p><strong>Status:</strong> ${commission.status}</p>
+          </div>
+          
+          <div style="background-color: #fff3e0; padding: 20px; border-radius: 6px; margin-bottom: 20px;">
+            <h3 style="color: #333; margin-top: 0;">Request Information:</h3>
+            <p><strong>Date of Request:</strong> ${new Date().toLocaleDateString(
+              "en-US",
+              {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              }
+            )}</p>
+          </div>
+        </div>
+      `,
+    };
+
+    const result = await transporter.sendMail(mailOptions);
+    console.log("Email sent successfully:", result.messageId);
+    return { success: true, messageId: result.messageId };
+  } catch (error) {
+    console.error("Error sending email:", error);
+    return { success: false, error: error.message };
+  }
+};
 // Middleware to verify user exists
 const verifyUser = async (req, res, next) => {
   try {
@@ -24,6 +91,7 @@ const verifyUser = async (req, res, next) => {
     });
   }
 };
+
 // GET /api/refportal/commission/:userId - Get all commissions for a user
 router.get("/:userId", verifyUser, async (req, res) => {
   try {
@@ -44,6 +112,7 @@ router.get("/:userId", verifyUser, async (req, res) => {
     });
   }
 });
+
 // POST /api/refportal/commission/:userId - Create new commission
 router.post("/:userId", verifyUser, async (req, res) => {
   try {
@@ -118,11 +187,13 @@ router.post("/:userId", verifyUser, async (req, res) => {
     });
   }
 });
+
 // PUT /api/refportal/commission/:userId/:commissionId - Update commission
 router.put("/:userId/:commissionId", verifyUser, async (req, res) => {
   try {
     const { userId, commissionId } = req.params;
     const { month, referrals, amount, status } = req.body;
+
     // Find the commission
     const commission = await Commission.findOne({
       _id: commissionId,
@@ -134,6 +205,11 @@ router.put("/:userId/:commissionId", verifyUser, async (req, res) => {
         message: "Commission record not found",
       });
     }
+
+    // Check if this is a withdrawal request (status change from Pending to Requested)
+    const isWithdrawalRequest =
+      commission.status === "Pending" && status === "Requested";
+
     // Validate fields if provided
     if (
       referrals !== undefined &&
@@ -156,6 +232,7 @@ router.put("/:userId/:commissionId", verifyUser, async (req, res) => {
         message: "Status must be one of: Paid, Pending, Requested",
       });
     }
+
     // Check for duplicate month if month is being updated
     if (month && month !== commission.month) {
       const existingCommission = await Commission.findOne({
@@ -170,17 +247,66 @@ router.put("/:userId/:commissionId", verifyUser, async (req, res) => {
         });
       }
     }
+
     // Update fields
     const updates = {};
     if (month !== undefined) updates.month = month;
     if (referrals !== undefined) updates.referrals = referrals;
     if (amount !== undefined) updates.amount = amount;
     if (status !== undefined) updates.status = status;
+
     const updatedCommission = await Commission.findByIdAndUpdate(
       commissionId,
       updates,
       { new: true, runValidators: true }
     );
+
+    // Send email notification if this is a withdrawal request
+    // if (isWithdrawalRequest) {
+    //   try {
+    //     console.log("Sending withdrawal request email...");
+    //     const emailResult = await sendWithdrawalRequestEmail(
+    //       req.user,
+    //       updatedCommission
+    //     );
+
+    //     if (emailResult.success) {
+    //       console.log("Withdrawal request email sent successfully");
+    //     } else {
+    //       console.error(
+    //         "Failed to send withdrawal request email:",
+    //         emailResult.error
+    //       );
+    //     }
+    //   } catch (emailError) {
+    //     console.error("Error calling email function:", emailError.message);
+    //     // Continue with the response even if email fails
+    //   }
+    // }
+    // Send email notification if this is a withdrawal request
+    if (isWithdrawalRequest) {
+      console.log("Sending withdrawal request email...");
+      try {
+        const emailResult = await sendWithdrawalEmail(
+          req.user,
+          updatedCommission
+        );
+
+        if (emailResult.success) {
+          console.log("Withdrawal request email sent successfully");
+        } else {
+          console.error(
+            "Failed to send withdrawal request email:",
+            emailResult.error
+          );
+        }
+      } catch (emailError) {
+        console.error(
+          "Error sending withdrawal request email:",
+          emailError.message
+        );
+      }
+    }
     res.status(200).json({
       success: true,
       message: "Commission record updated successfully",
@@ -201,6 +327,7 @@ router.put("/:userId/:commissionId", verifyUser, async (req, res) => {
     });
   }
 });
+
 // DELETE /api/refportal/commission/:userId/:commissionId - Delete commission
 router.delete("/:userId/:commissionId", verifyUser, async (req, res) => {
   try {
@@ -229,4 +356,5 @@ router.delete("/:userId/:commissionId", verifyUser, async (req, res) => {
     });
   }
 });
+
 module.exports = router;
