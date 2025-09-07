@@ -73,14 +73,6 @@ const validateSuccessChanceInput = (req, res, next) => {
     });
   }
 
-  // Additional validations
-  if (grade.score && isNaN(parseFloat(grade.score))) {
-    return res.status(400).json({
-      success: false,
-      message: "Grade score must be a number",
-      field: "grade.score",
-    });
-  }
 
   // Date of birth validation
   const dobRegex = /^\d{4}-\d{2}-\d{2}$/;
@@ -289,13 +281,14 @@ const updateUserEmbeddings = async (userId, action = "update") => {
 };
 
 // Add new success chance entry
+// Add new success chance entry (with upsert logic)
 router.post(
   "/add",
   authenticateToken,
   validateSuccessChanceInput,
   async (req, res) => {
     const userId = req.user.id;
-    console.log(`📝 Processing success chance creation for user ID: ${userId}`);
+    console.log(`📝 Processing success chance upsert for user ID: ${userId}`);
 
     try {
       const {
@@ -313,21 +306,77 @@ router.post(
 
       // Check if user already has an entry
       const existingEntry = await userSuccessDb.findOne({ userId });
+      
       if (existingEntry) {
-        return res.status(409).json({
-          success: false,
-          message:
-            "User already has a success chance entry. Use PATCH to update.",
-          data: existingEntry,
+        console.log(`🔄 User ${userId} already has data. Updating existing entry...`);
+        
+        // Update existing entry
+        const updateFields = {
+          studyLevel,
+          gradeType: grade.gradeType,
+          grade: grade.score,
+          dateOfBirth,
+          nationality,
+          majorSubject,
+          livingCosts: {
+            amount: parseFloat(livingCosts.amount),
+            currency: livingCosts.currency,
+          },
+          tuitionFee: {
+            amount: parseFloat(tuitionfee.amount),
+            currency: tuitionfee.currency,
+          },
+          languageProficiency: LanguageProficiency
+            ? {
+                test: LanguageProficiency.test,
+                score: LanguageProficiency.score,
+              }
+            : undefined,
+          workExperience: years ? parseInt(years, 10) : undefined,
+          studyPreferenced: {
+            country: StudyPreferenced.country,
+            degree: StudyPreferenced.degree,
+            subject: StudyPreferenced.subject,
+          },
+          updatedAt: new Date()
+        };
+
+        const updatedEntry = await userSuccessDb.findOneAndUpdate(
+          { userId },
+          { $set: updateFields },
+          { new: true, runValidators: true }
+        );
+
+        console.log(`✅ Success chance data updated for existing user ID: ${userId}`);
+
+        // 🚀 Trigger enhanced embedding update
+        const embeddingResult = await updateUserEmbeddings(userId, "update");
+
+        return res.status(200).json({
+          success: true,
+          message: "Success chance data updated successfully",
+          action: "updated",
+          data: updatedEntry,
+          embeddingUpdate: embeddingResult.success ? "success" : "failed",
+          metadata: {
+            profileCompleteness: calculateProfileCompleteness(updatedEntry),
+            hasLanguageProficiency: !!(
+              LanguageProficiency?.test && LanguageProficiency?.score
+            ),
+            hasWorkExperience: !!(years && years > 0),
+            wasExistingEntry: true,
+          },
         });
       }
 
-      // Create new entry
+      // Create new entry if no existing data
+      console.log(`➕ Creating new entry for user ID: ${userId}`);
+      
       const newEntry = new userSuccessDb({
         userId,
         studyLevel,
         gradeType: grade.gradeType,
-        grade: parseFloat(grade.score),
+        grade: grade.score,
         dateOfBirth,
         nationality,
         majorSubject,
@@ -354,20 +403,15 @@ router.post(
       });
 
       const saved = await newEntry.save();
-      console.log(`✅ Success chance data saved for user ID: ${userId}`);
+      console.log(`✅ New success chance data created for user ID: ${userId}`);
 
       // 🚀 Trigger enhanced embedding update
       const embeddingResult = await updateUserEmbeddings(userId, "update");
 
-      if (!embeddingResult.success) {
-        console.warn(
-          `⚠️ Embedding update failed but success chance data was saved for user ${userId}`
-        );
-      }
-
       return res.status(201).json({
         success: true,
-        message: "Success chance data saved successfully",
+        message: "Success chance data created successfully",
+        action: "created",
         data: saved,
         embeddingUpdate: embeddingResult.success ? "success" : "failed",
         metadata: {
@@ -376,11 +420,12 @@ router.post(
             LanguageProficiency?.test && LanguageProficiency?.score
           ),
           hasWorkExperience: !!(years && years > 0),
+          wasExistingEntry: false,
         },
       });
     } catch (error) {
       console.error(
-        `❌ Error saving success chance data for user ID ${userId}:`,
+        `❌ Error processing success chance data for user ID ${userId}:`,
         error
       );
 
@@ -405,7 +450,124 @@ router.post(
 
       return res.status(500).json({
         success: false,
-        message: "Server error while saving success chance data",
+        message: "Server error while processing success chance data",
+        error:
+          process.env.NODE_ENV === "development" ? error.message : undefined,
+      });
+    }
+  }
+);
+
+// Alternative: If you want a cleaner approach using MongoDB's upsert functionality
+router.post(
+  "/add-upsert", // Alternative endpoint with native MongoDB upsert
+  authenticateToken,
+  validateSuccessChanceInput,
+  async (req, res) => {
+    const userId = req.user.id;
+    console.log(`📝 Processing success chance upsert (MongoDB native) for user ID: ${userId}`);
+
+    try {
+      const {
+        studyLevel,
+        grade,
+        dateOfBirth,
+        nationality,
+        majorSubject,
+        livingCosts,
+        tuitionfee,
+        LanguageProficiency,
+        years,
+        StudyPreferenced,
+      } = req.body;
+
+      const updateFields = {
+        userId,
+        studyLevel,
+        gradeType: grade.gradeType,
+        grade: grade.score,
+        dateOfBirth,
+        nationality,
+        majorSubject,
+        livingCosts: {
+          amount: parseFloat(livingCosts.amount),
+          currency: livingCosts.currency,
+        },
+        tuitionFee: {
+          amount: parseFloat(tuitionfee.amount),
+          currency: tuitionfee.currency,
+        },
+        languageProficiency: LanguageProficiency
+          ? {
+              test: LanguageProficiency.test,
+              score: LanguageProficiency.score,
+            }
+          : undefined,
+        workExperience: years ? parseInt(years, 10) : undefined,
+        studyPreferenced: {
+          country: StudyPreferenced.country,
+          degree: StudyPreferenced.degree,
+          subject: StudyPreferenced.subject,
+        },
+        updatedAt: new Date()
+      };
+
+      // Use MongoDB's upsert functionality
+      const result = await userSuccessDb.findOneAndUpdate(
+        { userId },
+        { $set: updateFields },
+        { 
+          new: true, 
+          upsert: true, 
+          runValidators: true,
+          setDefaultsOnInsert: true
+        }
+      );
+
+      const wasCreated = !result.createdAt || 
+        (result.updatedAt && result.createdAt && 
+         Math.abs(new Date(result.updatedAt) - new Date(result.createdAt)) < 1000);
+
+      console.log(`✅ Success chance data ${wasCreated ? 'created' : 'updated'} for user ID: ${userId}`);
+
+      // 🚀 Trigger enhanced embedding update
+      const embeddingResult = await updateUserEmbeddings(userId, "update");
+
+      return res.status(wasCreated ? 201 : 200).json({
+        success: true,
+        message: `Success chance data ${wasCreated ? 'created' : 'updated'} successfully`,
+        action: wasCreated ? "created" : "updated",
+        data: result,
+        embeddingUpdate: embeddingResult.success ? "success" : "failed",
+        metadata: {
+          profileCompleteness: calculateProfileCompleteness(result),
+          hasLanguageProficiency: !!(
+            LanguageProficiency?.test && LanguageProficiency?.score
+          ),
+          hasWorkExperience: !!(years && years > 0),
+          wasExistingEntry: !wasCreated,
+        },
+      });
+    } catch (error) {
+      console.error(
+        `❌ Error upserting success chance data for user ID ${userId}:`,
+        error
+      );
+
+      if (error.name === "ValidationError") {
+        return res.status(400).json({
+          success: false,
+          message: "Validation error",
+          errors: Object.values(error.errors).map((err) => ({
+            field: err.path,
+            message: err.message,
+          })),
+        });
+      }
+
+      return res.status(500).json({
+        success: false,
+        message: "Server error while processing success chance data",
         error:
           process.env.NODE_ENV === "development" ? error.message : undefined,
       });

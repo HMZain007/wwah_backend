@@ -19,7 +19,7 @@ const successChanceSchema = new mongoose.Schema(
       trim: true,
     },
     grade: {
-      type: Number,
+      type: String,
       required: [true, "Grade score is required"],
     },
     dateOfBirth: {
