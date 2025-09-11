@@ -53,7 +53,7 @@ const generateReferralCode = (firstName, refId) => {
     const formattedRefId = refId.toString().padStart(3, "0");
 
     // Combine: REF + namePrefix + formattedRefId
-    return `REF${namePrefix}${formattedRefId}`;
+    return `ref${namePrefix}${formattedRefId}`;
   } catch (error) {
     console.error("Error generating referral code:", error);
     throw new Error("Failed to generate referral code");
