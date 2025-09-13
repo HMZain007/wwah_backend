@@ -116,7 +116,14 @@ const profileController = {
     const {
       firstName,
       lastName,
-      phone,
+      contactNo, // This should be just the contact number without country code
+      countryCode, // This should be stored separately
+      country,
+      city,
+      dob,
+      facebook,
+      instagram,
+      linkedin,
       profilePictureUrl, // Frontend sends this
       coverPhotoUrl, // Frontend sends this
     } = req.body;
@@ -132,12 +139,27 @@ const profileController = {
           .json({ message: "Login required.", success: false });
       }
 
-      // Prepare update object - map frontend field names to database field names
+      // Prepare update object - handle all fields separately
       const updateFields = {};
 
       if (firstName !== undefined) updateFields.firstName = firstName;
       if (lastName !== undefined) updateFields.lastName = lastName;
-      if (phone !== undefined) updateFields.phone = phone;
+
+      // Store contact number without country code
+      if (contactNo !== undefined) updateFields.contactNo = contactNo;
+
+      // Store country code separately (don't concatenate)
+      if (countryCode !== undefined) updateFields.countryCode = countryCode;
+
+      // Store other location fields
+      if (country !== undefined) updateFields.country = country;
+      if (city !== undefined) updateFields.city = city;
+      if (dob !== undefined) updateFields.dob = dob;
+
+      // Store social media fields
+      if (facebook !== undefined) updateFields.facebook = facebook;
+      if (instagram !== undefined) updateFields.instagram = instagram;
+      if (linkedin !== undefined) updateFields.linkedin = linkedin;
 
       // Map frontend field names to database field names
       if (profilePictureUrl !== undefined) {
@@ -164,6 +186,8 @@ const profileController = {
       console.log("Existing user found:", {
         id: existingUser._id,
         email: existingUser.email,
+        currentContactNo: existingUser.contactNo,
+        currentCountryCode: existingUser.countryCode,
         currentProfilePicture: existingUser.profilePicture,
         currentCoverPhoto: existingUser.coverPhoto,
       });
@@ -190,6 +214,9 @@ const profileController = {
 
       console.log("Updated user data:", {
         id: updatePersonalInformation._id,
+        contactNo: updatePersonalInformation.contactNo,
+        countryCode: updatePersonalInformation.countryCode,
+        country: updatePersonalInformation.country,
         profilePicture: updatePersonalInformation.profilePicture,
         coverPhoto: updatePersonalInformation.coverPhoto,
         firstName: updatePersonalInformation.firstName,
