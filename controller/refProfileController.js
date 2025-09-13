@@ -108,47 +108,6 @@ const profileController = {
     }
   },
 
-  // Update Personal Information Controller
-  // updatePersonalInfomation: async (req, res) => {
-  //   const { firstName, lastName, phone } = req.body;
-  //   console.log(
-  //     req.body,
-  //     "update personal information from req.body of updatePersonalInfomation controller"
-  //   );
-  //   try {
-  //     const userId = req.user?.id || req.user?._id;
-  //     console.log(userId);
-  //     if (!userId) {
-  //       return res
-  //         .status(401)
-  //         .json({ message: "Login required.", success: false });
-  //     }
-
-  //     const updatePersonalInformation = await UserRefDb.findOneAndUpdate(
-  //       { _id: userId }, // Find by user ID
-  //       {
-  //         $set: {
-  //           firstName,
-  //           lastName,
-  //           phone,
-  //         },
-  //       },
-  //       { new: true, upsert: true } // Return the updated document or insert if not found
-  //     );
-
-  //     return res.status(200).json({
-  //       message: "Presonal information updated successfully.",
-  //       success: true,
-  //       data: updatePersonalInformation,
-  //     });
-  //   } catch (error) {
-  //     console.error(`Error updating Presonal information: ${error}`);
-  //     return res.status(500).json({
-  //       message: "Internal server error while updating Presonal information.",
-  //       success: false,
-  //     });
-  //   }
-  // },
   updatePersonalInfomation: async (req, res) => {
     console.log("=== UPDATE PERSONAL INFORMATION START ===");
     console.log("Request body:", req.body);
@@ -255,6 +214,7 @@ const profileController = {
       });
     }
   },
+
   // Academic Information Controller
   academicInformation: async (req, res) => {
     // Destructure request body
@@ -436,7 +396,6 @@ const profileController = {
   },
 
   // update english language proficiency
-
   updateEnglishProficiency: async (req, res) => {
     const { proficiencyLevel, testType, score } = req.body;
     console.log(req.body);
@@ -880,6 +839,7 @@ const profileController = {
       });
     }
   },
+
   // **ADDITION: Get Payment Information Controller**
   getPaymentInformation: async (req, res) => {
     try {

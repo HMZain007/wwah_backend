@@ -5,10 +5,7 @@ const bcrypt = require("bcryptjs");
 const nodemailer = require("nodemailer");
 const otpSessions = require("../../../utils/otpStore");
 const jwt = require("jsonwebtoken");
-const { send } = require("process");
 const UserRefDb = require("../../../database/models/refPortal/refuser");
-// const UserRefDb = require("../../database/models/refuser");
-
 const router = express.Router();
 const REQUIRED_FIELDS = ["firstName", "lastName", "email", "phone", "password"];
 
