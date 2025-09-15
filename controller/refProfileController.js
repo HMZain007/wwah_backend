@@ -108,47 +108,6 @@ const profileController = {
     }
   },
 
-  // Update Personal Information Controller
-  // updatePersonalInfomation: async (req, res) => {
-  //   const { firstName, lastName, phone } = req.body;
-  //   console.log(
-  //     req.body,
-  //     "update personal information from req.body of updatePersonalInfomation controller"
-  //   );
-  //   try {
-  //     const userId = req.user?.id || req.user?._id;
-  //     console.log(userId);
-  //     if (!userId) {
-  //       return res
-  //         .status(401)
-  //         .json({ message: "Login required.", success: false });
-  //     }
-
-  //     const updatePersonalInformation = await UserRefDb.findOneAndUpdate(
-  //       { _id: userId }, // Find by user ID
-  //       {
-  //         $set: {
-  //           firstName,
-  //           lastName,
-  //           phone,
-  //         },
-  //       },
-  //       { new: true, upsert: true } // Return the updated document or insert if not found
-  //     );
-
-  //     return res.status(200).json({
-  //       message: "Presonal information updated successfully.",
-  //       success: true,
-  //       data: updatePersonalInformation,
-  //     });
-  //   } catch (error) {
-  //     console.error(`Error updating Presonal information: ${error}`);
-  //     return res.status(500).json({
-  //       message: "Internal server error while updating Presonal information.",
-  //       success: false,
-  //     });
-  //   }
-  // },
   updatePersonalInfomation: async (req, res) => {
     console.log("=== UPDATE PERSONAL INFORMATION START ===");
     console.log("Request body:", req.body);
@@ -157,7 +116,14 @@ const profileController = {
     const {
       firstName,
       lastName,
-      phone,
+      contactNo, // This should be just the contact number without country code
+      countryCode, // This should be stored separately
+      country,
+      city,
+      dob,
+      facebook,
+      instagram,
+      linkedin,
       profilePictureUrl, // Frontend sends this
       coverPhotoUrl, // Frontend sends this
     } = req.body;
@@ -173,12 +139,27 @@ const profileController = {
           .json({ message: "Login required.", success: false });
       }
 
-      // Prepare update object - map frontend field names to database field names
+      // Prepare update object - handle all fields separately
       const updateFields = {};
 
       if (firstName !== undefined) updateFields.firstName = firstName;
       if (lastName !== undefined) updateFields.lastName = lastName;
-      if (phone !== undefined) updateFields.phone = phone;
+
+      // Store contact number without country code
+      if (contactNo !== undefined) updateFields.contactNo = contactNo;
+
+      // Store country code separately (don't concatenate)
+      if (countryCode !== undefined) updateFields.countryCode = countryCode;
+
+      // Store other location fields
+      if (country !== undefined) updateFields.country = country;
+      if (city !== undefined) updateFields.city = city;
+      if (dob !== undefined) updateFields.dob = dob;
+
+      // Store social media fields
+      if (facebook !== undefined) updateFields.facebook = facebook;
+      if (instagram !== undefined) updateFields.instagram = instagram;
+      if (linkedin !== undefined) updateFields.linkedin = linkedin;
 
       // Map frontend field names to database field names
       if (profilePictureUrl !== undefined) {
@@ -205,6 +186,8 @@ const profileController = {
       console.log("Existing user found:", {
         id: existingUser._id,
         email: existingUser.email,
+        currentContactNo: existingUser.contactNo,
+        currentCountryCode: existingUser.countryCode,
         currentProfilePicture: existingUser.profilePicture,
         currentCoverPhoto: existingUser.coverPhoto,
       });
@@ -231,6 +214,9 @@ const profileController = {
 
       console.log("Updated user data:", {
         id: updatePersonalInformation._id,
+        contactNo: updatePersonalInformation.contactNo,
+        countryCode: updatePersonalInformation.countryCode,
+        country: updatePersonalInformation.country,
         profilePicture: updatePersonalInformation.profilePicture,
         coverPhoto: updatePersonalInformation.coverPhoto,
         firstName: updatePersonalInformation.firstName,
@@ -255,6 +241,7 @@ const profileController = {
       });
     }
   },
+
   // Academic Information Controller
   academicInformation: async (req, res) => {
     // Destructure request body
@@ -436,7 +423,6 @@ const profileController = {
   },
 
   // update english language proficiency
-
   updateEnglishProficiency: async (req, res) => {
     const { proficiencyLevel, testType, score } = req.body;
     console.log(req.body);
@@ -880,6 +866,7 @@ const profileController = {
       });
     }
   },
+
   // **ADDITION: Get Payment Information Controller**
   getPaymentInformation: async (req, res) => {
     try {
