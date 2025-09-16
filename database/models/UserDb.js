@@ -33,14 +33,6 @@ const appliedScholarshipCourseSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-    successChances: {
-      academicBackground: String,
-      age: String,
-      englishProficiency: String,
-      gradesAndCGPA: String,
-      nationality: String,
-      workExperience: String,
-    },
     banner: {
       type: String,
     },
@@ -151,7 +143,12 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
     },
-    password: { type: String, required: function () { return this.provider === "local"; } },
+    password: {
+      type: String,
+      required: function () {
+        return this.provider === "local";
+      },
+    },
     provider: { type: String, enum: ["local", "google"], default: "local" },
     googleId: { type: String, unique: true, sparse: true },
     isVerified: { type: Boolean, default: false },
@@ -255,7 +252,7 @@ const userSchema = new mongoose.Schema(
     },
     otpVerified: { type: Boolean, default: false },
     profilePic: { type: String },
-
+    complete_profile: { type: Boolean, default: false },
 
     favouriteCourse: { type: [String], default: [] },
     favouriteScholarship: { type: [String], default: [] },

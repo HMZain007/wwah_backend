@@ -5,7 +5,9 @@ const bcrypt = require("bcryptjs");
 const nodemailer = require("nodemailer");
 const otpSessions = require("../../../utils/otpStore");
 const jwt = require("jsonwebtoken");
+const { send } = require("process");
 const UserRefDb = require("../../../database/models/refPortal/refuser");
+
 const router = express.Router();
 const REQUIRED_FIELDS = ["firstName", "lastName", "email", "phone", "password"];
 
@@ -25,38 +27,34 @@ emailTransporter.verify((error, success) => {
     console.log("Email transporter is ready to send messages!");
   }
 });
+
+// Generate next reference ID
 const generateNextRefId = async () => {
   try {
-    // Find the user with the highest refId
     const lastUser = await UserRefDb.findOne({}, { refId: 1 })
       .sort({ refId: -1 })
       .lean();
-
-    // If no users exist, start with 1, otherwise increment
     const nextRefId = lastUser && lastUser.refId ? lastUser.refId + 1 : 1;
-
     return nextRefId;
   } catch (error) {
     console.error("Error generating refId:", error);
     throw new Error("Failed to generate reference ID");
   }
 };
+
+// Generate referral code
 const generateReferralCode = (firstName, refId) => {
   try {
-    // Get first 3 letters of first name in lowercase
     const namePrefix = firstName.toLowerCase().substring(0, 3);
-
-    // Format refId as 3-digit string with leading zeros
     const formattedRefId = refId.toString().padStart(3, "0");
-
-    // Combine: REF + namePrefix + formattedRefId
-    return `ref${namePrefix}${formattedRefId}`;
+    return `REF${namePrefix}${formattedRefId}`;
   } catch (error) {
     console.error("Error generating referral code:", error);
     throw new Error("Failed to generate referral code");
   }
 };
-// ✅ Send Email OTP
+
+// Send Email OTP
 const sendEmailOTP = async (email, otp) => {
   const mailOptions = {
     from: process.env.EMAIL_USER,
@@ -78,30 +76,106 @@ const sendEmailOTP = async (email, otp) => {
   return emailTransporter.sendMail(mailOptions);
 };
 
-// 🆕 Standalone function to create user (replaces ExpressDbHooks.createUser)
+// ✅ NEW: Send Welcome Email for MBA Registration
+const sendWelcomeEmail = async (userInfo) => {
+  try {
+    const { firstName, lastName, email, referralCode } = userInfo;
+    const dashboardUrl = `${
+      process.env.FRONTEND_URL || "https://wwah.ai"
+    }/referralportal/signin`;
+
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: "Welcome to the Worldwide Admissions Hub (WWAH) MBA Program!",
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
+          <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+            
+            <!-- Header -->
+            <div style="text-align: center; margin-bottom: 30px;">
+              <h1 style="color: #dc2626; margin: 0; font-size: 24px;">Welcome to WWAH!</h1>
+              <p style="color: #666; margin: 5px 0 0 0;">Mini Brand Ambassador Program</p>
+            </div>
+
+            <!-- Greeting -->
+            <h2 style="color: #333; margin-bottom: 10px;">Hello ${firstName} ${lastName},</h2>
+            
+            <p style="color: #555; line-height: 1.6; margin-bottom: 20px;">
+              <strong>Welcome aboard!</strong> Your registration for the Mini Brand Ambassador (MBA) Program has been successfully completed. 
+              You're now part of WWAH's mission to make studying abroad easier, accessible, and achievable for students everywhere - while you earn exciting rewards!
+            </p>
+
+            <!-- What's Next Section -->
+            <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <h3 style="color: #dc2626; margin-top: 0;">Here's what's next for you:</h3>
+              <ol style="color: #555; line-height: 1.8;">
+                <li><strong>Complete Your Profile</strong> – Log in to your dashboard and fill in the required details to activate all features.</li>
+                <li><strong>Start Referring</strong> – Generate your unique referral link and share it with potential students.</li>
+                <li><strong>Track Your Impact</strong> – View real-time analytics on your referrals and commissions.</li>
+              </ol>
+            </div>
+
+            <!-- Referral Code -->
+            <div style="background-color: #e3f2fd; padding: 15px; border-radius: 8px; margin: 20px 0; text-align: center;">
+              <p style="margin: 0; color: #1565c0; font-size: 14px;">Your Referral Code:</p>
+              <p style="margin: 5px 0 0 0; font-size: 20px; font-weight: bold; color: #0d47a1; letter-spacing: 2px;">${referralCode}</p>
+            </div>
+
+            <!-- CTA Button -->
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${dashboardUrl}" 
+                 style="display: inline-block; background-color: #dc2626; color: white; padding: 15px 30px; 
+                        text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">
+                Access Your Dashboard Now
+              </a>
+            </div>
+
+            <!-- Footer Message -->
+            <p style="color: #555; line-height: 1.6; margin-top: 30px;">
+              We're excited to have you on the team and can't wait to see the difference you'll make.
+            </p>
+
+            <!-- Signature -->
+            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+              <p style="margin: 0; color: #555;">Best regards,</p>
+              <p style="margin: 5px 0 0 0; color: #dc2626; font-weight: bold;">Worldwide Admissions Hub (WWAH) Team</p>
+              <p style="margin: 5px 0 0 0; color: #888; font-size: 14px;">
+                <a href="https://wwah.ai" style="color: #dc2626; text-decoration: none;">www.wwah.ai</a>
+              </p>
+            </div>
+          </div>
+        </div>
+      `,
+    };
+
+    await emailTransporter.sendMail(mailOptions);
+    console.log(`Welcome email sent successfully to ${email}`);
+    return true;
+  } catch (error) {
+    console.error("Error sending welcome email:", error);
+    // Don't throw error here - welcome email failure shouldn't break registration
+    return false;
+  }
+};
+
+// Create user function
 const createUser = async (userData) => {
   try {
     console.log("Creating new user...");
-
-    // Generate unique refId
     const refId = await generateNextRefId();
     console.log("Generated refId:", refId);
 
-    // Generate referral code
     const referralCode = generateReferralCode(userData.firstName, refId);
     console.log("Generated referral code:", referralCode);
 
-    // Add refId and referralCode to userData
     const userDataWithIds = {
       ...userData,
       refId,
       referralCode,
     };
 
-    // Create new user instance
     const newUser = new UserRefDb(userDataWithIds);
-
-    // Save user to database
     const savedUser = await newUser.save();
 
     console.log("User created successfully:", savedUser._id);
@@ -112,28 +186,24 @@ const createUser = async (userData) => {
   }
 };
 
-// 🆕 Standalone function to validate user data
+// Validate user data
 const validateUserData = (userData) => {
   const { firstName, lastName, email, phone, password } = userData;
 
-  // Email validation
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email)) {
     throw new Error("Please enter a valid email address");
   }
 
-  // Phone number validation
   const phoneRegex = /^\d{10,15}$/;
   if (!phoneRegex.test(phone)) {
     throw new Error("Please enter a valid phone number");
   }
 
-  // Password validation
   if (password.length < 8) {
     throw new Error("Password must be at least 8 characters");
   }
 
-  // Name validation
   if (firstName.trim().length < 2) {
     throw new Error("First name must be at least 2 characters");
   }
@@ -145,11 +215,9 @@ const validateUserData = (userData) => {
   return true;
 };
 
-// ✅ Send OTP (email only)
+// Send OTP endpoint
 router.post("/send-otp", async (req, res) => {
   const userData = req.body;
-
-  // Check which required fields are missing
   const missingFields = REQUIRED_FIELDS.filter((field) => !userData[field]);
   console.log("User data received:", userData);
 
@@ -164,10 +232,8 @@ router.post("/send-otp", async (req, res) => {
   const { firstName, lastName, email, phone, password } = userData;
 
   try {
-    // Validate user data
     validateUserData({ firstName, lastName, email, phone, password });
 
-    // Check if a user with the given email already exists
     const userExists = await UserRefDb.findOne({ email });
     if (userExists) {
       return res.status(409).json({
@@ -180,21 +246,19 @@ router.post("/send-otp", async (req, res) => {
     const emailOtp = Math.floor(100000 + Math.random() * 900000).toString();
     const sessionId = crypto.randomUUID();
 
-    // Store OTP session with all user data (including password for later use)
     otpSessions.set(sessionId, {
       emailOtp,
       email,
       phone,
       firstName,
       lastName,
-      password, // Store password temporarily for complete-signup
+      password,
       verified: false,
-      expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes
+      expiresAt: new Date(Date.now() + 10 * 60 * 1000),
     });
 
     try {
       await sendEmailOTP(email, emailOtp);
-
       res.status(200).json({
         success: true,
         sessionId,
@@ -203,8 +267,6 @@ router.post("/send-otp", async (req, res) => {
     } catch (sendError) {
       console.error("Error sending OTP:", sendError);
       otpSessions.delete(sessionId);
-      console.log("OTP session deleted due to send error", sendError);
-
       res.status(500).json({
         message: `Failed to send OTP. ${sendError.message}`,
         success: false,
@@ -212,8 +274,6 @@ router.post("/send-otp", async (req, res) => {
     }
   } catch (err) {
     console.error("Send OTP error:", err);
-
-    // Handle validation errors
     if (
       err.message.includes("valid email") ||
       err.message.includes("valid phone") ||
@@ -233,7 +293,7 @@ router.post("/send-otp", async (req, res) => {
   }
 });
 
-// ✅ Verify OTP (email only)
+// Verify OTP endpoint
 router.post("/verify-otp", async (req, res) => {
   try {
     const { sessionId, emailOtp } = req.body;
@@ -276,7 +336,7 @@ router.post("/verify-otp", async (req, res) => {
   }
 });
 
-// ✅ Complete Registration (Updated without embedding hooks)
+// ✅ UPDATED: Complete Registration with Welcome Email
 router.post("/complete-signup", async (req, res) => {
   try {
     const { sessionId, password: providedPassword } = req.body;
@@ -301,7 +361,6 @@ router.post("/complete-signup", async (req, res) => {
       });
     }
 
-    // Use password from session or provided password (for flexibility)
     const passwordToUse = providedPassword || session.password;
 
     if (!passwordToUse || passwordToUse.length < 8) {
@@ -313,7 +372,6 @@ router.post("/complete-signup", async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(passwordToUse, 12);
 
-    // Create user data object
     const userData = {
       firstName: session.firstName,
       lastName: session.lastName,
@@ -324,10 +382,22 @@ router.post("/complete-signup", async (req, res) => {
       createdAt: new Date(),
     };
 
-    // 🚀 Create user using standalone function (replaces ExpressDbHooks.createUser)
     console.log("Creating user...");
     const newUser = await createUser(userData);
     console.log("User created successfully:", newUser._id);
+
+    // ✅ Send welcome email (non-blocking)
+    const welcomeEmailInfo = {
+      firstName: newUser.firstName,
+      lastName: newUser.lastName,
+      email: newUser.email,
+      referralCode: newUser.referralCode,
+    };
+
+    // Send welcome email in background (don't await to avoid blocking response)
+    sendWelcomeEmail(welcomeEmailInfo).catch((error) => {
+      console.error("Welcome email failed but continuing:", error);
+    });
 
     // Generate JWT token
     const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET_KEY, {
@@ -339,7 +409,7 @@ router.post("/complete-signup", async (req, res) => {
       httpOnly: true,
       sameSite: "None",
       secure: true,
-      maxAge: 24 * 60 * 60 * 1000, // 1 day
+      maxAge: 24 * 60 * 60 * 1000,
     });
 
     // Clean up session
@@ -359,14 +429,13 @@ router.post("/complete-signup", async (req, res) => {
         email: newUser.email,
         phone: newUser.phone,
         isEmailVerified: newUser.isEmailVerified,
+        referralCode: newUser.referralCode,
       },
     });
   } catch (err) {
     console.error("Complete signup error:", err);
 
-    // More specific error handling
     if (err.code === 11000) {
-      // Duplicate key error
       return res.status(409).json({
         message: "Email is already registered",
         success: false,
@@ -380,14 +449,13 @@ router.post("/complete-signup", async (req, res) => {
   }
 });
 
-// ✅ Resend OTP (email only)
+// Resend OTP endpoint
 router.post("/resend-otp", async (req, res) => {
   try {
     const { sessionId } = req.body;
 
     console.log("Resend OTP request received:", { sessionId });
 
-    // Check if sessionId is provided
     if (!sessionId) {
       console.log("No sessionId provided");
       return res.status(400).json({
@@ -407,7 +475,6 @@ router.post("/resend-otp", async (req, res) => {
       });
     }
 
-    // Check if session has required data
     if (!session.email) {
       console.log("Session missing email data");
       return res.status(400).json({
@@ -419,10 +486,9 @@ router.post("/resend-otp", async (req, res) => {
     console.log("Generating new OTP for email:", session.email);
     const emailOtp = Math.floor(100000 + Math.random() * 900000).toString();
 
-    // Update session with new OTP
     session.emailOtp = emailOtp;
     session.verified = false;
-    session.expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+    session.expiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
     console.log("Updated session with new OTP");
 
@@ -455,7 +521,7 @@ router.post("/resend-otp", async (req, res) => {
   }
 });
 
-// 🆕 Health check endpoint
+// Health check endpoint
 router.get("/health", (req, res) => {
   res.status(200).json({
     success: true,

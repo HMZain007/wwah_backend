@@ -635,9 +635,11 @@ router.put("/confirm/:courseId", authenticateToken, async (req, res) => {
     // Update the course confirmation status
     if (typeof user.appliedCourses[courseIndex] === "string") {
       // Convert string format to object format with confirmation
+      console.log();
+
       user.appliedCourses[courseIndex] = {
         courseId: user.appliedCourses[courseIndex],
-        applicationStatus: 1, // Default status
+        applicationStatus: user.complete_profile ? 2 : 1, // Default status
         isConfirmed: isConfirmed,
         updatedAt: new Date(),
       };
