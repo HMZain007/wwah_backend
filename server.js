@@ -55,12 +55,12 @@ const refforget = require("./routers/referralPortal/auth/forget");
 const refverifyOtp = require("./routers/referralPortal/auth/verifyotp");
 const refresetpassword = require("./routers/referralPortal/auth/resetpassword");
 // const refPaymentInformation = require("./routers/referralPortal/refPaymentInformationRoutes");
-// const refCommissionRoutes = require("./routers/referralPortal/commissionRoutes");
 const refcontact = require("./routers/referralPortal/refcontact");
 const mbaData = require("./routers/adminDashboard/mbaData");
 const referrals = require("./routers/adminDashboard/referrals");
-const commisionRoutes = require("./routers/referralPortal/commissionRoutes");
 const EmailRoutes = require("./routers/referralPortal/emailroutes");
+const commisionRoutes = require("./routers/referralPortal/commissionRoutes");
+
 // Middleware for parsing request bodies
 server.use(bodyParser.json());
 server.use(bodyParser.urlencoded({ extended: true }));
