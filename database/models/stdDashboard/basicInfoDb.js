@@ -123,6 +123,9 @@ const basicInfoSchema = mongoose.Schema(
     hasPassport: {
       type: Boolean,
     },
+    noPassport: {
+      type: Boolean,
+    },
     passportNumber: {
       type: String,
     },

@@ -10,6 +10,11 @@ const educationalBackgroundSchema = new mongoose.Schema({
     required: true,
     trim: true,
   },
+  gradingType:{
+    type:String,
+    required:true,
+    trim:true
+  },
   marks: {
     type: String,
     required: true,

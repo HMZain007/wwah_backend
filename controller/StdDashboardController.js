@@ -105,6 +105,7 @@ const stdDashboardController = {
         currentCountryCode,
         currentPhoneNo,
         hasPassport,
+        noPassport,
         passportNumber,
         passportExpiryDate,
         oldPassportNumber,
@@ -163,6 +164,7 @@ const stdDashboardController = {
             currentCountryCode,
             currentPhoneNo,
             hasPassport,
+            noPassport,
             passportNumber,
             passportExpiryDate,
             oldPassportNumber,
@@ -208,9 +210,9 @@ const stdDashboardController = {
   },
   // Replace your existing updateBasicInformation method with this enhanced version
   updateBasicInformation: async (req, res) => {
-    console.log("DEBUG: Updating basic information for user");
     try {
       const userId = req.user?.id;
+      console.log("DEBUG: Updating basic information for user" , req.body);
 
       if (!userId) {
         return res.status(401).json({
@@ -305,9 +307,9 @@ const stdDashboardController = {
       if (req.body.noPassport === true) {
         updatedData.hasPassport = false;
         updatedData.passportNumber = "";
-        updatedData.passportExpiryDate = null;
+        updatedData.passportExpiryDate = undefined;
         updatedData.oldPassportNumber = "";
-        updatedData.oldPassportExpiryDate = null;
+        updatedData.oldPassportExpiryDate = undefined;
       }
 
       // Handle date fields - convert string dates to Date objects if needed
@@ -400,7 +402,6 @@ const stdDashboardController = {
           success: false,
         });
       }
-
       // Extract and validate body data
       const {
         countryOfStudy,
@@ -417,7 +418,7 @@ const stdDashboardController = {
         educationalBackground = [],
         workExperience = [],
       } = req.body;
-      console.log(req.body, "Request");
+      // console.log(req.body, "Request");
       // Find and update or create basic info document
       const applicationInformation = await applicationInfo.findOneAndUpdate(
         { user: userId }, // Correct query using the "user" field
@@ -440,7 +441,8 @@ const stdDashboardController = {
         },
         { new: true, upsert: true } // Return updated doc or create new one
       );
-
+    //  console.log(applicationInformation , "This data is save");
+     
       // Return the updated user data with success message
       return res.status(200).json({
         message: "Application Information Updated Successfully",
@@ -462,7 +464,6 @@ const stdDashboardController = {
     }
   },
   // Add these new methods to your stdDashboardController
-
   // Update single basic info field
   updateBasicInfoField: async (req, res) => {
     try {
@@ -662,7 +663,7 @@ const stdDashboardController = {
 
       // Validate each education object
       for (const education of educationalBackground) {
-        const requiredFields = ['highestDegree', 'subjectName', 'institutionAttended', 'marks'];
+        const requiredFields = ['highestDegree', 'subjectName', 'institutionAttended', 'marks' , 'gradingType'];
         const missingFields = requiredFields.filter(field => !education[field]);
 
         if (missingFields.length > 0) {
