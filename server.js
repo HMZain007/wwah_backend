@@ -328,7 +328,7 @@ server.get("/chat/messages/:email", async (req, res) => {
 // Centralized error handler
 server.use((err, req, res, next) => {
   console.error(`Error occurred: ${err.message}`);
-  res.status(500).json({ message: "Internal Server Error" });
+  res.status(500).json({ message: "Internal Server Error , Cause in Main Server" , success: false  });
 });
 
 // Starting the server
