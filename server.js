@@ -69,13 +69,12 @@ const path = require("path");
 // Middleware
 const app = http.createServer(server);
 const allowedOrigins = [
+  "https://wwah.ai",        // naked domain
+  "https://www.wwah.ai",    // www domain
   "http://localhost:3000",
   "https://wwah.vercel.app",
   "https://www.worldwideadmissionshub.com",
-  "https://wwah.ai",
-  "https://www.wwah.ai",
 ];
-
 const corsOptions = {
   origin: function (origin, callback) {
     console.log("🔍 Incoming Origin:", origin);
@@ -89,6 +88,7 @@ const corsOptions = {
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
 };
+
 server.use(cors(corsOptions)); // Enable CORS with specific options
 
 const io = new Server(app, {
