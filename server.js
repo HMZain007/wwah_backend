@@ -70,11 +70,11 @@ const path = require("path");
 const app = http.createServer(server);
 const corsOptions = {
   origin: [
+    "https://www.wwah.ai",
     "http://localhost:3000",
     "https://wwah.vercel.app",
     "https://www.worldwideadmissionshub.com",
-    "https://www.wwah.ai",
-    "https://wwah.ai"
+    // "https://wwah.ai"
   ],
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],

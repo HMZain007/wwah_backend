@@ -93,22 +93,17 @@ router.get("/:userId", async (req, res) => {
     console.log("[Commission Route] Received userId:", userId);
 
     if (!mongoose.Types.ObjectId.isValid(userId)) {
-      console.log("[Commission Route] Invalid ObjectId:", userId);
+      console.error("[Commission Route] Invalid ObjectId:", userId);
       return res.status(400).json({ success: false, message: "Invalid userId" });
     }
 
-    console.log("[Commission Route] Querying DB for user:", userId);
     const commissions = await Commission.find({ user: userId }).sort({ createdAt: -1 });
-    console.log("[Commission Route] Query result:", commissions);
+    console.log("[Commission Route] Found commissions:", commissions.length);
 
     res.status(200).json({ success: true, data: commissions });
   } catch (error) {
-    console.error("[Commission Route] Error fetching commissions:", error);
-    res.status(500).json({
-      success: false,
-      message: "Error fetching commission data",
-      error: error.message,
-    });
+    console.error("[Commission Route] Error:", error);
+    res.status(500).json({ success: false, message: error.message });
   }
 });
 
