@@ -90,19 +90,20 @@ const verifyUser = async (req, res, next) => {
 router.get("/:userId", async (req, res) => {
   try {
     const { userId } = req.params;
-    
+    console.log("[Commission Route] Received userId:", userId);
+
     if (!mongoose.Types.ObjectId.isValid(userId)) {
+      console.log("[Commission Route] Invalid ObjectId:", userId);
       return res.status(400).json({ success: false, message: "Invalid userId" });
     }
-    const commissions = await Commission.find({ user: userId }).sort({
-      createdAt: -1,
-    }); // Sort by newest first
-    res.status(200).json({
-      success: true,
-      data: commissions,
-    });
+
+    console.log("[Commission Route] Querying DB for user:", userId);
+    const commissions = await Commission.find({ user: userId }).sort({ createdAt: -1 });
+    console.log("[Commission Route] Query result:", commissions);
+
+    res.status(200).json({ success: true, data: commissions });
   } catch (error) {
-    console.error("Error fetching commissions:", error);
+    console.error("[Commission Route] Error fetching commissions:", error);
     res.status(500).json({
       success: false,
       message: "Error fetching commission data",
@@ -110,6 +111,7 @@ router.get("/:userId", async (req, res) => {
     });
   }
 });
+
 // POST /api/refportal/commission/:userId - Create new commission
 router.post("/:userId", verifyUser, async (req, res) => {
   try {
