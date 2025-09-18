@@ -78,16 +78,18 @@ const allowedOrigins = [
 
 const corsOptions = {
   origin: function (origin, callback) {
+    console.log("🔍 Incoming Origin:", origin);
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      console.error("CORS blocked origin:", origin);
+      console.error("❌ Blocked Origin:", origin);
       callback(new Error("Not allowed by CORS"));
     }
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
 };
+
 server.use(cors(corsOptions)); // Enable CORS with specific options
 
 const io = new Server(app, {
