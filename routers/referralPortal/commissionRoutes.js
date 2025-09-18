@@ -90,6 +90,10 @@ const verifyUser = async (req, res, next) => {
 router.get("/:userId", async (req, res) => {
   try {
     const { userId } = req.params;
+    
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ success: false, message: "Invalid userId" });
+    }
     const commissions = await Commission.find({ user: userId }).sort({
       createdAt: -1,
     }); // Sort by newest first
