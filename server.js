@@ -68,14 +68,23 @@ server.use(bodyParser.urlencoded({ extended: true }));
 const path = require("path");
 // Middleware
 const app = http.createServer(server);
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://wwah.vercel.app",
+  "https://www.worldwideadmissionshub.com",
+  "https://wwah.ai",
+  "https://www.wwah.ai",
+];
+
 const corsOptions = {
-  origin: [
-    "https://www.wwah.ai",
-    "http://localhost:3000",
-    "https://wwah.vercel.app",
-    "https://www.worldwideadmissionshub.com",
-    // "https://wwah.ai"
-  ],
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.error("CORS blocked origin:", origin);
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
 };
