@@ -3,7 +3,6 @@ const express = require("express");
 const router = express.Router();
 const Commission = require("../../database/models/refPortal/Commission");
 const UserRefDb = require("../../database/models/refPortal/refuser");
-const axios = require("axios"); // Add this import for calling the email route
 // At the top of CommissionRoutes.js, add the email functionality
 const nodemailer = require("nodemailer");
 // Create the email function directly in this file
@@ -66,8 +65,10 @@ const sendWithdrawalEmail = async (user, commission) => {
 };
 // Middleware to verify user exists
 const verifyUser = async (req, res, next) => {
+  const { userId } = req.params;
+  console.log("This is user ID : " , req.params , userId);
+  
   try {
-    const { userId } = req.params;
     const user = await UserRefDb.findById(userId);
     if (!user) {
       return res.status(404).json({
@@ -86,7 +87,7 @@ const verifyUser = async (req, res, next) => {
   }
 };
 // GET /api/refportal/commission/:userId - Get all commissions for a user
-router.get("/:userId", verifyUser, async (req, res) => {
+router.get("/:userId", async (req, res) => {
   try {
     const { userId } = req.params;
     const commissions = await Commission.find({ user: userId }).sort({
