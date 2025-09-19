@@ -39,12 +39,9 @@ const favorites = require("./routers/favourites");
 // const toggleFavorites = require("./routers/favourites");
 const appliedcourses = require("./routers/appliedCourses");
 const appliedScholarshipRoutes = require("./routers/appliedScholarshipCourses");
-
 const favoritescholarship = require("./routers/favoriteScholarships");
 const favoritesuniversity = require("./routers/favouriteUniversities");
 const toggleFavorites = require("./routers/favourites");
-const getUniversities = require("./routers/getUniversities");
-
 // regferalportal
 const refSignUp = require("./routers/referralPortal/auth/signup");
 const refSignIn = require("./routers/referralPortal/auth/signin");
@@ -277,7 +274,7 @@ server.use("/favorites", toggleFavorites);
 server.use("/favorites/toggle", toggleFavorites);
 server.use("/appliedcourses", appliedcourses);
 server.use("/appliedScholarshipCourses", appliedScholarshipRoutes); // Applied scholarships route
-server.use("getUniversities", require("./routers/getUniversities")); // Universities route
+server.use("/getUniversities", require("./routers/getUniversities"));
 server.use("/favorites", toggleFavorites);
 server.use("/scholarships", favoritescholarship);
 server.use("/universities", favoritesuniversity); // Favorites route
