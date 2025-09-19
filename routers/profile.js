@@ -4,11 +4,6 @@ const authenticateToken = require("../middlewares/authMiddleware");
 const UserDb = require("../database/models/UserDb");
 const userSuccessDb = require('../database/models/successChance');
 
-/**
- * @route GET /profile/data
- * @desc Get user profile data with all related information
- * @access Private
- */
 router.get("/data", authenticateToken, async (req, res) => {
   console.log("Fetching user data from Profile...");
   const id = req.user.id;
@@ -46,11 +41,6 @@ router.get("/data", authenticateToken, async (req, res) => {
   }
 });
 
-/**
- * @route PATCH /profile/update
- * @desc Update user profile information
- * @access Private
- */
 router.patch("/update", authenticateToken, async (req, res) => {
   const id = req.user.id;
   const updateData = req.body;
