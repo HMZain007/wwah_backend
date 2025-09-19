@@ -39,12 +39,9 @@ const favorites = require("./routers/favourites");
 // const toggleFavorites = require("./routers/favourites");
 const appliedcourses = require("./routers/appliedCourses");
 const appliedScholarshipRoutes = require("./routers/appliedScholarshipCourses");
-
 const favoritescholarship = require("./routers/favoriteScholarships");
 const favoritesuniversity = require("./routers/favouriteUniversities");
 const toggleFavorites = require("./routers/favourites");
-const getUniversities = require("./routers/getUniversities");
-
 // regferalportal
 const refSignUp = require("./routers/referralPortal/auth/signup");
 const refSignIn = require("./routers/referralPortal/auth/signin");
@@ -88,8 +85,8 @@ const corsOptions = {
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
 };
-
 server.use(cors(corsOptions)); // Enable CORS with specific options
+server.options("*", cors(corsOptions));
 
 const io = new Server(app, {
   cors: corsOptions,
@@ -253,7 +250,6 @@ server.use(
 server.use("/signup", signUp); // User signup
 server.use("/createAdmin", createAdminRoute); // User signup
 server.use("/signin", signIn); // User signin
-server.use("/profile", profile);
 server.use("/forgotpassword", forgotPassword); // Forgot password
 server.use("/verifyOtp", verifyOtp); // Verify OTP
 server.use("/resetpassword", resetPassword); // Reset password
@@ -277,10 +273,12 @@ server.use("/favorites", toggleFavorites);
 server.use("/favorites/toggle", toggleFavorites);
 server.use("/appliedcourses", appliedcourses);
 server.use("/appliedScholarshipCourses", appliedScholarshipRoutes); // Applied scholarships route
-server.use("getUniversities", require("./routers/getUniversities")); // Universities route
+server.use("/getUniversities", require("./routers/getUniversities"));
 server.use("/favorites", toggleFavorites);
 server.use("/scholarships", favoritescholarship);
 server.use("/universities", favoritesuniversity); // Favorites route
+server.use("/profile", profile);
+
 // Scholarships favorites route
 // server.use("/appliedscholarships", require("./routers/appliedScholarships"));
 server.use("/profile", require("./routers/embedding-refresh"));
