@@ -10,7 +10,7 @@ const userSuccessDb = require('../database/models/successChance');
  * @access Private
  */
 router.get("/data", authenticateToken, async (req, res) => {
-  console.log("Fetching user data...");
+  console.log("Fetching user data from Profile...");
   const id = req.user.id;
   try {
     // Fetch basic user information
@@ -39,7 +39,7 @@ router.get("/data", authenticateToken, async (req, res) => {
     console.error("❌ Error fetching user data:", error);
     res.status(500).json({
       success: false,
-      message: "Internal Server Error",
+      message: "Internal Server Error While Fetch The Data",
       error: error.message,
       stack: process.env.NODE_ENV === 'production' ? '🥞' : error.stack
     });
