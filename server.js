@@ -211,12 +211,12 @@ io.on("connection", (socket) => {
   });
 
   socket.on("disconnect", () => {
-    console.log(
-      "🔌 Client disconnected:",
-      socket.id,
-      "User:",
-      socket.userEmail
-    );
+    // console.log(
+    //   "🔌 Client disconnected:",
+    //   socket.id,
+    //   "User:",
+    //   socket.userEmail
+    // );
   });
 
   // ✅ Debug event

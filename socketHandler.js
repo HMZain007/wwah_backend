@@ -10,9 +10,9 @@ module.exports = function socketHandler(io) {
         });
 
         socket.on("disconnect", () => {
-            console.log(
-                `🔌 Client disconnected: ${socket.id} User: ${socket.room || "unknown"}`
-            );
+            // console.log(
+            //     `🔌 Client disconnected: ${socket.id} User: ${socket.room || "unknown"}`
+            // );
         });
     });
 };
