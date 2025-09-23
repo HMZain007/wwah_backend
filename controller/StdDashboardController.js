@@ -383,7 +383,7 @@ const stdDashboardController = {
   },
   // Application Information Controller
   applicationInformation: async (req, res) => {
-    console.log(req.body);
+    // console.log(req.body);
     try {
       const userId = req.user?.id; // Safely access req.user and get userId
 
