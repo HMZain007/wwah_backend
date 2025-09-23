@@ -445,7 +445,7 @@ const stdDashboardController = {
      
       // Return the updated user data with success message
       return res.status(200).json({
-        message: "Application Information Updated Successfully",
+        message: "Application Information Updated  and Respone is send back",
         success: true,
         data: applicationInformation,
       });
