@@ -1,8 +1,8 @@
 const jwt = require("jsonwebtoken");
 
-const authenticateToken = (req, res, next) => {
+const authenticateRefToken = (req, res, next) => {
   // 🔹 Get token from `cookies` OR `Authorization` header
-  const token = req.cookies.authToken || req.headers.authorization?.split(" ")[1];
+  const token = req.cookies.refToken || req.headers.authorization?.split(" ")[1];
 
   if (!token) {
     return res.status(401).json({ message: "Access Denied: No Token Provided", success: false });
@@ -18,4 +18,4 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
-module.exports = authenticateToken;
+module.exports = authenticateRefToken;

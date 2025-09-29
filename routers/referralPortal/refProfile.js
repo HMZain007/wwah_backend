@@ -4,9 +4,9 @@ const refAcademicInfo = require("../../database/models/refPortal/refAcademicInfo
 const refWorkExperience = require("../../database/models/refPortal/refWorkExperience");
 const refPaymentInfo = require("../../database/models/refPortal/refPaymentInformation");
 const refUserDb = require("../../database/models/refPortal/refuser");
-const authenticateToken = require("../../middlewares/authMiddleware");
+const authenticateRefToken = require("../../middlewares/refAuth");
 
-router.get("/", authenticateToken, async (req, res) => {
+router.get("/", authenticateRefToken, async (req, res) => {
   try {
     const user = await refUserDb
       .findById(req.user.id)
@@ -29,7 +29,7 @@ router.get("/", authenticateToken, async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 });
-router.get("/data", authenticateToken, async (req, res) => {
+router.get("/data", authenticateRefToken, async (req, res) => {
   const id = req.user.id;
   try {
     const personalInfo = await refUserDb.findById(id);
@@ -55,7 +55,7 @@ router.get("/data", authenticateToken, async (req, res) => {
     });
   }
 });
-router.patch("/update", authenticateToken, async (req, res) => {
+router.patch("/update", authenticateRefToken, async (req, res) => {
   const id = req.user.id;
   const updateData = req.body;
 
