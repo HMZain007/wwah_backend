@@ -4,7 +4,7 @@ const router = express.Router();
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const UserDb = require("../database/models/UserDb"); // Importing the User database model for user data handling
-
+const userSuccessDb = require("../database/models/successChance");
 // POST Route for user login Authentication
 router.post("/", async (req, res) => {
   const { email, password } = req.body;
@@ -36,7 +36,8 @@ router.post("/", async (req, res) => {
         success: false,
       });
     }
-
+    const existingEntry = await userSuccessDb.findOne({ userId : user._id });
+  
     // Generate a JWT token
     const token = jwt.sign(
       { id: user._id },
@@ -56,6 +57,7 @@ router.post("/", async (req, res) => {
       message: "Sign In Successful",
       success: true,
       token,
+      successChance: existingEntry ? true : false,
       user: {
         _id: user._id,
         firstName: user.firstName,
