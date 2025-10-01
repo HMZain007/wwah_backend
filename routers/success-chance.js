@@ -7,7 +7,7 @@ const { triggerEmbeddingWebhooks } = require("../utils/embedding-hooks"); // Fix
 
 // Input validation middleware
 const validateSuccessChanceInput = (req, res, next) => {
-  console.log("Validating input for success chance data:", req.body);
+  // console.log("Validating input for success chance data:", req.body);
   const {
     studyLevel,
     grade,
