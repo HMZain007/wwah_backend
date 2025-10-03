@@ -20,7 +20,7 @@ jobs:
 
       - name: Deploy to EC2
         run: |
-          ssh -o StrictHostKeyChecking=no ubuntu@54.90.177.123 << 'EOF'
+          ssh -o StrictHostKeyChecking=no ubuntu@3.87.75.136 << 'EOF'
             cd ~/wwah_backend
             git pull origin main
             npm install
