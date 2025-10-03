@@ -2,61 +2,62 @@
 const express = require("express");
 const router = express.Router();
 const profileController = require("../../controller/refProfileController");
-const authenticateToken = require("../../middlewares/authMiddleware");
+const authenticateRefToken = require("../../middlewares/refAuth");
+// const authenticateRefToken = require("../../middlewares/authMiddleware");
 
 router.post(
   "/personalInformation",
-  authenticateToken,
+  authenticateRefToken,
   profileController.personalInfomation
 );
 router.get(
   "/academicInformation",
-  authenticateToken,
+  authenticateRefToken,
   profileController.getAcademicInformation
 );
 router.post(
   "/academicInformation",
-  authenticateToken,
+  authenticateRefToken,
 
   profileController.academicInformation
 );
 router.post(
   "/englishProficiency",
-  authenticateToken,
+  authenticateRefToken,
   profileController.languageProficiency
 );
 router.patch(
   "/updatePersonalInfomation",
-  authenticateToken,
+  authenticateRefToken,
   profileController.updatePersonalInfomation
 );
 
 router.post(
   "/workExperience",
-  authenticateToken,
+  authenticateRefToken,
   profileController.workExperience
 );
 router.post(
   "/paymentinformation",
-  authenticateToken,
+  authenticateRefToken,
   profileController.paymentInformation
 );
 router.put(
   "/changePassword",
-  authenticateToken,
+  authenticateRefToken,
   profileController.changePassword
 );
 
 // **ADDITION: Add GET route for payment information**
 router.get(
   "/getPaymentInformation",
-  authenticateToken,
+  authenticateRefToken,
   profileController.getPaymentInformation
 );
 // **ADDITION: Add PATCH route for updating payment information**
 router.patch(
   "/updatePaymentInformation",
-  authenticateToken,
+  authenticateRefToken,
   profileController.updatePaymentInformation
 );
 
