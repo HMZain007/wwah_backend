@@ -280,7 +280,6 @@ server.use("/universities", favoritesuniversity); // Favorites route
 server.use("/profile", profile);
 
 // Scholarships favorites route
-// server.use("/appliedscholarships", require("./routers/appliedScholarships"));
 server.use("/profile", require("./routers/embedding-refresh"));
 //ref portal
 server.use("/refportal/signup", refSignUp);
