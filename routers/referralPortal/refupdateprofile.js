@@ -3,7 +3,6 @@ const express = require("express");
 const router = express.Router();
 const profileController = require("../../controller/refProfileController");
 const authenticateRefToken = require("../../middlewares/refAuth");
-// const authenticateRefToken = require("../../middlewares/authMiddleware");
 
 router.post(
   "/personalInformation",
