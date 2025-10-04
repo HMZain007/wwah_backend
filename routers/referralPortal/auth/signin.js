@@ -48,11 +48,11 @@ router.post("/", async (req, res) => {
     res.cookie("refToken", token, {
       httpOnly: true,
       sameSite: "None",
-      secure: false,
+      secure: true,
       maxAge: 24 * 60 * 60 * 1000, // 1 day
     });
 
-    console.log("Sign In Successful");
+    console.log(" Ref user Sign In Successful");
     return res.status(200).json({
       message: "Sign In Successful",
       success: true,
