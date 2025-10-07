@@ -115,13 +115,7 @@ const sendWelcomeEmail = async (userInfo) => {
                 <li><strong>Track Your Impact</strong> – View real-time analytics on your referrals and commissions.</li>
               </ol>
             </div>
-
-            <!-- Referral Code -->
-            <div style="background-color: #e3f2fd; padding: 15px; border-radius: 8px; margin: 20px 0; text-align: center;">
-              <p style="margin: 0; color: #1565c0; font-size: 14px;">Your Referral Code:</p>
-              <p style="margin: 5px 0 0 0; font-size: 20px; font-weight: bold; color: #0d47a1; letter-spacing: 2px;">${referralCode}</p>
-            </div>
-
+            
             <!-- CTA Button -->
             <div style="text-align: center; margin: 30px 0;">
               <a href="${dashboardUrl}" 
