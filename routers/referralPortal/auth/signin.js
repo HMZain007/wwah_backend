@@ -46,9 +46,9 @@ router.post("/", async (req, res) => {
     );
 
     res.cookie("refToken", token, {
-      httpOnly: true,
+      httpOnly: false,
       sameSite: "None",
-      secure: true,
+      secure: false,
       maxAge: 24 * 60 * 60 * 1000, // 1 day
     });
 
