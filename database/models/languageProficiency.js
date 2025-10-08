@@ -9,12 +9,26 @@ const languageProficiencySchema = new mongoose.Schema(
     },
     proficiencyLevel: {
       type: String,
-      enum: ["native speaker", "test", "willingToTest"], // Restrict to specific levels
+      enum: [
+        "Native Speaker",
+        "Willing to take a test",
+        "Completed a test or have proof of English proficiency",
+        "I want WWAH to help me with this",
+      ], // Restrict to specific levels
       //required: true,
     },
     proficiencyTest: {
       type: String,
-      enum: ["IELTS", "PTE", "TOEFL", "DUOLINGO", "Language Cert", "others"],
+      enum: [
+        "IELTS",
+        "PTE",
+        "TOEFL",
+        "Duolingo English Test",
+        "LanguageCert Academic",
+        "Cambridge English Advanced (CAE)",
+        "Oxford ELLT",
+        "Any Other (Specify)",
+      ],
     },
     proficiencyTestScore: {
       type: String,
