@@ -329,6 +329,7 @@ router.post(
           },
           languageProficiency: LanguageProficiency
             ? {
+                level:LanguageProficiency.test,
                 test: LanguageProficiency.test,
                 score: LanguageProficiency.score,
               }
@@ -364,7 +365,7 @@ router.post(
           metadata: {
             profileCompleteness: calculateProfileCompleteness(updatedEntry),
             hasLanguageProficiency: !!(
-              LanguageProficiency?.test && LanguageProficiency?.score
+                 LanguageProficiency?.test && LanguageProficiency?.score
             ),
             hasWorkExperience: !!(years && years > 0),
             wasExistingEntry: true,
@@ -393,6 +394,7 @@ router.post(
         },
         languageProficiency: LanguageProficiency
           ? {
+            level:LanguageProficiency.test,
               test: LanguageProficiency.test,
               score: LanguageProficiency.score,
             }
@@ -504,6 +506,7 @@ router.post(
         },
         languageProficiency: LanguageProficiency
           ? {
+            level:LanguageProficiency.test,
               test: LanguageProficiency.test,
               score: LanguageProficiency.score,
             }
@@ -784,6 +787,7 @@ router.patch("/update", authenticateToken, async (req, res) => {
 
     if (languageProficiency && typeof languageProficiency === "object") {
       updateFields.languageProficiency = {
+        level:LanguageProficiency.test,
         test: languageProficiency.test,
         score: languageProficiency.score,
       };
