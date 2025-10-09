@@ -128,6 +128,7 @@
 // const successChance = mongoose.model("successChance", successChanceSchema);
 
 // module.exports = successChance;
+const { TrustedAdvisor } = require("aws-sdk");
 const mongoose = require("mongoose");
 
 const successChanceSchema = new mongoose.Schema(
@@ -201,6 +202,10 @@ const successChanceSchema = new mongoose.Schema(
       },
     },
     languageProficiency: {
+      level: {
+        type: String,
+        trim : true,
+      },
       test: {
         type: String,
         trim: true,
