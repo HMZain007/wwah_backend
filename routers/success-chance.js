@@ -787,7 +787,7 @@ router.patch("/update", authenticateToken, async (req, res) => {
 
     if (languageProficiency && typeof languageProficiency === "object") {
       updateFields.languageProficiency = {
-        level:LanguageProficiency.level,
+        level:languageProficiency.level,
         test: languageProficiency.test,
         score: languageProficiency.score,
       };
