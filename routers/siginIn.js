@@ -36,8 +36,8 @@ router.post("/", async (req, res) => {
         success: false,
       });
     }
-    const existingEntry = await userSuccessDb.findOne({ userId : user._id });
-  
+    const existingEntry = await userSuccessDb.findOne({ userId: user._id });
+
     // Generate a JWT token
     const token = jwt.sign(
       { id: user._id },
@@ -45,7 +45,7 @@ router.post("/", async (req, res) => {
       { expiresIn: "1d" }
     );
 
-    res.cookie('authToken', token, {
+    res.cookie("authToken", token, {
       httpOnly: true,
       sameSite: "None",
       secure: true,
