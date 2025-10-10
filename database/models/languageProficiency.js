@@ -22,7 +22,8 @@ const languageProficiencySchema = new mongoose.Schema(
       enum: [
         "IELTS",
         "PTE",
-        "TOEFL",
+        "TOEFL ibt",
+        "TOEFL pbt",
         "Duolingo English Test",
         "LanguageCert Academic",
         "Cambridge English Advanced (CAE)",
