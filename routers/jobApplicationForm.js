@@ -34,26 +34,26 @@ router.post("/", uploadFields, async (req, res) => {
     console.log("✅ req.body:", req.body); // <-- Check all submitted fields
     console.log("✅ req.files:", req.files); // <-- Check uploaded files
     // ✅ Get form fields
-  const {
-  fullName,
-  email,
-  countryCode,
-  phoneNumber,
-  city,
-  dateOfBirth,
-  position,
-  degree,
-  program,
-  universityName,
-  semester,
-  skills,
-  ref1Name,
-  ref1PhoneNumber,
-  ref1countryCode,
-  ref2Name,
-  ref2PhoneNumber,
-  ref2countryCode,
-} = req.body;
+    const {
+      fullName,
+      email,
+      countryCode,
+      phoneNumber,
+      city,
+      dateOfBirth,
+      position,
+      degree,
+      program,
+      universityName,
+      semester,
+      skills,
+      ref1Name,
+      ref1PhoneNumber,
+      ref1countryCode,
+      ref2Name,
+      ref2PhoneNumber,
+      ref2countryCode,
+    } = req.body;
 
 
     // ✅ Required fields validation
@@ -79,18 +79,18 @@ router.post("/", uploadFields, async (req, res) => {
     let referenceSection = "";
     const referenceRows = [];
 
-  if (ref1Name || ref1PhoneNumber) {
-  const ref1PhoneFull = ref1countryCode ? `${ref1countryCode}${ref1PhoneNumber}` : ref1PhoneNumber || "N/A";
-  referenceRows.push(`<tr><td>${ref1Name || "N/A"}</td><td>${ref1PhoneFull}</td></tr>`);
-}
+    if (ref1Name || ref1PhoneNumber) {
+      const ref1PhoneFull = ref1countryCode ? `${ref1countryCode}${ref1PhoneNumber}` : ref1PhoneNumber || "N/A";
+      referenceRows.push(`<tr><td>${ref1Name || "N/A"}</td><td>${ref1PhoneFull}</td></tr>`);
+    }
 
-if (ref2Name || ref2PhoneNumber) {
-  const ref2PhoneFull = ref2countryCode ? `${ref2countryCode}${ref2PhoneNumber}` : ref2PhoneNumber || "N/A";
-  referenceRows.push(`<tr><td>${ref2Name || "N/A"}</td><td>${ref2PhoneFull}</td></tr>`);
-}
+    if (ref2Name || ref2PhoneNumber) {
+      const ref2PhoneFull = ref2countryCode ? `${ref2countryCode}${ref2PhoneNumber}` : ref2PhoneNumber || "N/A";
+      referenceRows.push(`<tr><td>${ref2Name || "N/A"}</td><td>${ref2PhoneFull}</td></tr>`);
+    }
 
     // ✅ User email
-const userEmailHtml = `
+    const userEmailHtml = `
 <div style="font-family: Arial, sans-serif; color: #333;">
   <h2 style="color:#1a73e8; font-weight:bold;">Your job application has been submitted!</h2>
   <p>Dear ${fullName},</p>
@@ -138,7 +138,7 @@ const userEmailHtml = `
   <p>Best regards,<br>WWAH Team</p>
 </div>
 `;
-const adminEmailHtml = `
+    const adminEmailHtml = `
 <div style="font-family: Arial, sans-serif; color: #333;">
   <h2 style="color:#d32f2f; font-weight:bold;">New Job Application Received</h2>
 
@@ -183,9 +183,11 @@ const adminEmailHtml = `
   <p style="margin-top:12px;">All uploaded documents are downloadable.</p>
 </div>
 `;
-   // ✅ Send emails
-    await sendEmail(email, `Application Received - ${position}`, userEmailHtml, attachments);
-    await sendEmail("info@wwah.ai", `New Job Application - ${position}`, adminEmailHtml, attachments);
+    await Promise.all([
+    sendEmail(email, `Application Received - ${position}`, userEmailHtml, attachments),
+    sendEmail("info@wwah.ai", `New Job Application - ${position}`, adminEmailHtml, attachments)
+  ])
+
     res.status(200).json({ success: true, message: "Emails sent successfully with attachments!" });
   } catch (error) {
     console.error("❌ Error sending emails:", error);

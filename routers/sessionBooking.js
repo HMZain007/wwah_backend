@@ -98,8 +98,8 @@ router.post("/", async (req, res) => {
         .json({ error: "Selected time cannot be in the past (adjusted to timezone)" });
     }
 
-  // 📧 4. Email content (with modern layout)
-const adminEmailContent = `
+    // 📧 4. Email content (with modern layout)
+    const adminEmailContent = `
   <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
     <h2 style="background-color: #004aad; color: white; padding: 12px; border-radius: 6px;">
       New Session Booking Received
@@ -130,7 +130,7 @@ const adminEmailContent = `
   </div>
 `;
 
-const userEmailContent = `
+    const userEmailContent = `
   <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
     <h2 style="background-color: #007bff; color: white; padding: 12px; border-radius: 6px;">
       Booking Confirmation
@@ -160,23 +160,25 @@ const userEmailContent = `
 
 
     // 📤 Send emails
-    // await sendEmail("info@wwah.ai", `New Session Booking - ${fullName}`, adminEmailContent);
-    await sendEmail(email, `Booking Confirmation - ${fullName}`, userEmailContent);
+    await Promise.all([
+      sendEmail("info@wwah.ai", `New Session Booking - ${fullName}`, adminEmailContent),
+      sendEmail(email, `Booking Confirmation - ${fullName}`, userEmailContent)
+    ])
 
-    // ✅ Success response
-    res.status(200).json({
-      success: true,
-      message:
-        "Session booked successfully. Confirmation sent to user and admin.",
-    });
+// ✅ Success response
+res.status(200).json({
+  success: true,
+  message:
+    "Session booked successfully. Confirmation sent to user and admin.",
+});
   } catch (error) {
-    console.error("Error booking session:", error);
-    res.status(500).json({
-      success: false,
-      error: "Internal Server Error",
-      details: error.message,
-    });
-  }
+  console.error("Error booking session:", error);
+  res.status(500).json({
+    success: false,
+    error: "Internal Server Error",
+    details: error.message,
+  });
+}
 });
 
 module.exports = router;
