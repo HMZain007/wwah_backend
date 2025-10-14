@@ -301,6 +301,7 @@ router.post(
         LanguageProficiency,
         years,
         StudyPreferenced,
+        hasExperience, // Add this to get the boolean value
       } = req.body;
 
       // Check if user already has an entry
@@ -329,12 +330,17 @@ router.post(
           },
           languageProficiency: LanguageProficiency
             ? {
-                level:LanguageProficiency.level,
+                level: LanguageProficiency.level,
                 test: LanguageProficiency.test,
                 score: LanguageProficiency.score,
               }
             : undefined,
-          workExperience: years ? parseInt(years, 10) : undefined,
+          // ✅ FIXED: Properly handle clearing work experience
+          workExperience: hasExperience === false || years === null || years === 0 
+            ? null 
+            : years 
+            ? parseInt(years, 10) 
+            : null,
           studyPreferenced: {
             country: StudyPreferenced.country,
             degree: StudyPreferenced.degree,
@@ -365,9 +371,9 @@ router.post(
           metadata: {
             profileCompleteness: calculateProfileCompleteness(updatedEntry),
             hasLanguageProficiency: !!(
-                 LanguageProficiency?.test && LanguageProficiency?.score
+              LanguageProficiency?.test && LanguageProficiency?.score
             ),
-            hasWorkExperience: !!(years && years > 0),
+            hasWorkExperience: !!(updatedEntry.workExperience && updatedEntry.workExperience > 0),
             wasExistingEntry: true,
           },
         });
@@ -394,12 +400,17 @@ router.post(
         },
         languageProficiency: LanguageProficiency
           ? {
-            level:LanguageProficiency.level,
-              test: LanguageProficiency.level,
+              level: LanguageProficiency.level,
+              test: LanguageProficiency.test,
               score: LanguageProficiency.score,
             }
           : undefined,
-        workExperience: years ? parseInt(years, 10) : undefined,
+        // ✅ FIXED: Properly handle clearing work experience
+        workExperience: hasExperience === false || years === null || years === 0 
+          ? null 
+          : years 
+          ? parseInt(years, 10) 
+          : null,
         studyPreferenced: {
           country: StudyPreferenced.country,
           degree: StudyPreferenced.degree,
@@ -424,7 +435,7 @@ router.post(
           hasLanguageProficiency: !!(
             LanguageProficiency?.level && LanguageProficiency?.score
           ),
-          hasWorkExperience: !!(years && years > 0),
+          hasWorkExperience: !!(saved.workExperience && saved.workExperience > 0),
           wasExistingEntry: false,
         },
       });
@@ -736,13 +747,13 @@ router.patch("/update", authenticateToken, async (req, res) => {
       languageProficiency,
       years,
       studyPreferenced,
-      cgpaOutOf, // Add cgpaOutOf
+      cgpaOutOf,
+      hasExperience, // Add this
     } = req.body;
 
     if (studyLevel) updateFields.studyLevel = studyLevel;
     if (gradeType) updateFields.gradeType = gradeType;
 
-    // ✅ CRITICAL FIX: Handle grade based on gradeType
     if (grade !== undefined) {
       const currentGradeType = gradeType || existingEntry.gradeType;
 
@@ -750,16 +761,13 @@ router.patch("/update", authenticateToken, async (req, res) => {
         currentGradeType === "Percentage Grade Scale" ||
         currentGradeType === "CGPA Grade Scale"
       ) {
-        // Convert to number for numeric grade types
         updateFields.grade = parseFloat(grade);
       } else {
-        // Keep as string for Letter Grade, Pass/Fail, Any Other
         updateFields.grade =
           typeof grade === "string" ? grade.trim() : String(grade);
       }
     }
 
-    // ✅ Add cgpaOutOf handling
     if (cgpaOutOf !== undefined) {
       updateFields.cgpaOutOf = cgpaOutOf;
     }
@@ -767,7 +775,15 @@ router.patch("/update", authenticateToken, async (req, res) => {
     if (dateOfBirth) updateFields.dateOfBirth = dateOfBirth;
     if (nationality) updateFields.nationality = nationality;
     if (majorSubject) updateFields.majorSubject = majorSubject;
-    if (years !== undefined) updateFields.workExperience = parseInt(years, 10);
+    
+    // ✅ FIXED: Properly handle clearing work experience
+    if (years !== undefined || hasExperience !== undefined) {
+      if (hasExperience === false || years === null || years === 0) {
+        updateFields.workExperience = null;
+      } else if (years) {
+        updateFields.workExperience = parseInt(years, 10);
+      }
+    }
 
     if (livingCosts && typeof livingCosts === "object") {
       updateFields.livingCosts = {
@@ -787,7 +803,7 @@ router.patch("/update", authenticateToken, async (req, res) => {
 
     if (languageProficiency && typeof languageProficiency === "object") {
       updateFields.languageProficiency = {
-        level:languageProficiency.level,
+        level: languageProficiency.level,
         test: languageProficiency.test,
         score: languageProficiency.score,
       };
