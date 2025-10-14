@@ -15,6 +15,7 @@ const allowedFileTypes = [
 const storage = multer.memoryStorage();
 const upload = multer({
   storage,
+   limits: { fileSize: 5 * 1024 * 1024 }, // ⬅️ 5 MB limit (per file)
   fileFilter: (req, file, cb) => {
     if (allowedFileTypes.includes(file.mimetype)) cb(null, true);
     else cb(new Error("Invalid file type. Only PDF, DOCX, JPG, and PNG allowed."));
@@ -29,11 +30,21 @@ const uploadFields = upload.fields([
   { name: "ref2Attachment", maxCount: 1 },
 ]);
 
-router.post("/", uploadFields, async (req, res) => {
+// ✅ Custom multer error handler middleware
+function handleMulterError(err, req, res, next) {
+  if (err instanceof multer.MulterError && err.code === "LIMIT_FILE_SIZE") {
+    return res.status(400).json({
+      success: false,
+      message: "File size too large. Each file must be under 5MB.",
+    });
+  } else if (err) {
+    return res.status(400).json({ success: false, message: err.message });
+  }
+  next();
+}
+
+router.post("/", uploadFields, handleMulterError, async (req, res) => {
   try {
-    console.log("✅ req.body:", req.body); // <-- Check all submitted fields
-    console.log("✅ req.files:", req.files); // <-- Check uploaded files
-    // ✅ Get form fields
     const {
       fullName,
       email,
@@ -55,11 +66,50 @@ router.post("/", uploadFields, async (req, res) => {
       ref2countryCode,
     } = req.body;
 
+    console.log("📩 Email received:", email);
+    console.log("📱 Phone number received:", phoneNumber);
 
-    // ✅ Required fields validation
-    if (!fullName || !email || !countryCode || !phoneNumber || !city || !dateOfBirth || !position || !degree || !program || !universityName || !semester) {
-      return res.status(400).json({ success: false, message: "Please fill all required fields." });
+    // ✅ 1. Required field validation
+    if (
+      !fullName ||
+      !email ||
+      !countryCode ||
+      !phoneNumber ||
+      !city ||
+      !dateOfBirth ||
+      !position ||
+      !degree ||
+      !program ||
+      !universityName ||
+       (degree === "Pursuing" && !semester) // ✅ Only required if degree is pursuing
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Please fill all required fields.",
+      });
     }
+
+    // ✅ 2. Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      console.log("❌ Invalid email format detected:", email);
+      return res.status(400).json({
+        success: false,
+        message: "Invalid email format. Please enter a valid email address.",
+      });
+    }
+
+    // ✅ 3. Phone number validation
+    const phoneRegex = /^\+?[0-9\s]{7,20}$/; // allows + and spaces
+    if (!phoneRegex.test(phoneNumber.trim())) {
+      console.log("❌ Invalid phone number detected:", phoneNumber);
+      return res.status(400).json({
+        success: false,
+        message:
+          "Invalid phone number. Use digits only (optionally + or spaces).",
+      });
+    }
+
 
     // ✅ Uploaded files
     const cvFile = req.files?.cvFile?.[0];
@@ -79,18 +129,18 @@ router.post("/", uploadFields, async (req, res) => {
     let referenceSection = "";
     const referenceRows = [];
 
-    if (ref1Name || ref1PhoneNumber) {
-      const ref1PhoneFull = ref1countryCode ? `${ref1countryCode}${ref1PhoneNumber}` : ref1PhoneNumber || "N/A";
-      referenceRows.push(`<tr><td>${ref1Name || "N/A"}</td><td>${ref1PhoneFull}</td></tr>`);
-    }
+  if (ref1Name || ref1PhoneNumber) {
+  const ref1PhoneFull = ref1countryCode ? `${ref1countryCode}${ref1PhoneNumber}` : ref1PhoneNumber || "N/A";
+  referenceRows.push(`<tr><td>${ref1Name || "N/A"}</td><td>${ref1PhoneFull}</td></tr>`);
+}
 
-    if (ref2Name || ref2PhoneNumber) {
-      const ref2PhoneFull = ref2countryCode ? `${ref2countryCode}${ref2PhoneNumber}` : ref2PhoneNumber || "N/A";
-      referenceRows.push(`<tr><td>${ref2Name || "N/A"}</td><td>${ref2PhoneFull}</td></tr>`);
-    }
+if (ref2Name || ref2PhoneNumber) {
+  const ref2PhoneFull = ref2countryCode ? `${ref2countryCode}${ref2PhoneNumber}` : ref2PhoneNumber || "N/A";
+  referenceRows.push(`<tr><td>${ref2Name || "N/A"}</td><td>${ref2PhoneFull}</td></tr>`);
+}
 
     // ✅ User email
-    const userEmailHtml = `
+const userEmailHtml = `
 <div style="font-family: Arial, sans-serif; color: #333;">
   <h2 style="color:#1a73e8; font-weight:bold;">Your job application has been submitted!</h2>
   <p>Dear ${fullName},</p>
@@ -138,7 +188,7 @@ router.post("/", uploadFields, async (req, res) => {
   <p>Best regards,<br>WWAH Team</p>
 </div>
 `;
-    const adminEmailHtml = `
+const adminEmailHtml = `
 <div style="font-family: Arial, sans-serif; color: #333;">
   <h2 style="color:#d32f2f; font-weight:bold;">New Job Application Received</h2>
 
@@ -183,10 +233,12 @@ router.post("/", uploadFields, async (req, res) => {
   <p style="margin-top:12px;">All uploaded documents are downloadable.</p>
 </div>
 `;
+
+    // ✅ Send emails
     await Promise.all([
-    sendEmail(email, `Application Received - ${position}`, userEmailHtml, attachments),
-    sendEmail("info@wwah.ai", `New Job Application - ${position}`, adminEmailHtml, attachments)
-  ])
+   sendEmail(email, `Application Received - ${position}`, userEmailHtml, attachments),
+  sendEmail("info@wwah.ai", `New Job Application - ${position}`, adminEmailHtml, attachments),
+]);
 
     res.status(200).json({ success: true, message: "Emails sent successfully with attachments!" });
   } catch (error) {
