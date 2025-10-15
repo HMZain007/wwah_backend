@@ -88,7 +88,12 @@ router.post("/", uploadFields, handleMulterError, async (req, res) => {
         message: "Please fill all required fields.",
       });
     }
-
+    if (/^\d+$/.test(fullName.trim())) {
+      return res.status(400).json({
+        success: false,
+        message: "Full name cannot contain only numbers.",
+      });
+    }
     // ✅ 2. Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email.trim())) {
