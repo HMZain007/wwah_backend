@@ -14,10 +14,9 @@ const corsOptions = {
     if (!origin) return callback(null, true);
 
     const allowedOrigins = [
-      process.env.FRONTEND_URL,
+      "https://wwah.ai",
       "http://localhost:3000",
       "https://wwah.vercel.app",
-      "https://wwah.ai",
       "https://www.worldwideadmissionshub.com",
     ];
 
@@ -29,7 +28,7 @@ const corsOptions = {
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+  allowedHeaders: ["Content-Type", "Authorization"],
   optionsSuccessStatus: 200,
 };
 
