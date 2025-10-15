@@ -417,7 +417,8 @@ server.use(bodyParser.urlencoded({ extended: true }));
 server.use(express.json());
 server.use(express.urlencoded({ extended: true }));
 server.use(cookieParser());
-
+server.use(express.json({ limit: "20mb" }));
+server.use(express.urlencoded({ limit: "20mb", extended: true }));
 // 3. CORS Configuration (BEFORE session)
 const allowedOrigins = [
   "https://wwah.ai",
