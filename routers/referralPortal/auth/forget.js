@@ -59,11 +59,12 @@ const sendOTPEmail = async (email, otp, firstName = "") => {
 
   await transporter.sendMail(mailOptions);
 };
+console.log("🔥 Route hit:", req.method, req.originalUrl);
+res.setHeader("Access-Control-Allow-Origin", req.headers.origin || "*");
 
 // POST Route for forgot password - Send OTP
 router.post("/", async (req, res) => {
   const { email } = req.body;
-
   console.log("=== FORGOT PASSWORD REQUEST ===");
   console.log("Email received:", email);
   console.log("EMAIL_USER:", process.env.EMAIL_USER);
