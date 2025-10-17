@@ -393,7 +393,7 @@ const refProfile = require("./routers/referralPortal/refProfile");
 const refupdateProfile = require("./routers/referralPortal/refupdateprofile");
 const refPortalAuth = require("./routers/referralPortal/refPortalAuth");
 const refforget = require("./routers/referralPortal/auth/forget");
-const refverifyOtp = require("./routers/referralPortal/verifyotp");
+
 const refresetpassword = require("./routers/referralPortal/auth/resetpassword");
 const refcontact = require("./routers/referralPortal/refcontact");
 const mbaData = require("./routers/adminDashboard/mbaData");
@@ -404,6 +404,7 @@ const jobApplicationForm = require("./routers/jobApplicationForm");
 const sessionBooking=require("./routers/sessionBooking")
 const path = require("path");
 const refForgotPassword = require("./routers/referralPortal/ref-forgotpassword");
+const refverifyOtp = require("./routers/referralPortal/ref-verify-otp");
 // ============================================
 // MIDDLEWARE SETUP (ORDER MATTERS!)
 // ============================================
@@ -635,7 +636,7 @@ server.use("/refprofile", refProfile);
 server.use("/refportal/auth", refPortalAuth);
 server.use("/refportal", refPortalAuth);
 server.use("/refportal/forgotpassword", refforget);
-server.use("/refportal/verifyotp", refverifyOtp);
+
 server.use("/refportal/resetpassword", refresetpassword);
 server.use("/refcontact", refcontact);
 server.use("/adminDashboard/mbaData", mbaData);
@@ -645,6 +646,7 @@ server.use("/refportal/email", EmailRoutes);
 server.use("/jobapplicationform",jobApplicationForm)
 server.use("/sessionbooking",sessionBooking)
 server.use("/refral/forgot",refForgotPassword);
+server.use("/refal/verifyotp", refverifyOtp);
 // Default routes
 server.get("/", async (req, res) => {
   try {
