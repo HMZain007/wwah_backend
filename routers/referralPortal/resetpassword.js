@@ -4,7 +4,7 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
 const router = express.Router();
-const UserRefDb = require("../../../database/models/refPortal/refuser");
+const UserRefDb = require("../../database/models/refPortal/refuser");
 
 // Helper: Validate email format
 const isValidEmail = (email) => /\S+@\S+\.\S+/.test(email);
