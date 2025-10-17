@@ -646,7 +646,7 @@ server.use("/refportal/email", EmailRoutes);
 server.use("/jobapplicationform",jobApplicationForm)
 server.use("/sessionbooking",sessionBooking)
 server.use("/refral/forgot",refForgotPassword);
-server.use("/refal/verifyotp", refverifyOtp);
+server.use("/refal/verify-otp", refverifyOtp);
 // Default routes
 server.get("/", async (req, res) => {
   try {
