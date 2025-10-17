@@ -1,102 +1,101 @@
-// Importing necessary modules
+// routes/verifyOtp.js
+
 const express = require("express");
+const crypto = require("crypto");
 const router = express.Router();
 const UserRefDb = require("../../database/models/refPortal/refuser");
 
-// POST Route for OTP verification
+// Helper function to validate email
+const isValidEmail = (email) => /\S+@\S+\.\S+/.test(email);
+
+// Hash OTP for comparison
+const hashOTP = (otp) => crypto.createHash("sha256").update(otp).digest("hex");
+
+// ==================== Verify OTP Route ====================
 router.post("/", async (req, res) => {
-  const { email, otp } = req.body;
-
-  // Validate input
-  if (!email || !/\S+@\S+\.\S+/.test(email)) {
-    return res.status(400).json({
-      message: "Please provide a valid email address.",
-      success: false,
-    });
-  }
-
-  if (!otp || otp.length !== 6) {
-    return res.status(400).json({
-      message: "Please provide a valid 6-digit OTP.",
-      success: false,
-    });
-  }
-
   try {
-    // console.log("=== OTP VERIFICATION REQUEST ===");
-    // console.log("Email:", email);
-    // console.log("OTP:", otp);
+    const { email, otp } = req.body;
 
-    // Find the user
+    // ---------- Input Validation ----------
+    if (!email || !isValidEmail(email)) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide a valid email address.",
+      });
+    }
+
+    if (!otp || otp.length !== 6) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide a valid 6-digit OTP.",
+      });
+    }
+
+    // ---------- Find User ----------
     const user = await UserRefDb.findOne({ email });
-
     if (!user) {
       return res.status(404).json({
+        success: false,
         message: "No account found with this email address.",
-        success: false,
       });
     }
 
-    // console.log("User found:", user.firstName);
-    // console.log("Stored OTP:", user.otp);
-    // console.log("OTP Expiration:", user.otpExpiration);
-
-    // Check if OTP exists
-    if (!user.otp) {
+    // ---------- Validate OTP ----------
+    if (!user.otp || !user.otpExpiration) {
       return res.status(400).json({
-        message: "No OTP found. Please request a new one.",
         success: false,
+        message: "No OTP found. Please request a new one.",
       });
     }
 
-    // Check if OTP has expired
-    if (new Date() > user.otpExpiration) {
-      // Clear expired OTP
+    // Check expiration
+    if (Date.now() > user.otpExpiration) {
       await UserRefDb.findByIdAndUpdate(user._id, {
         otp: null,
         otpExpiration: null,
+        otpVerified: false,
       });
 
       return res.status(400).json({
+        success: false,
         message: "OTP has expired. Please request a new one.",
-        success: false,
       });
     }
 
-    // Verify OTP
-    if (user.otp !== otp) {
+    // Compare hashed OTP
+    const hashedInputOTP = hashOTP(otp);
+    if (hashedInputOTP !== user.otp) {
       return res.status(400).json({
-        message: "Invalid OTP. Please try again.",
         success: false,
+        message: "Invalid OTP. Please try again.",
       });
     }
 
-    // OTP is valid - mark as verified and generate a temporary token for password reset
-    const resetToken = require("crypto").randomBytes(32).toString("hex");
-    const resetTokenExpires = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+    // ---------- OTP Valid - Generate Reset Token ----------
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    const resetTokenExpires = Date.now() + 15 * 60 * 1000; // 15 mins
 
     await UserRefDb.findByIdAndUpdate(user._id, {
+      otp: null, // clear OTP once used
+      otpExpiration: null,
       otpVerified: true,
       resetPasswordToken: resetToken,
       resetPasswordTokenExpires: resetTokenExpires,
-      // Keep OTP for a short while in case user needs to verify again
     });
 
-    console.log("OTP verified successfully");
+    console.log(`✅ OTP verified successfully for: ${email}`);
 
     return res.status(200).json({
-      message: "OTP verified successfully. You can now reset your password.",
       success: true,
-      resetToken: resetToken, // Send this to frontend for password reset
+      message: "OTP verified successfully. You can now reset your password.",
+      resetToken,
     });
   } catch (error) {
-    console.error(
-      `${new Date().toISOString()}] OTP verification error: ${error.message}`
-    );
+    console.error(`[${new Date().toISOString()}] OTP Verification Error:`, error);
 
     return res.status(500).json({
-      message: "An internal server error occurred. Please try again later.",
       success: false,
+      message: "An internal server error occurred. Please try again later.",
     });
   }
 });
