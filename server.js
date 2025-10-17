@@ -394,7 +394,7 @@ const refupdateProfile = require("./routers/referralPortal/refupdateprofile");
 const refPortalAuth = require("./routers/referralPortal/refPortalAuth");
 const refforget = require("./routers/referralPortal/auth/forget");
 
-const refresetpassword = require("./routers/referralPortal/auth/resetpassword");
+const refresetpassword = require("./routers/referralPortal/resetpassword");
 const refcontact = require("./routers/referralPortal/refcontact");
 const mbaData = require("./routers/adminDashboard/mbaData");
 const referrals = require("./routers/adminDashboard/referrals");
