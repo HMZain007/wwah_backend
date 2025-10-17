@@ -23,9 +23,9 @@ router.post("/", async (req, res) => {
   }
 
   try {
-    console.log("=== OTP VERIFICATION REQUEST ===");
-    console.log("Email:", email);
-    console.log("OTP:", otp);
+    // console.log("=== OTP VERIFICATION REQUEST ===");
+    // console.log("Email:", email);
+    // console.log("OTP:", otp);
 
     // Find the user
     const user = await UserRefDb.findOne({ email });
@@ -37,9 +37,9 @@ router.post("/", async (req, res) => {
       });
     }
 
-    console.log("User found:", user.firstName);
-    console.log("Stored OTP:", user.otp);
-    console.log("OTP Expiration:", user.otpExpiration);
+    // console.log("User found:", user.firstName);
+    // console.log("Stored OTP:", user.otp);
+    // console.log("OTP Expiration:", user.otpExpiration);
 
     // Check if OTP exists
     if (!user.otp) {
