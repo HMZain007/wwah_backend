@@ -644,7 +644,7 @@ server.use("/refportal/commission", commisionRoutes);
 server.use("/refportal/email", EmailRoutes);
 server.use("/jobapplicationform",jobApplicationForm)
 server.use("/sessionbooking",sessionBooking)
-server.use("/refral/forgot",refForgotPassword );
+server.use("/refral/forgot",refForgotPassword);
 // Default routes
 server.get("/", async (req, res) => {
   try {
