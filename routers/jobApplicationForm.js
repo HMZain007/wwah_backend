@@ -15,7 +15,7 @@ const allowedFileTypes = [
 const storage = multer.memoryStorage();
 const upload = multer({
   storage,
-  limits: { fileSize: 3 * 1024 * 1024 }, // ⬅ 3 MB limit (per file)
+   limits: { fileSize: 3 * 1024 * 1024 }, // ⬅️ 3 MB limit (per file)
   fileFilter: (req, file, cb) => {
     if (allowedFileTypes.includes(file.mimetype)) cb(null, true);
     else cb(new Error("Invalid file type. Only PDF, DOCX, JPG, and PNG allowed."));
@@ -66,8 +66,8 @@ router.post("/", uploadFields, handleMulterError, async (req, res) => {
       ref2countryCode,
     } = req.body;
 
-    console.log("📩 Email received:", email);
-    console.log("📱 Phone number received:", phoneNumber);
+    // console.log("📩 Email received:", email);
+    // console.log("📱 Phone number received:", phoneNumber);
 
     // ✅ 1. Required field validation
     if (
@@ -88,12 +88,16 @@ router.post("/", uploadFields, handleMulterError, async (req, res) => {
         message: "Please fill all required fields.",
       });
     }
-    if (/^\d+$/.test(fullName.trim())) {
-      return res.status(400).json({
-        success: false,
-        message: "Full name cannot contain only numbers.",
-      });
-    }
+    // ✅ Additional validation for fullName
+if (/^\d+$/.test(fullName.trim())) {
+  return res.status(400).json({
+    success: false,
+    message: "Full name cannot contain only numbers.",
+  });
+}
+
+
+
     // ✅ 2. Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email.trim())) {
@@ -114,6 +118,39 @@ router.post("/", uploadFields, handleMulterError, async (req, res) => {
           "Invalid phone number. Use digits only (optionally + or spaces).",
       });
     }
+    // ✅ 4. Work Experience & Skills validation
+const hasExperience = req.body.hasExperience === "true" 
+                    ? true 
+                    : req.body.hasExperience === "false" 
+                    ? false 
+                    : null;
+
+// Check if user selected Yes/No for experience
+if (hasExperience === null) {
+  return res.status(400).json({
+    success: false,
+    message: "Please indicate whether you have work experience."
+  });
+}
+
+// Skills are always mandatory
+if (!skills || !skills.trim()) {
+  return res.status(400).json({
+    success: false,
+    message: "Please enter your skills."
+  });
+}
+
+// If user has experience, work experience description is mandatory
+if (hasExperience === true) {
+  if (!req.body.workexperience || !req.body.workexperience.trim()) {
+    return res.status(400).json({
+      success: false,
+      message: "Please describe your work experience."
+    });
+  }
+}
+
 
 
     // ✅ Uploaded files
@@ -143,6 +180,8 @@ if (ref2Name || ref2PhoneNumber) {
   const ref2PhoneFull = ref2countryCode ? `${ref2countryCode}${ref2PhoneNumber}` : ref2PhoneNumber || "N/A";
   referenceRows.push(`<tr><td>${ref2Name || "N/A"}</td><td>${ref2PhoneFull}</td></tr>`);
 }
+const { workexperience } = req.body;
+
 
     // ✅ User email
 const userEmailHtml = `
@@ -160,16 +199,24 @@ const userEmailHtml = `
     </div>
   </div>
 
-  <div style="border:1px solid #ddd; padding:12px; border-radius:8px; background:#f1f3f4; margin-top:12px;">
-    <h3 style="margin-bottom:8px;">Education & Position</h3>
-    <div style="line-height:1.6;">
-      <div><strong>Position:</strong> ${position}</div>
-      <div><strong>Degree:</strong> ${degree || "N/A"}</div>
-      <div><strong>Program:</strong> ${program || "N/A"}</div>
-      <div><strong>University:</strong> ${universityName || "N/A"}</div>
-      <div><strong>Skills:</strong> ${skills || "No Skills"}</div>
-    </div>
+<div style="border:1px solid #ddd; padding:12px; border-radius:8px; background:#f1f3f4; margin-top:12px;">
+  <h3 style="margin-bottom:8px;">Education & Position</h3>
+  <div style="line-height:1.6;">
+    <div><strong>Position:</strong> ${position}</div>
+    <div><strong>Degree:</strong> ${degree || "N/A"}</div>
+    <div><strong>Program:</strong> ${program || "N/A"}</div>
+    <div><strong>University:</strong> ${universityName || "N/A"}</div>
+    <div><strong>Semester:</strong> ${
+      degree && degree.toLowerCase().includes("pursuing")
+        ? semester || "N/A"
+        : "N/A"
+    }</div>
+    <div><strong>Skills:</strong> ${skills || "No Skills"}</div>
+    ${hasExperience ? `<div><strong>Work Experience:</strong> ${workexperience}</div>` : ""}
   </div>
+</div>
+
+
 
   ${referenceRows.length > 0 ? `
     <div style="border:1px solid #ddd; padding:12px; border-radius:8px; background:#f9f9f9; margin-top:12px;">
@@ -209,13 +256,19 @@ const adminEmailHtml = `
 
   <div style="border:1px solid #ddd; padding:12px; border-radius:8px; background:#f1f3f4; margin-top:12px;">
     <h3 style="margin-bottom:8px;">Education & Position</h3>
-    <div style="line-height:1.6;">
-      <div><strong>Position:</strong> ${position}</div>
-      <div><strong>Degree:</strong> ${degree || "N/A"}</div>
-      <div><strong>Program:</strong> ${program || "N/A"}</div>
-      <div><strong>University:</strong> ${universityName || "N/A"}</div>
-      <div><strong>Skills:</strong> ${skills || "N/A"}</div>
-    </div>
+   <div style="line-height:1.6;">
+    <div><strong>Position:</strong> ${position}</div>
+    <div><strong>Degree:</strong> ${degree || "N/A"}</div>
+    <div><strong>Program:</strong> ${program || "N/A"}</div>
+    <div><strong>University:</strong> ${universityName || "N/A"}</div>
+    <div><strong>Semester:</strong> ${
+      degree && degree.toLowerCase().includes("pursuing")
+        ? semester || "N/A"
+        : "N/A"
+    }</div>
+    <div><strong>Skills:</strong> ${skills || "No Skills"}</div>
+    ${hasExperience ? `<div><strong>Work Experience:</strong> ${workexperience}</div>` : ""}
+  </div>
   </div>
 
   ${referenceRows.length > 0 ? `
@@ -242,7 +295,7 @@ const adminEmailHtml = `
     // ✅ Send emails
     await Promise.all([
    sendEmail(email, `Application Received - ${position}`, userEmailHtml, attachments),
-  sendEmail("info@wwah.ai", `New Job Application - ${position}`, adminEmailHtml, attachments),
+ sendEmail("info@wwah.ai", `New Job Application - ${position}`, adminEmailHtml, attachments),
 ]);
 
     res.status(200).json({ success: true, message: "Emails sent successfully with attachments!" });
