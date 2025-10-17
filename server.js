@@ -403,7 +403,7 @@ const commisionRoutes = require("./routers/referralPortal/commissionRoutes");
 const jobApplicationForm = require("./routers/jobApplicationForm");
 const sessionBooking=require("./routers/sessionBooking")
 const path = require("path");
-
+const refForgotPassword = require("./routers/referralPortal/ref-forgotpassword");
 // ============================================
 // MIDDLEWARE SETUP (ORDER MATTERS!)
 // ============================================
@@ -644,7 +644,7 @@ server.use("/refportal/commission", commisionRoutes);
 server.use("/refportal/email", EmailRoutes);
 server.use("/jobapplicationform",jobApplicationForm)
 server.use("/sessionbooking",sessionBooking)
-
+server.use("/refral/forgot",refForgotPassword );
 // Default routes
 server.get("/", async (req, res) => {
   try {
