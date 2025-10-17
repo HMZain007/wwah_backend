@@ -4,7 +4,7 @@ const express = require("express");
 const router = express.Router();
 const crypto = require("crypto");
 const nodemailer = require("nodemailer");
-const UserRefDb = require("../../../database/models/refPortal/refuser");
+const UserRefDb = require("../../database/models/refPortal/refuser");
 
 // ==================== Helper Functions ====================
 
