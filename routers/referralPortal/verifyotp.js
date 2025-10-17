@@ -1,7 +1,7 @@
 // Importing necessary modules
 const express = require("express");
 const router = express.Router();
-const UserRefDb = require("../../../database/models/refPortal/refuser");
+const UserRefDb = require("../../database/models/refPortal/refuser");
 
 // POST Route for OTP verification
 router.post("/", async (req, res) => {
