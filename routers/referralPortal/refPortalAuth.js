@@ -135,7 +135,7 @@ router.post("/google-login", async (req, res) => {
     // Determine cookie settings based on environment
     const isProduction = process.env.NODE_ENV === "production";
     const cookieOptions = {
-      httpOnly: false, // Allow frontend to access the token
+      httpOnly: true, // Allow frontend to access the token
       secure: isProduction, // Only secure in production
       sameSite: isProduction ? "None" : "Lax",
       maxAge: 24 * 60 * 60 * 1000, // 1 day
