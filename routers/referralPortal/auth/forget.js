@@ -39,7 +39,7 @@ const sendOTPEmail = async (email, otp, firstName = "User") => {
         <p>We received a request to reset your password for your WWAH account. Please use the following One-Time Password (OTP) to proceed:</p>
         <div style="background: #f5f5f5; padding: 20px; text-align: center; border-radius: 8px; margin: 30px 0;">
           <h1 style="color: #d32f2f; font-size: 32px; letter-spacing: 5px; margin: 0;">${otp}</h1>
-          <p style="color: #666; font-size: 14px;">Valid for 2 minutes</p>
+          <p style="color: #666; font-size: 14px;">Valid for 10 minutes</p>
         </div>
         <p>If you did not request this, please ignore this email.</p>
         <p style="font-size: 12px; color: #999; text-align: center;">This is an automated email. Please do not reply.</p>
@@ -76,7 +76,7 @@ router.post("/", async (req, res) => {
     // Generate and hash OTP
     const otp = generateOTP();
     const hashedOTP = hashOTP(otp);
-    const otpExpires = Date.now() + 2 * 60 * 1000; // 2 minutes
+    const otpExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
 
     // Update user with OTP and expiration
     await UserRefDb.findByIdAndUpdate(user._id, {
