@@ -124,7 +124,7 @@ router.post("/resend", async (req, res) => {
     await transporter.sendMail({
       to: email,
       subject: "Resent OTP for Verification",
-      text: `Your new OTP is: ${otpToken}. It will expire in 10 minutes.`,
+      text: `Your new OTP is: ${otpToken}. It will expire in 2 minutes.`,
     });
 
     // Update session

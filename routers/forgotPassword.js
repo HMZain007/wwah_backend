@@ -23,7 +23,7 @@ router.post("/", async (req, res) => {
     console.log('Generated OTP:', otpToken);
 
     user.otp = otpToken;
-    user.otpExpiration = Date.now() + 10 * 60 * 1000; // Expire in 10 minutes (increased for testing)
+    user.otpExpiration = Date.now() + 2 * 60 * 1000; // Expire in 2 minutes (increased for testing)
     user.otpVerified = false; // Mark OTP as unverified
     await user.save();
 
@@ -40,7 +40,7 @@ router.post("/", async (req, res) => {
     await transporter.sendMail({
       to: user.email,
       subject: "Password Reset OTP",
-      text: `Your OTP for password reset is: ${otpToken}. This OTP is valid for 10 minutes.`,
+      text: `Your OTP for password reset is: ${otpToken}. This OTP is valid for 2 minutes.`,
     });
     console.log(`OTP sent to ${user.email}: ${otpToken}`);
 
