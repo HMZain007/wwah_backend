@@ -241,7 +241,7 @@
 //       secure: true, // true if you're using HTTPS
 //       sameSite: "none",
 //       httpOnly: true,
-//       maxAge: 1000 * 60 * 10, // 2 minutes
+//       maxAge: 1000 * 60 * 10, // 10 minutes
 //     },
 //   })
 // );
@@ -404,6 +404,8 @@ const path = require("path");
 const refForgotPassword = require("./routers/referralPortal/ref-forgotpassword");
 const refverifyOtp = require("./routers/referralPortal/ref-verify-otp");
 const refResetPassword = require("./routers/referralPortal/resetpassword");
+// super admin
+const superAdminSignIn = require("./routers/adminDashboard/auth/signin");
 // ============================================
 // MIDDLEWARE SETUP (ORDER MATTERS!)
 // ============================================
@@ -645,6 +647,7 @@ server.use("/sessionbooking",sessionBooking)
 server.use("/refral/forgot",refForgotPassword);
 server.use("/refal/verify-otp", refverifyOtp);
 server.use("/refal/reset-password", refResetPassword);
+server.use("/superadmin/signin", superAdminSignIn);
 // Default routes
 server.get("/", async (req, res) => {
   try {

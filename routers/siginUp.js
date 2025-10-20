@@ -41,7 +41,7 @@ const sendEmailOTP = async (email, otp) => {
         <div style="background-color: #f0f0f0; padding: 20px; text-align: center; font-size: 24px; font-weight: bold; letter-spacing: 5px; margin: 20px 0;">
           ${otp}
         </div>
-        <p>This code will expire in 2 minutes.</p>
+        <p>This code will expire in 10 minutes.</p>
         <p>If you didn't request this code, please ignore this email.</p>
       </div>
     `,
@@ -110,7 +110,7 @@ router.post("/send-otp", async (req, res) => {
       password, // Store password temporarily for complete-signup
       referralCode: referralCode || null,
       verified: false,
-      expiresAt: new Date(Date.now() + 2 * 60 * 1000), // 2 minutes
+      expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes
     });
 
     try {
@@ -809,7 +809,7 @@ router.post("/resend-otp", async (req, res) => {
     // Update session with new OTP
     session.emailOtp = emailOtp;
     session.verified = false;
-    session.expiresAt = new Date(Date.now() + 2 * 60 * 1000); // 2 minutes
+    session.expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
     console.log("Updated session with new OTP");
 
