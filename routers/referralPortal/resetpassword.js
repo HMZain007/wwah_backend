@@ -150,10 +150,7 @@ router.post("/", async (req, res) => {
         success: false,
         message: "Password must be at least 6 characters long.",
       });
-    }
-
-    // ---------- Find User ----------
-    const user = await UserRefDb.findOne({ email });
+    }    const user = await UserRefDb.findOne({ email });
     if (!user) {
       return res.status(404).json({
         success: false,
