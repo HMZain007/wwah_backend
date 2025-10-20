@@ -5,10 +5,10 @@
 class OTPStore {
     constructor() {
         this.sessions = new Map();
-        // Clean up expired sessions every 5 minutes
+        // Clean up expired sessions every 2 minutes
         this.cleanupInterval = setInterval(() => {
             this.cleanup();
-        }, 5 * 60 * 1000);
+        }, 2 * 60 * 1000);
     }
 
     set(sessionId, data) {

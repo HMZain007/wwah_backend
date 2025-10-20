@@ -180,7 +180,7 @@ router.post("/", async (req, res) => {
     // ---------- OTP Valid - Generate Reset Token ----------
     const resetToken = crypto.randomBytes(32).toString("hex");
     const hashedResetToken = hashToken(resetToken); // ✅ Hash before storing
-    const resetTokenExpires = Date.now() + 15 * 60 * 1000; // 15 mins
+    const resetTokenExpires = Date.now() + 2 * 60 * 1000; // 2 mins
 
     await UserRefDb.findByIdAndUpdate(user._id, {
       otp: null, // clear OTP once used

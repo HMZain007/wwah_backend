@@ -241,7 +241,7 @@
 //       secure: true, // true if you're using HTTPS
 //       sameSite: "none",
 //       httpOnly: true,
-//       maxAge: 1000 * 60 * 10, // 10 minutes
+//       maxAge: 1000 * 60 * 10, // 2 minutes
 //     },
 //   })
 // );
