@@ -108,7 +108,7 @@ router.post("/resend", async (req, res) => {
     // Generate new OTP
     const otpToken = crypto.randomInt(100000, 999999).toString();
     user.otp = otpToken;
-    user.otpExpiration = Date.now() + 10 * 60 * 1000;
+    user.otpExpiration = Date.now() + 5 * 60 * 1000;
     user.otpVerified = false;
     await user.save();
 
@@ -124,7 +124,7 @@ router.post("/resend", async (req, res) => {
     await transporter.sendMail({
       to: email,
       subject: "Resent OTP for Verification",
-      text: `Your new OTP is: ${otpToken}. It will expire in 10 minutes.`,
+      text: `Your new OTP is: ${otpToken}. It will expire in 5 minutes.`,
     });
 
     // Update session
