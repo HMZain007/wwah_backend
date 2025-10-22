@@ -471,10 +471,6 @@ const sessionConfig = {
   name: "wwah.sid",
   rolling: true,
 };
-
-server.use(session(sessionConfig));
-
-
 server.use(session(sessionConfig));
 
 // 6. SESSION DEBUG MIDDLEWARE (Remove in production)
