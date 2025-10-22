@@ -453,36 +453,27 @@ server.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
 
-// 5. SESSION CONFIGURATION (FIXED!)
 const sessionConfig = {
-  secret:
-    process.env.SESSION_SECRET ||
-    "e9ed0093e9fc9aa21caf0f44a3ed2fc3ccae908ebf65784287902aafe446529a675f9b56b4d008deff7236dc97001f2300dc5fa6c23eab144fed98bb347d6c5c",
+  secret: process.env.SESSION_SECRET || "fallback-secret",
   resave: false,
   saveUninitialized: false,
-
   store: MongoStore.create({
     mongoUrl: process.env.MONGODB_URI || process.env.DATABASE_URL,
     ttl: 60 * 60,
     touchAfter: 24 * 3600,
-    crypto: {
-      secret:
-        process.env.SESSION_SECRET ||
-        "e9ed0093e9fc9aa21caf0f44a3ed2fc3ccae908ebf65784287902aafe446529a675f9b56b4d008deff7236dc97001f2300dc5fa6c23eab144fed98bb347d6c5c",
-    },
   }),
-
   cookie: {
     secure: process.env.NODE_ENV === "production",
     httpOnly: true,
     sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     maxAge: 1000 * 60 * 60,
-    domain: undefined,
   },
-
   name: "wwah.sid",
   rolling: true,
 };
+
+server.use(session(sessionConfig));
+
 
 server.use(session(sessionConfig));
 

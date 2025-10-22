@@ -6,13 +6,13 @@ const nodemailer = require("nodemailer");
 // Verify OTP
 router.post("/", async (req, res) => {
   const { otp } = req.body;
-  console.log('Received OTP:', otp);
+  // console.log('Received OTP:', otp);
 
   // Debug session information
-  console.log('=== VERIFY OTP SESSION DEBUG ===');
-  console.log('Session ID:', req.sessionID);
-  console.log('Session email:', req.session?.email);
-  console.log('Session exists:', !!req.session);
+  // console.log('=== VERIFY OTP SESSION DEBUG ===');
+  // console.log('Session ID:', req.sessionID);
+  // console.log('Session email:', req.session?.email);
+  // console.log('Session exists:', !!req.session);
 
   try {
     // Validate input
@@ -32,7 +32,7 @@ router.post("/", async (req, res) => {
     }
 
     const { email } = req.session; // Get email from session
-    console.log('Email from session:', email, 'OTP:', otp);
+    // console.log('Email from session:', email, 'OTP:', otp);
 
     // Find user with matching email, OTP, and non-expired OTP
     const user = await UserDb.findOne({
@@ -43,9 +43,9 @@ router.post("/", async (req, res) => {
 
     console.log('User found:', !!user);
     if (user) {
-      console.log('User OTP:', user.otp);
-      console.log('User OTP Expiration:', new Date(user.otpExpiration));
-      console.log('Current time:', new Date());
+      // console.log('User OTP:', user.otp);
+      // console.log('User OTP Expiration:', new Date(user.otpExpiration));
+      // console.log('Current time:', new Date());
     }
 
     if (!user) {
@@ -63,7 +63,7 @@ router.post("/", async (req, res) => {
 
     // IMPORTANT: Keep session data for password reset
     // DO NOT clear session.email here - we need it for password reset
-    console.log('OTP verified successfully. Session email preserved:', req.session.email);
+    // console.log('OTP verified successfully. Session email preserved:', req.session.email);
 
     // Save session to ensure it persists
     req.session.save((err) => {
@@ -108,7 +108,7 @@ router.post("/resend", async (req, res) => {
     // Generate new OTP
     const otpToken = crypto.randomInt(100000, 999999).toString();
     user.otp = otpToken;
-    user.otpExpiration = Date.now() + 5 * 60 * 1000;
+    user.otpExpiration = Date.now() + 2 * 60 * 1000;
     user.otpVerified = false;
     await user.save();
 
@@ -124,13 +124,13 @@ router.post("/resend", async (req, res) => {
     await transporter.sendMail({
       to: email,
       subject: "Resent OTP for Verification",
-      text: `Your new OTP is: ${otpToken}. It will expire in 5 minutes.`,
+      text: `Your new OTP is: ${otpToken}. It will expire in 2 minutes.`,
     });
 
     // Update session
     req.session.otpToken = otpToken;
 
-    console.log(`🔁 OTP resent to ${email}: ${otpToken}`);
+    // console.log(`🔁 OTP resent to ${email}: ${otpToken}`);
 
     res.status(200).json({ message: "OTP resent successfully." });
   } catch (error) {
