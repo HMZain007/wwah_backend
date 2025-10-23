@@ -6,7 +6,7 @@ const nodemailer = require("nodemailer");
 // Verify OTP
 router.post("/", async (req, res) => {
   const { otp } = req.body;
-  // console.log('Received OTP:', otp);
+  console.log('Received OTP:', otp);
   // Debug session information
   console.log('=== VERIFY OTP SESSION DEBUG ===');
   console.log('Session ID:', req.sessionID);
