@@ -23,7 +23,7 @@ router.post("/", async (req, res) => {
     // console.log('Generated OTP:', otpToken);
 
     user.otp = otpToken;
-    user.otpExpiration = Date.now() + 2 * 60 * 1000; // Expire in 10 minutes (increased for testing)
+    user.otpExpiration = Date.now() + 2 * 60 * 1000; // Expire in 2 minutes (increased for testing)
     user.otpVerified = false; // Mark OTP as unverified
     await user.save();
 
@@ -54,7 +54,7 @@ router.post("/", async (req, res) => {
     req.session.email = email;
     req.session.otpRequested = true;
     req.session.otpToken = otpToken; // Store for debugging (remove in production)
-    // console.log('Session after setting data:', JSON.stringify(req.session, null, 2));
+    console.log('Session after setting data:', JSON.stringify(req.session, null, 2));
 
 
     // Save session explicitly and wait for completion
@@ -66,8 +66,8 @@ router.post("/", async (req, res) => {
         });
       }
 
-      // console.log('Session saved successfully');
-      // console.log('Final session data:', JSON.stringify(req.session, null, 2));
+      console.log('Session saved successfully');
+      console.log('Final session data:', JSON.stringify(req.session, null, 2));
 
       res.status(200).json({
         message: "OTP sent to email. Please check your inbox.",

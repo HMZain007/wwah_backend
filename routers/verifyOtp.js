@@ -9,10 +9,10 @@ router.post("/", async (req, res) => {
   // console.log('Received OTP:', otp);
 
   // Debug session information
-  // console.log('=== VERIFY OTP SESSION DEBUG ===');
-  // console.log('Session ID:', req.sessionID);
-  // console.log('Session email:', req.session?.email);
-  // console.log('Session exists:', !!req.session);
+  console.log('=== VERIFY OTP SESSION DEBUG ===');
+  console.log('Session ID:', req.sessionID);
+  console.log('Session email:', req.session?.email);
+  console.log('Session exists:', !!req.session);
 
   try {
     // Validate input
