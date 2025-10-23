@@ -6,8 +6,6 @@ const UserDb = require("../database/models/UserDb");
 // Reset Password
 router.post("/", async (req, res) => {
   const { newPassword } = req.body;
-
-
   try {
     // Validate input
     if (!newPassword || newPassword.length < 8) {

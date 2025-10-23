@@ -7,7 +7,6 @@ const nodemailer = require("nodemailer");
 const UserRefDb = require("../../database/models/refPortal/refuser");
 
 // ==================== Helper Functions ====================
-
 // Email validation
 const isValidEmail = (email) => /\S+@\S+\.\S+/.test(email);
 
