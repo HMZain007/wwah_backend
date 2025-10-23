@@ -463,9 +463,9 @@ const sessionConfig = {
     touchAfter: 24 * 3600,
   }),
   cookie: {
-    secure: process.env.NODE_ENV === "production",
+    secure: true,
     httpOnly: true,
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    sameSite: "none", 
     maxAge: 1000 * 60 * 60,
   },
   name: "wwah.sid",
@@ -476,14 +476,13 @@ server.use(session(sessionConfig));
 // 6. SESSION DEBUG MIDDLEWARE (Remove in production)
 server.use((req, res, next) => {
   if (req.path.includes("verifyOtp") || req.path.includes("forgotpassword") || req.path.includes("resetpassword")) {
-    // console.log("\n=== SESSION DEBUG ===");
-    // console.log("🔗 URL:", req.method, req.originalUrl);
-    // console.log("🆔 Session ID:", req.sessionID);
-    // console.log("📧 Session Email:", req.session?.email);
-    // console.log("✅ Session Exists:", !!req.session);
-    // console.log("📦 Full Session:", JSON.stringify(req.session, null, 2));
-    // console.log("🍪 Cookies:", req.headers.cookie);
-    // console.log("==================\n");
+    console.log("\n=== SESSION DEBUG ===");
+    console.log("🔗 URL:", req.method, req.originalUrl);
+    console.log("🆔 Session ID:", req.sessionID);
+    console.log("📧 Session Email:", req.session?.email);
+    console.log("✅ Session Exists:", !!req.session);
+    console.log("📦 Full Session:", JSON.stringify(req.session, null, 2));
+    console.log("🍪 Cookies:", req.headers.cookie);
   }
   next();
 });
