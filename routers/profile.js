@@ -1,8 +1,9 @@
 const express = require("express");
 const router = express.Router();
-const authenticateToken = require("../middlewares/authMiddleware");
+// const authenticateToken = require("../middlewares/authMiddleware");
 const UserDb = require("../database/models/UserDb");
-const userSuccessDb = require('../database/models/successChance');
+const userSuccessDb = require("../database/models/successChance");
+const authenticateToken = require("../middlewares/authMiddleware");
 
 router.get("/data", authenticateToken, async (req, res) => {
   console.log("Fetching user data from Profile...");
@@ -13,7 +14,7 @@ router.get("/data", authenticateToken, async (req, res) => {
     if (!basicInfo) {
       return res.status(404).json({
         success: false,
-        message: "User not found"
+        message: "User not found",
       });
     }
     // Fetch detailed user information
@@ -22,7 +23,8 @@ router.get("/data", authenticateToken, async (req, res) => {
     const userData = {
       success: true,
       message: "User data fetched successfully",
-      user: basicInfo, detailedInfo
+      user: basicInfo,
+      detailedInfo,
     };
 
     // Log the response size
@@ -36,7 +38,7 @@ router.get("/data", authenticateToken, async (req, res) => {
       success: false,
       message: "Internal Server Error While Fetch The Data",
       error: error.message,
-      stack: process.env.NODE_ENV === 'production' ? '🥞' : error.stack
+      stack: process.env.NODE_ENV === "production" ? "🥞" : error.stack,
     });
   }
 });
@@ -50,7 +52,7 @@ router.patch("/update", authenticateToken, async (req, res) => {
     if (!updateData || Object.keys(updateData).length === 0) {
       return res.status(400).json({
         success: false,
-        message: "No update data provided"
+        message: "No update data provided",
       });
     }
 
@@ -65,7 +67,7 @@ router.patch("/update", authenticateToken, async (req, res) => {
       if (!updatedBasicInfo) {
         return res.status(404).json({
           success: false,
-          message: "User not found"
+          message: "User not found",
         });
       }
     }
@@ -99,7 +101,8 @@ router.patch("/update", authenticateToken, async (req, res) => {
       }
 
       if (updateData.detailedInfo.LanguageProf) {
-        detailedInfoData.languageProficiency = updateData.detailedInfo.LanguageProf;
+        detailedInfoData.languageProficiency =
+          updateData.detailedInfo.LanguageProf;
       }
 
       if (updateData.detailedInfo.UserPref) {
@@ -116,14 +119,14 @@ router.patch("/update", authenticateToken, async (req, res) => {
 
     res.json({
       success: true,
-      message: "Profile updated successfully"
+      message: "Profile updated successfully",
     });
   } catch (error) {
     console.error("❌ Error updating user profile:", error);
     res.status(500).json({
       success: false,
       message: "Failed to update profile",
-      error: error.message
+      error: error.message,
     });
   }
 });

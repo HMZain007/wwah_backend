@@ -3,6 +3,7 @@ const express = require("express");
 const router = express.Router();
 const UserDb = require("../database/models/UserDb");
 const authenticateToken = require("../middlewares/authMiddleware");
+// const authenticateToken = require("../middlewares/authMiddleware");
 
 // Route 1: Toggle favorites with action parameter (main route for frontend)
 router.post("/favorites", authenticateToken, async (req, res) => {

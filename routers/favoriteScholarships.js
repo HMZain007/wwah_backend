@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const UserDb = require("../database/models/UserDb");
 const authenticateToken = require("../middlewares/authMiddleware");
+// const authenticateToken = require("../middlewares/authMiddleware");
 
 // Route 1: Toggle favorites with action parameter (main route for frontend)
 router.post("/favorite", authenticateToken, async (req, res) => {
@@ -128,7 +129,7 @@ router.post("/toggle", authenticateToken, async (req, res) => {
       success: true,
       message: message,
       isFavorite: !isFavorite,
-       favouriteScholarship: updatedUser.favouriteScholarship,
+      favouriteScholarship: updatedUser.favouriteScholarship,
     });
   } catch (error) {
     console.error("Error toggling favorite course:", error);
@@ -173,7 +174,7 @@ router.post("/add", authenticateToken, async (req, res) => {
       success: true,
       message: "Course added to favorites",
       isFavorite: true,
-       favouriteScholarship: user.favouriteScholarship,
+      favouriteScholarship: user.favouriteScholarship,
     });
   } catch (error) {
     console.error("Error adding course to favorites:", error);
@@ -218,7 +219,7 @@ router.post("/remove", authenticateToken, async (req, res) => {
       success: true,
       message: "Course removed from favorites",
       isFavorite: false,
-       favouriteScholarship: user.favouriteScholarship,
+      favouriteScholarship: user.favouriteScholarship,
     });
   } catch (error) {
     console.error("Error removing course from favorites:", error);
@@ -238,7 +239,7 @@ router.get("/", authenticateToken, async (req, res) => {
 
     const user = await UserDb.findById(userId).select("favouriteScholarship");
 
-    if (!user) {    
+    if (!user) {
       return res.status(404).json({
         success: false,
         message: "User not found",
@@ -247,7 +248,7 @@ router.get("/", authenticateToken, async (req, res) => {
 
     res.status(200).json({
       success: true,
-       favouriteScholarship: user.favouriteScholarship || [],
+      favouriteScholarship: user.favouriteScholarship || [],
     });
   } catch (error) {
     console.error("Error fetching favorites:", error);

@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const UserDb = require("../database/models/UserDb");
 const authenticateToken = require("../middlewares/authMiddleware");
+// const authenticateToken = require("../middlewares/authMiddleware");
 
 // Route 1: Toggle favorites with action parameter (main route for frontend)
 router.post("/", authenticateToken, async (req, res) => {
@@ -76,7 +77,7 @@ router.post("/", authenticateToken, async (req, res) => {
 });
 
 // Route 2: Toggle favorites without action (automatically detects add/remove)
-router.post("/toggle", authenticateToken, async (req, res) => {
+router.post("/toggle", async (req, res) => {
   try {
     const { courseId } = req.body;
     // Fix: Use consistent userId extraction
@@ -139,7 +140,7 @@ router.post("/toggle", authenticateToken, async (req, res) => {
 });
 
 // Route 3: Add to favorites explicitly
-router.post("/add", authenticateToken, async (req, res) => {
+router.post("/add", async (req, res) => {
   try {
     const { courseId } = req.body;
     // Fix: Use consistent userId extraction
@@ -184,7 +185,7 @@ router.post("/add", authenticateToken, async (req, res) => {
 });
 
 // Route 4: Remove from favorites explicitly
-router.post("/remove", authenticateToken, async (req, res) => {
+router.post("/remove", async (req, res) => {
   try {
     const { courseId } = req.body;
     // Fix: Use consistent userId extraction
@@ -229,14 +230,14 @@ router.post("/remove", authenticateToken, async (req, res) => {
 });
 
 // Route 5: Get user's favorites
-router.get("/", authenticateToken, async (req, res) => {
+router.get("/", authenticateToken,async (req, res) => {
   try {
     // Fix: Use consistent userId extraction
     const userId = req.user?.id || req.userId;
 
     const user = await UserDb.findById(userId).select("favouriteCourse");
 
-    if (!user) {    
+    if (!user) {
       return res.status(404).json({
         success: false,
         message: "User not found",

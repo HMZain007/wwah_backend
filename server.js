@@ -37,7 +37,7 @@
 // const chatRouter = require("./routers/counselorChat");
 // const favorites = require("./routers/favourites");
 // // const toggleFavorites = require("./routers/favourites");
-// const appliedcourses = require("./routers/appliedCourses");
+// const appliedCourses = require("./routers/appliedCourses");
 // const appliedScholarshipRoutes = require("./routers/appliedScholarshipCourses");
 // const favoritescholarship = require("./routers/favoriteScholarships");
 // const favoritesuniversity = require("./routers/favouriteUniversities");
@@ -271,7 +271,7 @@
 // server.use("/chat", chatRouter);
 // server.use("/favorites", toggleFavorites);
 // server.use("/favorites/toggle", toggleFavorites);
-// server.use("/appliedcourses", appliedcourses);
+// server.use("/appliedCourses", appliedCourses);
 // server.use("/appliedScholarshipCourses", appliedScholarshipRoutes); // Applied scholarships route
 // server.use("/getUniversities", require("./routers/getUniversities"));
 // server.use("/favorites", toggleFavorites);
@@ -382,7 +382,7 @@ const successChance = require("./routers/success-chance");
 const sendMail = require("./routers/sendMail");
 const chatRouter = require("./routers/counselorChat");
 const favorites = require("./routers/favourites");
-const appliedcourses = require("./routers/appliedCourses");
+const appliedCourses = require("./routers/appliedCourses");
 const appliedScholarshipRoutes = require("./routers/appliedScholarshipCourses");
 const favoritescholarship = require("./routers/favoriteScholarships");
 const favoritesuniversity = require("./routers/favouriteUniversities");
@@ -406,6 +406,8 @@ const refverifyOtp = require("./routers/referralPortal/ref-verify-otp");
 const refResetPassword = require("./routers/referralPortal/resetpassword");
 // super admin
 const superAdminSignIn = require("./routers/adminDashboard/auth/signin");
+const superAdminOtp = require("./routers/adminDashboard/auth/otp");
+
 // ============================================
 // MIDDLEWARE SETUP (ORDER MATTERS!)
 // ============================================
@@ -609,7 +611,7 @@ server.use("/uploads", express.static(path.join(__dirname, "uploads")));
 server.use("/chat", chatRouter);
 server.use("/favorites", toggleFavorites);
 server.use("/favorites/toggle", toggleFavorites);
-server.use("/appliedcourses", appliedcourses);
+server.use("/appliedCourses", appliedCourses);
 server.use("/appliedScholarshipCourses", appliedScholarshipRoutes);
 server.use("/getUniversities", require("./routers/getUniversities"));
 server.use("/scholarships", favoritescholarship);
@@ -634,6 +636,9 @@ server.use("/refral/forgot",refForgotPassword);
 server.use("/refal/verify-otp", refverifyOtp);
 server.use("/refal/reset-password", refResetPassword);
 server.use("/superadmin/signin", superAdminSignIn);
+server.use("/superadmin/otp", superAdminOtp);
+
+// ============================================
 // Default routes
 server.get("/", async (req, res) => {
   try {

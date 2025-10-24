@@ -1,7 +1,8 @@
 const express = require("express");
 const router = express.Router();
-const authenticateToken = require("../../middlewares/authMiddleware");
+// const authenticateToken = require("../../middlewares/authMiddleware");
 const stdDashboardController = require("../../controller/StdDashboardController");
+const authenticateToken = require("../../middlewares/authMiddleware");
 
 // Existing routes
 router.post(
@@ -58,7 +59,10 @@ router.put(
   stdDashboardController.updateStatus
 );
 
-router.get("/getStatusUpdate/:studentid", stdDashboardController.getStatusUpdate);
+router.get(
+  "/getStatusUpdate/:studentid",
+  stdDashboardController.getStatusUpdate
+);
 
 router.get(
   "/getStatusUpdateStudent",

@@ -1,9 +1,10 @@
 const express = require("express");
 const router = express.Router();
-const authenticateToken = require("../middlewares/authMiddleware");
+// const authenticateToken = require("../middlewares/authMiddleware");
 const userSuccessDb = require("../database/models/successChance");
 const UserDb = require("../database/models/UserDb");
 const { triggerEmbeddingWebhooks } = require("../utils/embedding-hooks"); // Fixed import
+const authenticateToken = require("../middlewares/authMiddleware");
 
 // Input validation middleware
 const validateSuccessChanceInput = (req, res, next) => {
@@ -336,11 +337,12 @@ router.post(
               }
             : undefined,
           // ✅ FIXED: Properly handle clearing work experience
-          workExperience: hasExperience === false || years === null || years === 0 
-            ? null 
-            : years 
-            ? parseInt(years, 10) 
-            : null,
+          workExperience:
+            hasExperience === false || years === null || years === 0
+              ? null
+              : years
+              ? parseInt(years, 10)
+              : null,
           studyPreferenced: {
             country: StudyPreferenced.country,
             degree: StudyPreferenced.degree,
@@ -373,7 +375,9 @@ router.post(
             hasLanguageProficiency: !!(
               LanguageProficiency?.test && LanguageProficiency?.score
             ),
-            hasWorkExperience: !!(updatedEntry.workExperience && updatedEntry.workExperience > 0),
+            hasWorkExperience: !!(
+              updatedEntry.workExperience && updatedEntry.workExperience > 0
+            ),
             wasExistingEntry: true,
           },
         });
@@ -406,11 +410,12 @@ router.post(
             }
           : undefined,
         // ✅ FIXED: Properly handle clearing work experience
-        workExperience: hasExperience === false || years === null || years === 0 
-          ? null 
-          : years 
-          ? parseInt(years, 10) 
-          : null,
+        workExperience:
+          hasExperience === false || years === null || years === 0
+            ? null
+            : years
+            ? parseInt(years, 10)
+            : null,
         studyPreferenced: {
           country: StudyPreferenced.country,
           degree: StudyPreferenced.degree,
@@ -435,7 +440,9 @@ router.post(
           hasLanguageProficiency: !!(
             LanguageProficiency?.level && LanguageProficiency?.score
           ),
-          hasWorkExperience: !!(saved.workExperience && saved.workExperience > 0),
+          hasWorkExperience: !!(
+            saved.workExperience && saved.workExperience > 0
+          ),
           wasExistingEntry: false,
         },
       });
@@ -517,7 +524,7 @@ router.post(
         },
         languageProficiency: LanguageProficiency
           ? {
-            level:LanguageProficiency.level,
+              level: LanguageProficiency.level,
               test: LanguageProficiency.test,
               score: LanguageProficiency.score,
             }
@@ -775,7 +782,7 @@ router.patch("/update", authenticateToken, async (req, res) => {
     if (dateOfBirth) updateFields.dateOfBirth = dateOfBirth;
     if (nationality) updateFields.nationality = nationality;
     if (majorSubject) updateFields.majorSubject = majorSubject;
-    
+
     // ✅ FIXED: Properly handle clearing work experience
     if (years !== undefined || hasExperience !== undefined) {
       if (hasExperience === false || years === null || years === 0) {

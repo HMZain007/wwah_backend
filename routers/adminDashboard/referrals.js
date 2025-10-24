@@ -1,11 +1,11 @@
 // // routers/adminDashboard/referrals.js
 // const express = require("express");
-// const authenticateToken = require("../../middlewares/authMiddleware");
+// const authenticateAdminToken = require("../../middlewares/authMiddleware");
 // const UserRefDb = require("../../database/models/refPortal/refuser");
 // const router = express.Router();
 
 // // Update referral status
-// router.patch("/update-status", authenticateToken, async (req, res) => {
+// router.patch("/update-status", authenticateAdminToken, async (req, res) => {
 //   try {
 //     const { userId, referralId, status } = req.body;
 
@@ -75,7 +75,7 @@
 // });
 
 // // Get current user's referral statistics
-// router.get("/my-statistics", authenticateToken, async (req, res) => {
+// router.get("/my-statistics", authenticateAdminToken, async (req, res) => {
 //   try {
 //     const currentUserId = req.user.id; // Get current user ID from auth token
 //     console.log(currentUserId, "currentUserId");
@@ -125,7 +125,7 @@
 // });
 
 // // Get current user's referrals only
-// router.get("/my-referrals", authenticateToken, async (req, res) => {
+// router.get("/my-referrals", authenticateAdminToken, async (req, res) => {
 //   try {
 //     const currentUserId = req.user.id; // Get current user ID from auth token
 //     const { status, page = 1, limit = 10 } = req.query;
@@ -333,12 +333,12 @@
 // module.exports = router;
 // routers/adminDashboard/referrals.js
 const express = require("express");
-const authenticateToken = require("../../middlewares/authMiddleware");
 const UserRefDb = require("../../database/models/refPortal/refuser");
+const authenticateAdminToken = require("../../middlewares/adminAuthMiddleware");
 const router = express.Router();
 
 // Update referral status
-router.patch("/update-status", authenticateToken, async (req, res) => {
+router.patch("/update-status", authenticateAdminToken, async (req, res) => {
   try {
     const { userId, referralId, status } = req.body;
 
@@ -408,7 +408,7 @@ router.patch("/update-status", authenticateToken, async (req, res) => {
 });
 
 // Get current user's referral statistics with commission calculation
-router.get("/my-statistics", authenticateToken, async (req, res) => {
+router.get("/my-statistics", authenticateAdminToken, async (req, res) => {
   try {
     const currentUserId = req.user.id;
     console.log(currentUserId, "currentUserId");
@@ -465,7 +465,7 @@ router.get("/my-statistics", authenticateToken, async (req, res) => {
 });
 
 // Get current user's referrals only
-router.get("/my-referrals", authenticateToken, async (req, res) => {
+router.get("/my-referrals", authenticateAdminToken, async (req, res) => {
   try {
     const currentUserId = req.user.id;
     const { status, page = 1, limit = 10 } = req.query;

@@ -3,6 +3,8 @@ const express = require("express");
 const router = express.Router();
 const UserDb = require("../database/models/UserDb");
 const authenticateToken = require("../middlewares/authMiddleware");
+const authenticateAdminToken = require("../middlewares/adminAuthMiddleware");
+// const authenticateToken = require("../middlewares/authMiddleware");
 
 // 🔧 Helper function to normalize applied courses data (SCHEMA ALIGNED)
 function normalizeAppliedCourses(appliedCourses = []) {
@@ -41,7 +43,8 @@ function extractCourseIds(appliedCourses = []) {
 }
 
 // ✅ADMIN SIDE : GET route to fetch applied courses & scholarships by userId
-router.get("/user/:userId", async (req, res) => {
+router.get("/user/:userId", authenticateAdminToken, async (req, res) => {
+  console.log("🟢 Inside /user/:userId route, userId:", req.params.userId);
   try {
     const { userId } = req.params;
 
@@ -125,7 +128,7 @@ router.get("/", authenticateToken, async (req, res) => {
 });
 
 // ✅ POST route to add/remove applied courses (SCHEMA ALIGNED)
-router.post("/", authenticateToken, async (req, res) => {
+router.post("/",authenticateToken, async (req, res) => {
   try {
     const { courseId, action, trackingData } = req.body;
     const userId = req.user?.id || req.userId;
@@ -385,7 +388,7 @@ router.put("/tracking/:courseId", async (req, res) => {
 });
 
 // ✅ GET route to check if a specific course is applied (SCHEMA ALIGNED)
-router.get("/check/:courseId", authenticateToken, async (req, res) => {
+router.get("/check/:courseId", async (req, res) => {
   try {
     const { courseId } = req.params;
     const userId = req.user?.id || req.userId;
@@ -439,7 +442,7 @@ router.get("/check/:courseId", authenticateToken, async (req, res) => {
 });
 
 // ✅ GET route to get applied course IDs only (lightweight, backward compatible)
-router.get("/ids", authenticateToken, async (req, res) => {
+router.get("/ids", async (req, res) => {
   try {
     const userId = req.user?.id || req.userId;
     const user = await UserDb.findById(userId).select("appliedCourses");
@@ -470,7 +473,7 @@ router.get("/ids", authenticateToken, async (req, res) => {
   }
 });
 
-router.delete("/remove", authenticateToken, async (req, res) => {
+router.delete("/remove", async (req, res) => {
   try {
     const { courseId } = req.body;
     const userId = req.user?.id || req.userId;
@@ -546,7 +549,7 @@ router.delete("/remove", authenticateToken, async (req, res) => {
 });
 
 // ✅ GET route to get application status options (SCHEMA ALIGNED)
-router.get("/status-options", authenticateToken, async (req, res) => {
+router.get("/status-options", async (req, res) => {
   try {
     res.json({
       success: true,
@@ -733,7 +736,7 @@ router.get("/confirmed/:userId", async (req, res) => {
 });
 
 // ✅ GET route to fetch confirmed courses for authenticated user
-router.get("/my-confirmed", authenticateToken, async (req, res) => {
+router.get("/my-confirmed", async (req, res) => {
   try {
     const userId = req.user?.id || req.userId;
     const user = await UserDb.findById(userId).select("appliedCourses");

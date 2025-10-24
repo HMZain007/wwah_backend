@@ -1,6 +1,7 @@
 // routes/appliedScholarshipCourses.js
 const express = require("express");
 const UserDb = require("../database/models/UserDb");
+const authenticateAdminToken = require("../middlewares/adminAuthMiddleware");
 const router = express.Router();
 
 // Apply for a scholarship course
@@ -19,7 +20,7 @@ router.post("/apply", async (req, res) => {
       banner,
       logo,
       ScholarshipId, // Added scholarshipId to identify the course
-      successChances
+      successChances,
     } = req.body;
     console.log(req.body, "req.body in apply route");
 
@@ -35,9 +36,8 @@ router.post("/apply", async (req, res) => {
       scholarshipType: !scholarshipType,
       deadline: !deadline,
       banner: !banner,
-      logo:!logo,
+      logo: !logo,
       ScholarshipId: !ScholarshipId, // Ensure scholarshipId is provided
-  
     };
 
     const hasMissingFields = Object.values(missingFields).some(
@@ -117,68 +117,72 @@ router.post("/apply", async (req, res) => {
     });
   }
 });
-router.get("/confirmed-applications/:userId", async (req, res) => {
-  try {
-    const { userId } = req.params;
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+router.get(
+  "/confirmed-applications/:userId",
+  authenticateAdminToken,
+  async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10;
 
-    console.log(userId, "backend user for confirmed scholarships");
+      console.log(userId, "backend user for confirmed scholarships");
 
-    if (!userId) {
-      return res.status(400).json({
-        success: false,
-        message: "User ID is required",
-      });
-    }
+      if (!userId) {
+        return res.status(400).json({
+          success: false,
+          message: "User ID is required",
+        });
+      }
 
-    const user = await UserDb.findById(userId).select(
-      "appliedScholarshipCourses"
-    );
+      const user = await UserDb.findById(userId).select(
+        "appliedScholarshipCourses"
+      );
 
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
-    }
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: "User not found",
+        });
+      }
 
-    // Filter only confirmed scholarship applications
-    const confirmedApplications = (user.appliedScholarshipCourses || [])
-      .filter((app) => app.isConfirmed === true)
-      .sort((a, b) => new Date(b.appliedDate) - new Date(a.appliedDate));
+      // Filter only confirmed scholarship applications
+      const confirmedApplications = (user.appliedScholarshipCourses || [])
+        .filter((app) => app.isConfirmed === true)
+        .sort((a, b) => new Date(b.appliedDate) - new Date(a.appliedDate));
 
-    console.log(
-      `Found ${confirmedApplications.length} confirmed applications out of ${user.appliedScholarshipCourses.length} total`
-    );
+      console.log(
+        `Found ${confirmedApplications.length} confirmed applications out of ${user.appliedScholarshipCourses.length} total`
+      );
 
-    // Apply pagination
-    const skip = (page - 1) * limit;
-    const applications = confirmedApplications.slice(skip, skip + limit);
-    const total = confirmedApplications.length;
+      // Apply pagination
+      const skip = (page - 1) * limit;
+      const applications = confirmedApplications.slice(skip, skip + limit);
+      const total = confirmedApplications.length;
 
-    res.status(200).json({
-      success: true,
-      message: "Confirmed scholarship courses fetched successfully",
-      data: {
-        applications,
-        pagination: {
-          currentPage: page,
-          totalPages: Math.ceil(total / limit),
-          totalApplications: total,
-          hasNextPage: page < Math.ceil(total / limit),
-          hasPrevPage: page > 1,
+      res.status(200).json({
+        success: true,
+        message: "Confirmed scholarship courses fetched successfully",
+        data: {
+          applications,
+          pagination: {
+            currentPage: page,
+            totalPages: Math.ceil(total / limit),
+            totalApplications: total,
+            hasNextPage: page < Math.ceil(total / limit),
+            hasPrevPage: page > 1,
+          },
         },
-      },
-    });
-  } catch (error) {
-    console.error("❌ Error fetching confirmed scholarship courses:", error);
-    res.status(500).json({
-      success: false,
-      message: "Internal Server Error",
-    });
+      });
+    } catch (error) {
+      console.error("❌ Error fetching confirmed scholarship courses:", error);
+      res.status(500).json({
+        success: false,
+        message: "Internal Server Error",
+      });
+    }
   }
-});
+);
 // Get all applied courses for a user
 router.get("/my-applications/:userId", async (req, res) => {
   try {
