@@ -1,7 +1,7 @@
 // // routers/adminDashboard/mbaData.js
 // const express = require("express");
 // const UserRefDb = require("../../database/models/refPortal/refuser");
-// const authenticateToken = require("../../middlewares/authMiddleware");
+// const authenticateAdminToken = require("../../middlewares/authMiddleware");
 // const refAcademicInfo = require("../../database/models/refPortal/refAcademicInfo");
 // const refPaymentInformation = require("../../database/models/refPortal/refPaymentInformation");
 // const refWorkExperience = require("../../database/models/refPortal/refWorkExperience");
@@ -32,7 +32,7 @@
 //   }
 // });
 // // Admin route to get any user's profile by ID
-// router.get("/user/:id", authenticateToken, async (req, res) => {
+// router.get("/user/:id", authenticateAdminToken, async (req, res) => {
 //   try {
 //     const { id } = req.params;
 
@@ -70,10 +70,10 @@
 // routers/adminDashboard/mbaData.js
 const express = require("express");
 const UserRefDb = require("../../database/models/refPortal/refuser");
-const authenticateToken = require("../../middlewares/authMiddleware");
 const refAcademicInfo = require("../../database/models/refPortal/refAcademicInfo");
 const refPaymentInformation = require("../../database/models/refPortal/refPaymentInformation");
 const refWorkExperience = require("../../database/models/refPortal/refWorkExperience");
+const authenticateAdminToken = require("../../middlewares/adminAuthMiddleware");
 
 const router = express.Router();
 
@@ -122,7 +122,7 @@ router.get("/", async (req, res) => {
 });
 
 // Admin route to get any user's profile by ID
-router.get("/user/:id", authenticateToken, async (req, res) => {
+router.get("/user/:id", authenticateAdminToken, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -156,7 +156,7 @@ router.get("/user/:id", authenticateToken, async (req, res) => {
 });
 
 // NEW: Admin route to update commission per referral for a user
-router.patch("/user/:id/commission", authenticateToken, async (req, res) => {
+router.patch("/user/:id/commission", authenticateAdminToken, async (req, res) => {
   try {
     const { id } = req.params;
     const { commissionPerReferral } = req.body;
@@ -200,7 +200,7 @@ router.patch("/user/:id/commission", authenticateToken, async (req, res) => {
 });
 
 // NEW: Admin route to get commission summary for all users
-router.get("/commission-summary", authenticateToken, async (req, res) => {
+router.get("/commission-summary", authenticateAdminToken, async (req, res) => {
   try {
     // Optional: Add admin authorization check
     // if (!req.user.isAdmin) {

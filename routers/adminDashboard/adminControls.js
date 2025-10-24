@@ -1,16 +1,22 @@
 const express = require("express");
 const router = express.Router();
-const authenticateToken = require("../../middlewares/authMiddleware");
 const adminDashboardController = require("../../controller/adminDashboardController");
+const authenticateAdminToken = require("../../middlewares/adminAuthMiddleware");
 
-router.post("/createPaymentTrack", adminDashboardController.createPaymentTrack);
-router.get("/getPayments/:studentid", adminDashboardController.getPayments);
+router.post("/createPaymentTrack",
+  authenticateAdminToken,
+  adminDashboardController.createPaymentTrack);
+router.get("/getPayments/:studentid",
+  authenticateAdminToken,
+  adminDashboardController.getPayments);
 router.put(
   "/updatePaymentStatus",
+   authenticateAdminToken,
   adminDashboardController.updatePaymentStatus
 );
 router.put(
   "/updatePayment",
+   authenticateAdminToken,
   adminDashboardController.updatePayment
 );
 // router.delete(
@@ -19,7 +25,7 @@ router.put(
 // );
 router.get(
   "/getPaymentStats",
-  authenticateToken,
+  authenticateAdminToken,
   adminDashboardController.getPaymentStats
 );
 

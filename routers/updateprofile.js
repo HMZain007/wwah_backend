@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const profileController = require("../controller/profileController");
 const authenticateToken = require("../middlewares/authMiddleware");
+// const authenticateToken = require("../middlewares/authMiddleware");
 
 router.get(
   "/academicInformation",
