@@ -462,12 +462,12 @@ const sessionConfig = {
     ttl: 60 * 60,
     touchAfter: 24 * 3600,
   }),
-  // cookie: {
-  //   secure: true,
-  //   httpOnly: true,
-  //   sameSite: "none", 
-  //   maxAge: 1000 * 60 * 60,
-  // },
+  cookie: {
+    secure: true,
+    httpOnly: true,
+    sameSite: "none", 
+    maxAge: 1000 * 60 * 60,
+  },
   name: "wwah.sid",
   rolling: true,
 };
