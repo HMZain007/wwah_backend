@@ -6,6 +6,7 @@ const nodemailer = require("nodemailer");
 // Verify OTP
 router.post("/", async (req, res) => {
   const { otp } = req.body;
+  const { email } = req.session; // Get email from session
   console.log('Received OTP:', otp);
   // Debug session information
   console.log('=== VERIFY OTP SESSION DEBUG ===');
@@ -23,17 +24,21 @@ router.post("/", async (req, res) => {
     }
 
     // Check session availability
-    if (!req.session || !req.session.email) {
+    if (!req.session) {
       return res.status(400).json({
-        message: "Session expired or email not found. Please request a new OTP.",
+        message: "There is no session. Please request a new OTP.",
+        success: false,
+      });
+    }
+    console.log('Session data:', JSON.stringify(req.session, null, 2));
+    console.log('Email from session:', req.session);
+    if (!req.session.email) {
+      return res.status(400).json({
+        message: "There is no email in the session. Please request a new OTP.",
         success: false,
       });
     }
 
-    const { email } = req.session; // Get email from session
-    // console.log('Email from session:', email, 'OTP:', otp);
-
-    // Find user with matching email, OTP, and non-expired OTP
     const user = await UserDb.findOne({
       email,
       otp,
