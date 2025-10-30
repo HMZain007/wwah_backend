@@ -54,7 +54,7 @@ router.post("/", async (req, res) => {
     req.session.email = email;
     req.session.otpRequested = true;
     req.session.otpToken = otpToken; // Store for debugging (remove in production)
-    console.log('Session after setting data:', JSON.stringify(req.session, null, 2));
+    // console.log('Session after setting data:', JSON.stringify(req.session, null, 2));
 
 
     // Save session explicitly and wait for completion
@@ -67,15 +67,11 @@ router.post("/", async (req, res) => {
       }
 
       console.log('Session saved successfully');
-      console.log('Final session data:', JSON.stringify(req.session, null, 2));
+      // console.log('Final session data:', JSON.stringify(req.session, null, 2));
 
       res.status(200).json({
         message: "OTP sent to email. Please check your inbox.",
         success: true,
-        debug: {
-          sessionId: req.sessionID,
-          email: req.session.email // Remove in production
-        }
       });
     });
   } catch (error) {
