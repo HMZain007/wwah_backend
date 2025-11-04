@@ -473,7 +473,7 @@ router.get("/ids", async (req, res) => {
   }
 });
 
-router.delete("/remove", async (req, res) => {
+router.delete("/remove", authenticateToken, async (req, res) => {
   try {
     const { courseId } = req.body;
     const userId = req.user?.id || req.userId;
