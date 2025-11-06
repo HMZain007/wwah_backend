@@ -107,6 +107,8 @@ server.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
 
+const isProduction = process.env.NODE_ENV === "production";
+
 const sessionConfig = {
   secret: process.env.SESSION_SECRET || "fallback-secret",
   resave: false,
@@ -117,13 +119,14 @@ const sessionConfig = {
     touchAfter: 24 * 3600,
   }),
   cookie: {
-    secure: process.env.NODE_ENV === "production",
-    httpOnly: process.env.NODE_ENV === "production",
-    sameSite: "none", 
-    maxAge: 1000 * 60 * 10, // 10 minutes
+    secure: isProduction,           // false in dev, true in prod
+    httpOnly: isProduction,         // false in dev, true in prod
+    sameSite: isProduction ? "none" : "lax",  // ✅ KEY FIX: 'lax' in dev, 'none' in prod
+    maxAge: 1000 * 60 * 10,         // 10 minutes
   },
   name: "wwah.sid",
   rolling: true,
+  
 };
 server.use(session(sessionConfig));
 
