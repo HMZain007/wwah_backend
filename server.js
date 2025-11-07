@@ -51,7 +51,7 @@ const refcontact = require("./routers/referralPortal/refcontact");
 const mbaData = require("./routers/adminDashboard/mbaData");
 const referrals = require("./routers/adminDashboard/referrals");
 const EmailRoutes = require("./routers/referralPortal/emailroutes");
-const commisionRoutes = require("./routers/referralPortal/commissionRoutes");
+const commisionTracker = require("./routers/referralPortal/commisson-tracker");
 const jobApplicationForm = require("./routers/jobApplicationForm");
 const sessionBooking=require("./routers/sessionBooking")
 const path = require("path");
@@ -269,7 +269,8 @@ server.use("/refportal/forgotpassword", refforget);
 server.use("/refcontact", refcontact);
 server.use("/adminDashboard/mbaData", mbaData);
 server.use("/adminDashboard/referrals", referrals);
-server.use("/refportal/commission", commisionRoutes);
+// server.use("/refportal/commission", commisionRoutes);
+server.use("/refportal/commission", commisionTracker);
 server.use("/refportal/email", EmailRoutes);
 server.use("/jobapplicationform",jobApplicationForm)
 server.use("/sessionbooking",sessionBooking)

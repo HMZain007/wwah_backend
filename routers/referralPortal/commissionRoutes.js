@@ -1,6 +1,7 @@
 // routes/referralPortal/CommissionRoutes.js
 const express = require("express");
 const router = express.Router();
+
 const Commission = require("../../database/models/refPortal/Commission");
 const UserRefDb = require("../../database/models/refPortal/refuser");
 // At the top of CommissionRoutes.js, add the email functionality
