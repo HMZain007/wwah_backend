@@ -39,6 +39,12 @@ const familyMemberSchema = new mongoose.Schema({
 });
 const basicInfoSchema = mongoose.Schema(
   {
+    isFamilyNameEmpty: {
+      type: Boolean,
+    },
+    isGivenNameEmpty: {
+      type: Boolean,
+    },
     familyName: {
       type: String,
     },
@@ -71,6 +77,9 @@ const basicInfoSchema = mongoose.Schema(
     },
     detailedAddress: {
       type: String,
+    },
+    sameAsCurrent:{
+      type:Boolean
     },
     country: {
       type: String,

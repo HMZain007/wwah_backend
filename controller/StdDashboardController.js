@@ -75,6 +75,8 @@ const stdDashboardController = {
       }
       // Extract and validate body data
       const {
+        isGivenNameEmpty,
+        isFamilyNameEmpty,
         familyName,
         givenName,
         gender,
@@ -90,6 +92,7 @@ const stdDashboardController = {
         currentAddress,
         permanentAddress,
         country,
+        sameAsCurrent,
         city,
         zipCode,
         email,
