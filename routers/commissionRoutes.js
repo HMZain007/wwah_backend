@@ -5,9 +5,9 @@ const router = express.Router();
 
 router.get("/:userId", async (req, res) => {
   try {
-    res.status(500).json({
+    res.status(200).json({
       success: false,
-      message: "Error fetching commission data",
+      message: "This is my data",
       error: error.message,
     });
   } catch (error) {
