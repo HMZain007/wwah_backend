@@ -2,8 +2,8 @@
 const express = require("express");
 const router = express.Router();
 
-const Commission = require("../../database/models/refPortal/Commission");
-const UserRefDb = require("../../database/models/refPortal/refuser");
+const Commission = require("../database/models/refPortal/Commission");
+const UserRefDb = require("../database/models/refPortal/refuser");
 // At the top of CommissionRoutes.js, add the email functionality
 const nodemailer = require("nodemailer");
 // Create the email function directly in this file
@@ -115,7 +115,6 @@ router.get("/:userId", async (req, res) => {
   }
 });
 
-
 // POST /api/refportal/commission/:userId - Create new commission
 router.post("/:userId", verifyUser, async (req, res) => {
   try {
@@ -190,6 +189,7 @@ router.post("/:userId", verifyUser, async (req, res) => {
     });
   }
 });
+
 // PUT /api/refportal/commission/:userId/:commissionId - Update commission
 router.put("/:userId/:commissionId", verifyUser, async (req, res) => {
   try {
@@ -320,6 +320,7 @@ router.put("/:userId/:commissionId", verifyUser, async (req, res) => {
     });
   }
 });
+
 // DELETE /api/refportal/commission/:userId/:commissionId - Delete commission
 router.delete("/:userId/:commissionId", verifyUser, async (req, res) => {
   try {
@@ -348,4 +349,5 @@ router.delete("/:userId/:commissionId", verifyUser, async (req, res) => {
     });
   }
 });
+
 module.exports = router;

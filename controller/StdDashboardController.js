@@ -530,7 +530,6 @@ const stdDashboardController = {
       });
     }
   },
-
   // Update single application info field
   updateApplicationInfoField: async (req, res) => {
     try {
@@ -589,7 +588,6 @@ const stdDashboardController = {
       });
     }
   },
-
   // Update family members array
   updateFamilyMembers: async (req, res) => {
     try {
@@ -643,7 +641,6 @@ const stdDashboardController = {
       });
     }
   },
-
   // Update educational background array
   updateEducationalBackground: async (req, res) => {
     try {
@@ -697,7 +694,6 @@ const stdDashboardController = {
       });
     }
   },
-
   // Update work experience array
   updateWorkExperience: async (req, res) => {
     try {
@@ -751,7 +747,6 @@ const stdDashboardController = {
       });
     }
   },
-
   // Final application submission
   finalSubmission: async (req, res) => {
     try {
