@@ -8,55 +8,55 @@ const UserRefDb = require("../../database/models/refPortal/refuser");
 // ======================
 // 🔹 Utility: Send Email
 // ======================
-// const sendWithdrawalEmail = async (user, commission) => {
-//   try {
-//     const transporter = nodemailer.createTransport({
-//       service: "gmail",
-//       auth: {
-//         user: process.env.EMAIL_USER,
-//         pass: process.env.EMAIL_PASS,
-//       },
-//     });
+const sendWithdrawalEmail = async (user, commission) => {
+  try {
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
 
-//     const mailOptions = {
-//       from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
-//       to: "info@wwah.ai",
-//       subject: `Withdrawal Request - ${user.firstName} ${user.lastName} (${commission.month})`,
-//       html: `
-//         <div style="font-family: Arial, sans-serif; max-width: 600px; margin:auto; padding: 20px; border:1px solid #ddd; border-radius:8px;">
-//           <h2 style="color:#D32F2F; text-align:center;">Withdrawal Request Notification</h2>
-//           <p style="text-align:center; color:#666;">World Wide Admissions Hub</p>
-//           <hr />
-//           <h3>MBA Details:</h3>
-//           <p><strong>Name:</strong> ${user.firstName} ${user.lastName}</p>
-//           <p><strong>MBA ID:</strong> ${user._id}</p>
-//           <p><strong>Email:</strong> ${user.email || "N/A"}</p>
-//           <h3>Commission Details:</h3>
-//           <p><strong>Month:</strong> ${commission.month}</p>
-//           <p><strong>Amount Requested:</strong> Rs. ${commission.amount.toLocaleString()}</p>
-//           <p><strong>Referrals:</strong> ${commission.referrals}</p>
-//           <p><strong>Status:</strong> ${commission.status}</p>
-//           <h3>Request Info:</h3>
-//           <p><strong>Date:</strong> ${new Date().toLocaleString("en-US", {
-//             weekday: "long",
-//             year: "numeric",
-//             month: "long",
-//             day: "numeric",
-//             hour: "2-digit",
-//             minute: "2-digit",
-//           })}</p>
-//         </div>
-//       `,
-//     };
+    const mailOptions = {
+      from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
+      to: "info@wwah.ai",
+      subject: `Withdrawal Request - ${user.firstName} ${user.lastName} (${commission.month})`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin:auto; padding: 20px; border:1px solid #ddd; border-radius:8px;">
+          <h2 style="color:#D32F2F; text-align:center;">Withdrawal Request Notification</h2>
+          <p style="text-align:center; color:#666;">World Wide Admissions Hub</p>
+          <hr />
+          <h3>MBA Details:</h3>
+          <p><strong>Name:</strong> ${user.firstName} ${user.lastName}</p>
+          <p><strong>MBA ID:</strong> ${user._id}</p>
+          <p><strong>Email:</strong> ${user.email || "N/A"}</p>
+          <h3>Commission Details:</h3>
+          <p><strong>Month:</strong> ${commission.month}</p>
+          <p><strong>Amount Requested:</strong> Rs. ${commission.amount.toLocaleString()}</p>
+          <p><strong>Referrals:</strong> ${commission.referrals}</p>
+          <p><strong>Status:</strong> ${commission.status}</p>
+          <h3>Request Info:</h3>
+          <p><strong>Date:</strong> ${new Date().toLocaleString("en-US", {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          })}</p>
+        </div>
+      `,
+    };
 
-//     const result = await transporter.sendMail(mailOptions);
-//     console.log("✅ Email sent:", result.messageId);
-//     return { success: true };
-//   } catch (error) {
-//     console.error("❌ Email error:", error.message);
-//     return { success: false, error: error.message };
-//   }
-// };
+    const result = await transporter.sendMail(mailOptions);
+    console.log("✅ Email sent:", result.messageId);
+    return { success: true };
+  } catch (error) {
+    console.error("❌ Email error:", error.message);
+    return { success: false, error: error.message };
+  }
+};
 
 // ======================
 // 🔹 Middleware: Verify User
@@ -88,7 +88,7 @@ router.get("/:userId", async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid userId" });
 
     const commissions = await Commission.find({ user: userId }).sort({ createdAt: -1 });
-    res.status(200).json({ success: true, data: commissions  , message : "Deleted function added"});
+    res.status(200).json({ success: true, data: commissions  , message : "Node mailer  function added" , user:userId});
   } catch (error) {
     console.error("❌ Fetch Commissions Error:", error.message);
     res.status(500).json({ success: false, message: "Error fetching commissions" });
