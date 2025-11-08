@@ -12,8 +12,8 @@ const helmet = require("helmet");
 const http = require("http");
 const { Server } = require("socket.io");
 const Chat = require("./database/models/Chat");
-const Commission = require("../../database/models/refPortal/Commission");
-const UserRefDb = require("../../database/models/refPortal/refuser");
+const Commission = require("./database/models/refPortal/Commission");
+const UserRefDb = require("./database/models/refPortal/refuser");
 // Import routers
 const signUp = require("./routers/siginUp");
 const signIn = require("./routers/siginIn");
@@ -52,7 +52,7 @@ const refcontact = require("./routers/referralPortal/refcontact");
 const mbaData = require("./routers/adminDashboard/mbaData");
 const referrals = require("./routers/adminDashboard/referrals");
 const EmailRoutes = require("./routers/referralPortal/emailroutes");
-const commisionTracker = require("./routers/commissionRoutes");
+// const commisionTracker = require("./routers/commissionRoutes");
 const jobApplicationForm = require("./routers/jobApplicationForm");
 const sessionBooking=require("./routers/sessionBooking")
 const path = require("path");
@@ -296,12 +296,11 @@ server.get("/commission/:userId", async(req, res) => {
     const { userId } = req.params;
     if (!mongoose.Types.ObjectId.isValid(userId))
       return res.status(400).json({ success: false, message: "Invalid userId" });
-
     const commissions = await Commission.find({ user: userId }).sort({ createdAt: -1 });
     res.status(200).json({ success: true, data: commissions });
   } catch (error) {
     console.error("❌ Fetch Commissions Error:", error.message);
-    res.status(500).json({ success: false, message: "Error fetching commissions" });
+    res.status(500).json({ success: false, message: `Error fetching commissions ${error}`  });
   }
 });
 
