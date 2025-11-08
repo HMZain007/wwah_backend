@@ -5,24 +5,6 @@ const nodemailer = require("nodemailer");
 const Commission = require("../../database/models/refPortal/Commission");
 const UserRefDb = require("../../database/models/refPortal/refuser");
 
-
-
-router.get("/:userId", async (req, res) => {
-    try {
-      res.status(200).json({
-        success: true,
-        message: "This is my data",
-        error: error.message,
-      });
-    } catch (error) {
-      console.error("Error fetching commissions:", error);
-      res.status(500).json({
-        success: false,
-        message: "Error fetching commission data",
-        error: error.message,
-      });
-    }
-  });
 // ======================
 // 🔹 Utility: Send Email
 // ======================
