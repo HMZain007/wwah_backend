@@ -88,7 +88,7 @@ router.get("/:userId", async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid userId" });
 
     const commissions = await Commission.find({ user: userId }).sort({ createdAt: -1 });
-    res.status(200).json({ success: true, data: commissions });
+    res.status(200).json({ success: true, data: commissions  , message : "Put function added"});
   } catch (error) {
     console.error("❌ Fetch Commissions Error:", error.message);
     res.status(500).json({ success: false, message: "Error fetching commissions" });
@@ -128,47 +128,47 @@ router.post("/:userId", verifyUser, async (req, res) => {
 // ======================
 // 🔹 PUT: Update Commission
 // ======================
-// router.put("/:userId/:commissionId", verifyUser, async (req, res) => {
-//   try {
-//     const { userId, commissionId } = req.params;
-//     const { month, referrals, amount, status } = req.body;
+router.put("/:userId/:commissionId", verifyUser, async (req, res) => {
+  try {
+    const { userId, commissionId } = req.params;
+    const { month, referrals, amount, status } = req.body;
 
-//     const commission = await Commission.findOne({ _id: commissionId, user: userId });
-//     if (!commission)
-//       return res.status(404).json({ success: false, message: "Commission record not found" });
+    const commission = await Commission.findOne({ _id: commissionId, user: userId });
+    if (!commission)
+      return res.status(404).json({ success: false, message: "Commission record not found" });
 
-//     const isWithdrawalRequest = commission.status === "Pending" && status === "Requested";
+    const isWithdrawalRequest = commission.status === "Pending" && status === "Requested";
 
-//     // Check for duplicate month if updated
-//     if (month && month !== commission.month) {
-//       const exists = await Commission.exists({ user: userId, month, _id: { $ne: commissionId } });
-//       if (exists)
-//         return res.status(400).json({ success: false, message: "Commission for this month already exists" });
-//     }
+    // Check for duplicate month if updated
+    if (month && month !== commission.month) {
+      const exists = await Commission.exists({ user: userId, month, _id: { $ne: commissionId } });
+      if (exists)
+        return res.status(400).json({ success: false, message: "Commission for this month already exists" });
+    }
 
-//     const updates = {
-//       ...(month && { month }),
-//       ...(referrals >= 0 && { referrals }),
-//       ...(amount >= 0 && { amount }),
-//       ...(status && { status }),
-//     };
+    const updates = {
+      ...(month && { month }),
+      ...(referrals >= 0 && { referrals }),
+      ...(amount >= 0 && { amount }),
+      ...(status && { status }),
+    };
 
-//     const updated = await Commission.findByIdAndUpdate(commissionId, updates, {
-//       new: true,
-//       runValidators: true,
-//     });
+    const updated = await Commission.findByIdAndUpdate(commissionId, updates, {
+      new: true,
+      runValidators: true,
+    });
 
-//     if (isWithdrawalRequest) {
-//       console.log("📧 Sending withdrawal request email...");
-//       await sendWithdrawalEmail(req.user, updated);
-//     }
+    if (isWithdrawalRequest) {
+      console.log("📧 Sending withdrawal request email...");
+      await sendWithdrawalEmail(req.user, updated);
+    }
 
-//     res.status(200).json({ success: true, message: "Commission updated", data: updated });
-//   } catch (error) {
-//     console.error("❌ Update Commission Error:", error.message);
-//     res.status(500).json({ success: false, message: "Error updating commission" });
-//   }
-// });
+    res.status(200).json({ success: true, message: "Commission updated", data: updated });
+  } catch (error) {
+    console.error("❌ Update Commission Error:", error.message);
+    res.status(500).json({ success: false, message: "Error updating commission" });
+  }
+});
 
 // ======================
 // 🔹 DELETE: Commission
