@@ -84,27 +84,13 @@ const verifyUser = async (req, res, next) => {
 router.get("/:userId", async (req, res) => {
   try {
     const { userId } = req.params;
-    // console.log("Fetching commissions for userId:", userId);
-
-    if (!mongoose.Types.ObjectId.isValid(userId)) {
-      console.error("Invalid ObjectId:", userId);
-      return res.status(400).json({
-        success: false,
-        message: "Invalid userId",
-      });
-    }
-
+    if (!mongoose.Types.ObjectId.isValid(userId))
+      return res.status(400).json({ success: false, message: "Invalid userId" });
     const commissions = await Commission.find({ user: userId }).sort({ createdAt: -1 });
-    // console.log("Found commissions:", commissions.length);
-
     res.status(200).json({ success: true, data: commissions });
   } catch (error) {
-    console.error("Error fetching commissions:", error);
-    res.status(500).json({
-      success: false,
-      message: "Error fetching commission data",
-      error: error.message,
-    });
+    console.error("❌ Fetch Commissions Error:", error.message);
+    res.status(500).json({ success: false, message: "Error fetching commissions" });
   }
 });
 
