@@ -270,7 +270,7 @@ server.use("/refcontact", refcontact);
 server.use("/adminDashboard/mbaData", mbaData);
 server.use("/adminDashboard/referrals", referrals);
 // server.use("/refportal/commission", commisionRoutes);
-server.use("/commission", commisionTracker);
+server.use("/refportal/commission", commisionTracker);
 server.use("/refportal/email", EmailRoutes);
 server.use("/jobapplicationform",jobApplicationForm)
 server.use("/sessionbooking",sessionBooking)
