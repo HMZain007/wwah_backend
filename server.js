@@ -300,7 +300,7 @@ server.get("/commission/:userId", async(req, res) => {
     res.status(200).json({ success: true, data: commissions });
   } catch (error) {
     console.error("❌ Fetch Commissions Error:", error.message);
-    res.status(500).json({ success: false, message: `Error fetching commissions ${error}`  });
+    res.status(500).json({ success: false, message: `Error in  fetching commissions data and eror is ${error}`  });
   }
 });
 
