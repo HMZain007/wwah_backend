@@ -86,8 +86,9 @@ router.get("/:userId", async (req, res) => {
     const { userId } = req.params;
     if (!mongoose.Types.ObjectId.isValid(userId))
       return res.status(400).json({ success: false, message: "Invalid userId" });
+
     const commissions = await Commission.find({ user: userId }).sort({ createdAt: -1 });
-    res.status(200).json({ success: true, data: commissions });
+    res.status(200).json({ success: true, data: commissions  , message : "Node mailer  function added" , user:userId});
   } catch (error) {
     console.error("❌ Fetch Commissions Error:", error.message);
     res.status(500).json({ success: false, message: "Error fetching commissions" });
