@@ -88,7 +88,7 @@ router.get("/:userId", async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid userId" });
 
     const commissions = await Commission.find({ user: userId }).sort({ createdAt: -1 });
-    res.status(200).json({ success: true, data: commissions  , message : "Put function added"});
+    res.status(200).json({ success: true, data: commissions  , message : "Deleted function added"});
   } catch (error) {
     console.error("❌ Fetch Commissions Error:", error.message);
     res.status(500).json({ success: false, message: "Error fetching commissions" });
@@ -159,8 +159,8 @@ router.put("/:userId/:commissionId", verifyUser, async (req, res) => {
     });
 
     if (isWithdrawalRequest) {
-      console.log("📧 Sending withdrawal request email...");
-      await sendWithdrawalEmail(req.user, updated);
+        console.log("📧 Sending withdrawal request email...");
+        await sendWithdrawalEmail(req.user, updated);
     }
 
     res.status(200).json({ success: true, message: "Commission updated", data: updated });
@@ -173,19 +173,19 @@ router.put("/:userId/:commissionId", verifyUser, async (req, res) => {
 // ======================
 // 🔹 DELETE: Commission
 // ======================
-// router.delete("/:userId/:commissionId", verifyUser, async (req, res) => {
-//   try {
-//     const { userId, commissionId } = req.params;
-//     const commission = await Commission.findOneAndDelete({ _id: commissionId, user: userId });
+router.delete("/:userId/:commissionId", verifyUser, async (req, res) => {
+  try {
+    const { userId, commissionId } = req.params;
+    const commission = await Commission.findOneAndDelete({ _id: commissionId, user: userId });
 
-//     if (!commission)
-//       return res.status(404).json({ success: false, message: "Commission not found" });
+    if (!commission)
+      return res.status(404).json({ success: false, message: "Commission not found" });
 
-//     res.status(200).json({ success: true, message: "Commission deleted successfully" });
-//   } catch (error) {
-//     console.error("❌ Delete Commission Error:", error.message);
-//     res.status(500).json({ success: false, message: "Error deleting commission" });
-//   }
-// });
+    res.status(200).json({ success: true, message: "Commission deleted successfully" });
+  } catch (error) {
+    console.error("❌ Delete Commission Error:", error.message);
+    res.status(500).json({ success: false, message: "Error deleting commission" });
+  }
+});
 
 module.exports = router;
