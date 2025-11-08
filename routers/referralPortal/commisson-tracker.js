@@ -61,23 +61,23 @@ const UserRefDb = require("../../database/models/refPortal/refuser");
 // ======================
 // 🔹 Middleware: Verify User
 // ======================
-// const verifyUser = async (req, res, next) => {
-//   try {
-//     const { userId } = req.params;
-//     if (!mongoose.Types.ObjectId.isValid(userId)) {
-//       return res.status(400).json({ success: false, message: "Invalid userId" });
-//     }
+const verifyUser = async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ success: false, message: "Invalid userId" });
+    }
 
-//     const user = await UserRefDb.findById(userId);
-//     if (!user) return res.status(404).json({ success: false, message: "User not found" });
+    const user = await UserRefDb.findById(userId);
+    if (!user) return res.status(404).json({ success: false, message: "User not found" });
 
-//     req.user = user;
-//     next();
-//   } catch (error) {
-//     console.error("❌ Verify User Error:", error.message);
-//     res.status(500).json({ success: false, message: "Error verifying user" });
-//   }
-// };
+    req.user = user;
+    next();
+  } catch (error) {
+    console.error("❌ Verify User Error:", error.message);
+    res.status(500).json({ success: false, message: "Error verifying user" });
+  }
+};
 // ======================
 // 🔹 GET: All Commissions
 // ======================
@@ -98,32 +98,32 @@ router.get("/:userId", async (req, res) => {
 // ======================
 // 🔹 POST: Create Commission
 // ======================
-// router.post("/:userId", verifyUser, async (req, res) => {
-//   try {
-//     const { userId } = req.params;
-//     const { month, referrals, amount, status } = req.body;
+router.post("/:userId", verifyUser, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { month, referrals, amount, status } = req.body;
 
-//     // Validation
-//     if (!month || referrals == null || amount == null || !status)
-//       return res.status(400).json({ success: false, message: "All fields required" });
+    // Validation
+    if (!month || referrals == null || amount == null || !status)
+      return res.status(400).json({ success: false, message: "All fields required" });
 
-//     if (typeof referrals !== "number" || typeof amount !== "number" || referrals < 0 || amount < 0)
-//       return res.status(400).json({ success: false, message: "Referrals & amount must be positive numbers" });
+    if (typeof referrals !== "number" || typeof amount !== "number" || referrals < 0 || amount < 0)
+      return res.status(400).json({ success: false, message: "Referrals & amount must be positive numbers" });
 
-//     if (!["Paid", "Pending", "Requested"].includes(status))
-//       return res.status(400).json({ success: false, message: "Invalid status value" });
+    if (!["Paid", "Pending", "Requested"].includes(status))
+      return res.status(400).json({ success: false, message: "Invalid status value" });
 
-//     const exists = await Commission.exists({ user: userId, month });
-//     if (exists)
-//       return res.status(400).json({ success: false, message: "Commission for this month already exists" });
+    const exists = await Commission.exists({ user: userId, month });
+    if (exists)
+      return res.status(400).json({ success: false, message: "Commission for this month already exists" });
 
-//     const savedCommission = await Commission.create({ user: userId, month, referrals, amount, status });
-//     res.status(201).json({ success: true, message: "Commission created", data: savedCommission });
-//   } catch (error) {
-//     console.error("❌ Create Commission Error:", error.message);
-//     res.status(500).json({ success: false, message: "Error creating commission" });
-//   }
-// });
+    const savedCommission = await Commission.create({ user: userId, month, referrals, amount, status });
+    res.status(201).json({ success: true, message: "Commission created", data: savedCommission });
+  } catch (error) {
+    console.error("❌ Create Commission Error:", error.message);
+    res.status(500).json({ success: false, message: "Error creating commission" });
+  }
+});
 
 // ======================
 // 🔹 PUT: Update Commission
