@@ -110,7 +110,7 @@ router.post("/send-otp", async (req, res) => {
       password, // Store password temporarily for complete-signup
       referralCode: referralCode || null,
       verified: false,
-      expiresAt: new Date(Date.now() + 5 * 60 * 1000), // 5 minutes
+      expiresAt: new Date(Date.now() + 2 * 60 * 1000), // 2 minutes
     });
 
     try {
@@ -784,7 +784,7 @@ router.post("/resend-otp", async (req, res) => {
     }
 
     const session = otpSessions.get(sessionId);
-    console.log("Session found:", session ? "Yes" : "No");
+    // console.log("Session found:", session ? "Yes" : "No");
 
     if (!session) {
       console.log("Session not found for sessionId:", sessionId);
@@ -809,7 +809,7 @@ router.post("/resend-otp", async (req, res) => {
     // Update session with new OTP
     session.emailOtp = emailOtp;
     session.verified = false;
-    session.expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+    session.expiresAt = new Date(Date.now() + 2 * 60 * 1000); // 2 minutes
 
     console.log("Updated session with new OTP");
 
