@@ -67,7 +67,8 @@ const sendEmailOTP = async (email, otp) => {
         <div style="background-color: #f0f0f0; padding: 20px; text-align: center; font-size: 24px; font-weight: bold; letter-spacing: 5px; margin: 20px 0;">
           ${otp}
         </div>
-        <p>This code will expire in 10 minutes.</p>
+        <p>This code will expire in 2 minutes.</p>
+        <p>If you didn't receive the code or it expired, you can request a new one.</p>
         <p>If you didn't request this code, please ignore this email.</p>
       </div>
     `,
@@ -248,7 +249,13 @@ router.post("/send-otp", async (req, res) => {
       lastName,
       password,
       verified: false,
-      expiresAt: new Date(Date.now() + 10 * 60 * 1000),
+      expiresAt: new Date(Date.now() + 5 * 60 * 1000), // 5 minutes for session
+    });
+
+    console.log("✅ OTP session created:", {
+      sessionId,
+      email,
+      expiresIn: "5 minutes",
     });
 
     try {
@@ -304,7 +311,7 @@ router.post("/verify-otp", async (req, res) => {
     if (new Date() > session.expiresAt) {
       otpSessions.delete(sessionId);
       return res.status(400).json({
-        message: "OTP expired",
+        message: "Session expired. Please start registration again.",
         success: false,
       });
     }
@@ -350,7 +357,7 @@ router.post("/complete-signup", async (req, res) => {
     if (new Date() > session.expiresAt) {
       otpSessions.delete(sessionId);
       return res.status(400).json({
-        message: "Session expired",
+        message: "Session expired. Please start registration again.",
         success: false,
       });
     }
@@ -448,10 +455,9 @@ router.post("/resend-otp", async (req, res) => {
   try {
     const { sessionId } = req.body;
 
-    console.log("Resend OTP request received:", { sessionId });
+    console.log("🔄 Resend OTP request for sessionId:", sessionId);
 
     if (!sessionId) {
-      console.log("No sessionId provided");
       return res.status(400).json({
         message: "Session ID is required",
         success: false,
@@ -459,10 +465,9 @@ router.post("/resend-otp", async (req, res) => {
     }
 
     const session = otpSessions.get(sessionId);
-    console.log("Session found:", session ? "Yes" : "No");
 
     if (!session) {
-      console.log("Session not found for sessionId:", sessionId);
+      console.log("❌ Session not found or expired");
       return res.status(400).json({
         message: "Invalid or expired session",
         success: false,
@@ -477,19 +482,15 @@ router.post("/resend-otp", async (req, res) => {
       });
     }
 
-    console.log("Generating new OTP for email:", session.email);
     const emailOtp = Math.floor(100000 + Math.random() * 900000).toString();
 
     session.emailOtp = emailOtp;
     session.verified = false;
-    session.expiresAt = new Date(Date.now() + 10 * 60 * 1000);
-
-    console.log("Updated session with new OTP");
+    session.expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes for session
 
     try {
-      console.log("Attempting to send email OTP");
       await sendEmailOTP(session.email, emailOtp);
-      console.log("Email OTP sent successfully");
+      console.log("✅ New OTP sent to:", session.email);
 
       res.status(200).json({
         success: true,

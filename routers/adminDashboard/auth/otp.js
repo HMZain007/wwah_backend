@@ -299,9 +299,9 @@ router.post("/verify-otp", async (req, res) => {
     });
 
     res.cookie("adminToken", token, {
-      httpOnly: true,
+      httpOnly: false,
       sameSite: "None",
-      secure: true,
+      secure: false,
       path: "/",
       maxAge: 24 * 60 * 60 * 1000,
     });
