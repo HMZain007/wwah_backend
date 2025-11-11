@@ -54,9 +54,7 @@ const sendEmailOTP = async (email, otp) => {
 router.post("/send-otp", async (req, res) => {
   const userData = req.body;
 
-  // Check which required fields are missing
   const missingFields = REQUIRED_FIELDS.filter((field) => !userData[field]);
-  // console.log("User data received:", userData);
 
   if (missingFields.length) {
     const fieldList = missingFields.join(", ");
@@ -70,7 +68,6 @@ router.post("/send-otp", async (req, res) => {
     userData;
 
   try {
-    // Check if a user with the given email already exists
     const userExists = await UserDb.findOne({ email });
     if (userExists) {
       return res.status(409).json({
@@ -80,7 +77,6 @@ router.post("/send-otp", async (req, res) => {
       });
     }
 
-    // Password length validation
     if (password.length < 8) {
       return res.status(400).json({
         message: "Password must be at least 8 characters",
@@ -88,7 +84,6 @@ router.post("/send-otp", async (req, res) => {
       });
     }
 
-    // Phone number validation
     const phoneRegex = /^\d{10,15}$/;
     if (!phoneRegex.test(phone)) {
       return res.status(400).json({
@@ -100,17 +95,19 @@ router.post("/send-otp", async (req, res) => {
     const emailOtp = Math.floor(100000 + Math.random() * 900000).toString();
     const sessionId = crypto.randomUUID();
 
-    // Store OTP session with all user data (including password for later use)
+    // ✅ KEY CHANGE: Store session for 10 minutes, but OTP expires in 2 minutes
     otpSessions.set(sessionId, {
       emailOtp,
       email,
       phone,
       firstName,
       lastName,
-      password, // Store password temporarily for complete-signup
+      password,
       referralCode: referralCode || null,
       verified: false,
-      expiresAt: new Date(Date.now() + 2 * 60 * 1000), // 2 minutes
+      otpExpiresAt: new Date(Date.now() + 2 * 60 * 1000), // ✅ OTP expires in 2 minutes
+      sessionExpiresAt: new Date(Date.now() + 10 * 60 * 1000), // ✅ Session expires in 10 minutes
+      createdAt: new Date(),
     });
 
     try {
@@ -124,10 +121,9 @@ router.post("/send-otp", async (req, res) => {
     } catch (sendError) {
       console.error("Error sending OTP:", sendError);
       otpSessions.delete(sessionId);
-      console.log("OTP session deleted due to send error", sendError);
 
       res.status(500).json({
-        message: `Failed to send OTP.${sendError}`,
+        message: "Failed to send OTP",
         success: false,
       });
     }
@@ -144,43 +140,73 @@ router.post("/send-otp", async (req, res) => {
 router.post("/verify-otp", async (req, res) => {
   try {
     const { sessionId, emailOtp } = req.body;
-    const session = otpSessions.get(sessionId);
-    console.log("Session data:", session, "Session data:" + emailOtp);
-    console.log(session, "Session data:");
-    console.log(
-      "Session data for verification:",
-      session ? "Found" : "Not found"
-    );
 
-    if (!session || !emailOtp) {
+    console.log("=== VERIFY OTP START ===");
+    console.log("SessionId:", sessionId);
+    console.log("EmailOtp received:", emailOtp);
+
+    const session = otpSessions.get(sessionId);
+
+    if (!session) {
       return res.status(400).json({
-        message: "Invalid OTP or session expired",
+        message: "Invalid session. Please try resending OTP.",
         success: false,
+        sessionExpired: true,
       });
     }
 
-    if (new Date() > session.expiresAt) {
+    //  Check SESSION expiry (10 minutes)
+    if (new Date() > session.sessionExpiresAt) {
       otpSessions.delete(sessionId);
       return res.status(400).json({
-        message: "OTP expired",
+        message: "Session expired. Please register again.",
         success: false,
+        sessionExpired: true,
       });
     }
 
-    if (session.emailOtp !== emailOtp) {
+    if (!emailOtp) {
+      console.log(" OTP not provided");
       return res.status(400).json({
-        message: "Invalid OTP",
+        message: "Please enter OTP",
         success: false,
       });
     }
 
+    // Check OTP expiry (2 minutes) - NOT session expiry
+    if (new Date() > session.otpExpiresAt) {
+      return res.status(400).json({
+        message: "OTP expired. Please click 'Resend OTP' to get a new code.",
+        success: false,
+        otpExpired: true, //Different from sessionExpired
+      });
+    }
+
+    const storedOtp = String(session.emailOtp).trim();
+    const receivedOtp = String(emailOtp).trim();
+
+    if (storedOtp !== receivedOtp) {
+      return res.status(400).json({
+        message: "Invalid OTP. Please check and try again.",
+        success: false,
+      });
+    }
+
+    console.log("OTP VERIFIED SUCCESSFULLY");
+
+    // Update session
     session.verified = true;
+    session.sessionExpiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes to complete signup
+
+    otpSessions.set(sessionId, session);
+    console.log("Session marked as verified");
+
     res.status(200).json({
       success: true,
       message: "OTP verified successfully",
     });
   } catch (err) {
-    console.error("Verify OTP error:", err);
+    console.error("❌ Verify OTP error:", err);
     res.status(500).json({
       message: "Failed to verify OTP",
       success: false,
@@ -294,10 +320,6 @@ router.post("/complete-signup", async (req, res) => {
   try {
     const { sessionId, password: providedPassword } = req.body;
     const session = otpSessions.get(sessionId);
-    console.log(
-      "Session data for completion:",
-      session ? "Found" : "Not found"
-    );
 
     if (!session || !session.verified) {
       return res.status(400).json({
@@ -306,7 +328,8 @@ router.post("/complete-signup", async (req, res) => {
       });
     }
 
-    if (new Date() > session.expiresAt) {
+    // ✅ Check session expiry (not OTP expiry)
+    if (new Date() > session.sessionExpiresAt) {
       otpSessions.delete(sessionId);
       return res.status(400).json({
         message: "Session expired",
@@ -314,7 +337,6 @@ router.post("/complete-signup", async (req, res) => {
       });
     }
 
-    // Use password from session or provided password (for flexibility)
     const passwordToUse = providedPassword || session.password;
 
     if (!passwordToUse || passwordToUse.length < 8) {
@@ -326,7 +348,6 @@ router.post("/complete-signup", async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(passwordToUse, 12);
 
-    // Create user data object
     const userData = {
       firstName: session.firstName,
       lastName: session.lastName,
@@ -335,68 +356,45 @@ router.post("/complete-signup", async (req, res) => {
       password: hashedPassword,
       provider: "local",
       isEmailVerified: true,
-      referralCode: session.referralCode, // Store the referral code used by student
+      referralCode: session.referralCode,
       createdAt: new Date(),
     };
 
-    // 🚀 Create user with embedding integration
     console.log("Creating student user with embeddings...");
     const newUser = await ExpressDbHooks.createUser(userData);
 
-    console.log(
-      "Student user created successfully with embeddings:",
-      newUser._id
-    );
-
-    // 🆕 Process referral code if provided
     let referralProcessed = false;
     let referralMessage = "";
     let mbaInfo = null;
 
     if (session.referralCode) {
-      console.log(
-        "Processing referral code for student:",
-        session.referralCode
-      );
-
       const referralResult = await processReferralCode(
         session.referralCode,
         newUser
       );
 
       if (referralResult.success && referralResult.mbaUser) {
-        console.log("Referral processing successful:", referralResult.message);
         referralProcessed = true;
         mbaInfo = referralResult.mbaUser;
         referralMessage = `Successfully referred by ${referralResult.mbaUser.firstName} ${referralResult.mbaUser.lastName}`;
       } else {
-        console.log("Referral processing failed:", referralResult.message);
         referralMessage = referralResult.message;
-        // Note: We don't fail the signup if referral processing fails
-        // The account is still created, but referral might not be tracked
       }
     }
 
-    // Generate JWT token
     const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET_KEY, {
       expiresIn: "1h",
     });
 
-    // Set cookie
     res.cookie("authToken", token, {
       httpOnly: true,
       sameSite: "None",
       secure: true,
-      maxAge: 24 * 60 * 60 * 1000, // 1 day
+      maxAge: 24 * 60 * 60 * 1000,
     });
 
-    // Clean up session
     otpSessions.delete(sessionId);
-    console.log(
-      "Student user successfully signed up with embeddings and referral processing complete"
-    );
 
-    // Success response with enhanced referral information
     res.status(201).json({
       message: "User successfully signed up and embeddings created",
       success: true,
@@ -405,7 +403,7 @@ router.post("/complete-signup", async (req, res) => {
       referral: {
         processed: referralProcessed,
         message: referralMessage,
-        mbaInfo: mbaInfo, // Include MBA details with timestamps
+        mbaInfo: mbaInfo,
       },
       data: {
         _id: newUser._id,
@@ -415,15 +413,13 @@ router.post("/complete-signup", async (req, res) => {
         phone: newUser.phone,
         isEmailVerified: newUser.isEmailVerified,
         referralCodeUsed: session.referralCode || null,
-        createdAt: newUser.createdAt, // Student's account creation time
+        createdAt: newUser.createdAt,
       },
     });
   } catch (err) {
     console.error("Complete student signup error:", err);
 
-    // More specific error handling
     if (err.code === 11000) {
-      // Duplicate key error
       return res.status(409).json({
         message: "Email is already registered",
         success: false,
@@ -770,71 +766,85 @@ router.post("/complete-signup", async (req, res) => {
 // ✅ Resend OTP (email only)
 router.post("/resend-otp", async (req, res) => {
   try {
-    const { sessionId } = req.body;
+    const { sessionId, email } = req.body;
 
-    console.log("Resend OTP request received:", { sessionId });
+    console.log("=== RESEND OTP START ===");
+    console.log("SessionId:", sessionId);
+    console.log("Email:", email);
 
-    // Check if sessionId is provided
     if (!sessionId) {
-      console.log("No sessionId provided");
+      console.log("❌ No sessionId provided");
       return res.status(400).json({
         message: "Session ID is required",
         success: false,
       });
     }
 
+    // ✅ Get session
     const session = otpSessions.get(sessionId);
-    // console.log("Session found:", session ? "Yes" : "No");
 
     if (!session) {
-      console.log("Session not found for sessionId:", sessionId);
+      console.log("❌ Session not found");
       return res.status(400).json({
-        message: "Invalid or expired session",
+        message: "Session expired. Please register again.",
         success: false,
+        sessionExpired: true,
       });
     }
 
-    // Check if session has required data
-    if (!session.email) {
-      console.log("Session missing email data");
+    // ✅ Check if SESSION expired (10 minutes) - NOT OTP
+    if (new Date() > session.sessionExpiresAt) {
+      console.log("❌ Session completely expired (10 min)");
+      otpSessions.delete(sessionId);
       return res.status(400).json({
-        message: "Invalid session data",
+        message: "Session expired. Please register again.",
         success: false,
+        sessionExpired: true,
       });
     }
 
-    console.log("Generating new OTP for email:", session.email);
-    const emailOtp = Math.floor(100000 + Math.random() * 900000).toString();
+    // ✅ Session is still valid - Generate NEW OTP
+    console.log("✅ Session valid, generating new OTP");
 
-    // Update session with new OTP
-    session.emailOtp = emailOtp;
-    session.verified = false;
-    session.expiresAt = new Date(Date.now() + 2 * 60 * 1000); // 2 minutes
+    const newEmailOtp = Math.floor(100000 + Math.random() * 900000).toString();
 
-    console.log("Updated session with new OTP");
+    // ✅ Update session with new OTP and extend OTP expiry (but NOT session expiry)
+    const updatedSession = {
+      ...session,
+      emailOtp: newEmailOtp,
+      verified: false,
+      otpExpiresAt: new Date(Date.now() + 2 * 60 * 1000), // ✅ New OTP expires in 2 minutes
+      // sessionExpiresAt stays the same - session continues for 10 minutes total
+    };
 
+    otpSessions.set(sessionId, updatedSession);
+
+    console.log("Session updated:", {
+      email: session.email,
+      newOTP: newEmailOtp,
+      otpExpiresAt: updatedSession.otpExpiresAt,
+      sessionExpiresAt: updatedSession.sessionExpiresAt,
+    });
+
+    // ✅ Send new OTP
     try {
-      console.log("Attempting to send email OTP");
-      await sendEmailOTP(session.email, emailOtp);
-      console.log("Email OTP sent successfully");
+      console.log("📧 Sending new OTP to:", session.email);
+      await sendEmailOTP(session.email, newEmailOtp);
+      console.log("✅ Email sent successfully");
 
       res.status(200).json({
         success: true,
         message: "New OTP sent successfully to your email",
       });
     } catch (sendError) {
-      console.error("Error sending email OTP:", sendError);
+      console.error("❌ Error sending email:", sendError);
       res.status(500).json({
         message: "Failed to send OTP email. Please try again.",
         success: false,
-        error:
-          process.env.NODE_ENV === "development"
-            ? sendError.message
-            : undefined,
       });
     }
   } catch (err) {
-    console.error("Resend OTP error:", err);
+    console.error("❌ Resend OTP error:", err);
     res.status(500).json({
       message: "Internal server error while resending OTP",
       success: false,
