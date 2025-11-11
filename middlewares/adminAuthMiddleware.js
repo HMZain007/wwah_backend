@@ -30,17 +30,17 @@
 const jwt = require("jsonwebtoken");
 
 const authenticateAdminToken = (req, res, next) => {
-//   console.log("=== MIDDLEWARE DEBUG ===");
-//   console.log("All Cookies:", req.cookies);
-//   console.log("adminToken:", req.cookies.adminToken);
-//   console.log("Authorization Header:", req.headers.authorization);
-//   console.log("Origin:", req.headers.origin);
-//   console.log("Cookie Header:", req.headers.cookie);
-  
+  console.log("=== MIDDLEWARE DEBUG ===");
+  console.log("All Cookies:", req.cookies);
+  console.log("adminToken:", req.cookies.adminToken);
+  console.log("Authorization Header:", req.headers.authorization);
+  console.log("Origin:", req.headers.origin);
+  console.log("Cookie Header:", req.headers.cookie);
+
   // Get token from cookies OR Authorization header
   const token =
     req.cookies.adminToken || req.headers.authorization?.split(" ")[1];
-  
+
   console.log("Final Token:", token);
 
   if (!token) {
@@ -64,7 +64,7 @@ const authenticateAdminToken = (req, res, next) => {
         success: false,
       });
     }
-    
+
     // console.log("✅ Token verified, user:", user);
     req.user = user;
     next();
