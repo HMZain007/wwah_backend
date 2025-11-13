@@ -114,6 +114,7 @@ const appliedScholarshipCourseSchema = new mongoose.Schema(
       default: 1,
     },
     successChances: {
+      age:{type : String},
       academicBackground : {type : String},
       englishProficiency: {type: String},
       gradesAndCGPA : {type: String},

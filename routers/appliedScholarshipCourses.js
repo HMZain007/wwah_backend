@@ -22,7 +22,7 @@ router.post("/apply", async (req, res) => {
       ScholarshipId, // Added scholarshipId to identify the course
       successChances,
     } = req.body;
-    console.log(req.body, "req.body in apply route");
+    // console.log(req.body, "req.body in apply route");
 
     // Validate required fields with detailed error reporting
     const missingFields = {
