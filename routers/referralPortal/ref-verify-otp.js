@@ -1,4 +1,3 @@
-
 const express = require("express");
 const crypto = require("crypto");
 const router = express.Router();
@@ -11,7 +10,8 @@ const isValidEmail = (email) => /\S+@\S+\.\S+/.test(email);
 const hashOTP = (otp) => crypto.createHash("sha256").update(otp).digest("hex");
 
 // Hash token for secure storage
-const hashToken = (token) => crypto.createHash("sha256").update(token).digest("hex");
+const hashToken = (token) =>
+  crypto.createHash("sha256").update(token).digest("hex");
 
 // ==================== Verify OTP Route ====================
 router.post("/", async (req, res) => {
@@ -50,8 +50,8 @@ router.post("/", async (req, res) => {
       });
     }
 
-    // Check expiration
     if (Date.now() > user.otpExpiration) {
+      // Check expiration
       await UserRefDb.findByIdAndUpdate(user._id, {
         otp: null,
         otpExpiration: null,
@@ -76,7 +76,7 @@ router.post("/", async (req, res) => {
     // ---------- OTP Valid - Generate Reset Token ----------
     const resetToken = crypto.randomBytes(32).toString("hex");
     const hashedResetToken = hashToken(resetToken); // ✅ Hash before storing
-    const resetTokenExpires = Date.now() + 5 * 60 * 1000; // 5 mins
+    const resetTokenExpires = Date.now() + 2 * 60 * 1000; // 2 mins
 
     await UserRefDb.findByIdAndUpdate(user._id, {
       otp: null, // clear OTP once used
@@ -94,7 +94,10 @@ router.post("/", async (req, res) => {
       resetToken, // ✅ Send plain token to client
     });
   } catch (error) {
-    console.error(`[${new Date().toISOString()}] OTP Verification Error:`, error);
+    console.error(
+      `[${new Date().toISOString()}] OTP Verification Error:`,
+      error
+    );
 
     return res.status(500).json({
       success: false,
