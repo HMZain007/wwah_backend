@@ -134,14 +134,13 @@
 //   }
 // });
 
-
 // module.exports = router;
 const express = require("express");
 const router = express.Router();
 const Otp = require("../database/models/Otp");
 const { hashString } = require("../utils/hashString");
 const { generateResetToken } = require("../utils/generateToken");
-const sendEmail = require('../utils/sendEmail')
+const sendEmail = require("../utils/sendEmail");
 router.post("/", async (req, res) => {
   try {
     const { otp } = req.body;
@@ -150,14 +149,21 @@ router.post("/", async (req, res) => {
     // console.log(resetData , "Resrey")
     if (!otp) return res.status(400).json({ message: "OTP required" });
     if (!resetData)
-      return res.status(400).json({ success: false, message: "Session expired, request OTP again." });
+      return res.status(400).json({
+        success: false,
+        message: "Session expired, request OTP again.",
+      });
 
     const email = resetData.email;
     const otpRecord = await Otp.findOne({ email });
     if (!otpRecord) return res.status(400).json({ message: "OTP not found" });
 
-    if (otpRecord.expiresAt < Date.now())
-      return res.status(400).json({ message: "OTP expired" });
+    if (Date.now() > otpRecord.expiresAt) {
+      await Otp.deleteMany({ email }); // clean expired OTP
+      return res
+        .status(400)
+        .json({ message: "OTP expired. Please request a new one." });
+    }
 
     if (otpRecord.otpHash !== hashString(otp))
       return res.status(400).json({ message: "Invalid OTP" });
@@ -170,7 +176,11 @@ router.post("/", async (req, res) => {
     // Mark session verified (optional)
     req.session.resetData.verified = true;
 
-    res.json({ success: true, message: "OTP verified successfully", resetToken });
+    res.json({
+      success: true,
+      message: "OTP verified successfully",
+      resetToken,
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });
@@ -187,10 +197,14 @@ router.post("/resend", async (req, res) => {
 
     const email = resetData.email;
     const lastOtp = await Otp.findOne({ email }).sort({ createdAt: -1 });
-  //  console.log(email , "resend")
+    //  console.log(email , "resend")
     if (lastOtp && new Date() < lastOtp.resendAvailableAt) {
-      const waitSec = Math.ceil((lastOtp.resendAvailableAt - Date.now()) / 1000);
-      return res.status(429).json({ message: `Please wait ${waitSec}s before resending.` });
+      const waitSec = Math.ceil(
+        (lastOtp.resendAvailableAt - Date.now()) / 1000
+      );
+      return res
+        .status(429)
+        .json({ message: `Please wait ${waitSec}s before resending.` });
     }
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
