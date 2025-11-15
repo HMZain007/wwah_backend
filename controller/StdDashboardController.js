@@ -75,9 +75,10 @@ const stdDashboardController = {
       }
       // Extract and validate body data
       const {
+        
+        familyName,
         isGivenNameEmpty,
         isFamilyNameEmpty,
-        familyName,
         givenName,
         gender,
         DOB,
@@ -91,8 +92,8 @@ const stdDashboardController = {
         detailedAddress,
         currentAddress,
         permanentAddress,
-        country,
         sameAsCurrent,
+        country,
         city,
         zipCode,
         email,
@@ -138,6 +139,8 @@ const stdDashboardController = {
         {
           $set: {
             familyName,
+            isGivenNameEmpty,
+            isFamilyNameEmpty,
             givenName,
             gender,
             DOB,
@@ -150,6 +153,7 @@ const stdDashboardController = {
             detailedAddress,
             currentAddress,
             permanentAddress,
+            sameAsCurrent,
             country,
             city,
             zipCode,
@@ -299,6 +303,18 @@ const stdDashboardController = {
       });
 
       // Apply conditional logic after basic field extraction
+          // Handle checkbox and name field logic
+    if (req.body.isFamilyNameEmpty === true) {
+      updatedData.isFamilyNameEmpty = true;
+      updatedData.familyName = "";
+    } else if (req.body.isFamilyNameEmpty === false) {
+      updatedData.isFamilyNameEmpty = false;
+      // Keep the familyName as provided in the request
+    }
+
+  
+      // Keep the givenName as provided in the request
+    // }
       if (req.body.isFamilyNameEmpty === true) {
         updatedData.familyName = "";
       }
@@ -530,6 +546,7 @@ const stdDashboardController = {
       });
     }
   },
+
   // Update single application info field
   updateApplicationInfoField: async (req, res) => {
     try {
@@ -588,6 +605,7 @@ const stdDashboardController = {
       });
     }
   },
+
   // Update family members array
   updateFamilyMembers: async (req, res) => {
     try {
@@ -641,6 +659,7 @@ const stdDashboardController = {
       });
     }
   },
+
   // Update educational background array
   updateEducationalBackground: async (req, res) => {
     try {
@@ -694,6 +713,7 @@ const stdDashboardController = {
       });
     }
   },
+
   // Update work experience array
   updateWorkExperience: async (req, res) => {
     try {
@@ -747,6 +767,7 @@ const stdDashboardController = {
       });
     }
   },
+
   // Final application submission
   finalSubmission: async (req, res) => {
     try {
