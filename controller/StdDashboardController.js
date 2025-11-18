@@ -461,7 +461,11 @@ const stdDashboardController = {
         { new: true, upsert: true } // Return updated doc or create new one
       );
     //  console.log(applicationInformation , "This data is save");
-     
+     await UserDb.findByIdAndUpdate(
+      userId,
+      { complete_profile: true },
+      { new: true } // important to see changes
+    );
       // Return the updated user data with success message
       return res.status(200).json({
         message: "Application Information Updated  and Respone is send back to Frontend",
