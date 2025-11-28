@@ -1,4 +1,3 @@
-
 require("dotenv").config();
 const express = require("express");
 const server = express();
@@ -53,7 +52,7 @@ const referrals = require("./routers/adminDashboard/referrals");
 const EmailRoutes = require("./routers/referralPortal/emailroutes");
 const commisionTracker = require("./routers/referralPortal/commisson-tracker");
 const jobApplicationForm = require("./routers/jobApplicationForm");
-const sessionBooking=require("./routers/sessionBooking")
+const sessionBooking = require("./routers/sessionBooking");
 const path = require("path");
 const refForgotPassword = require("./routers/referralPortal/ref-forgotpassword");
 const refverifyOtp = require("./routers/referralPortal/ref-verify-otp");
@@ -103,9 +102,11 @@ server.use(cors(corsOptions));
 server.options("*", cors(corsOptions));
 
 // 4. Security headers
-server.use(helmet({
-  crossOriginResourcePolicy: { policy: "cross-origin" }
-}));
+server.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+  })
+);
 
 const isProduction = process.env.NODE_ENV === "production";
 
@@ -119,14 +120,13 @@ const sessionConfig = {
     touchAfter: 24 * 3600,
   }),
   cookie: {
-    secure: isProduction,           // false in dev, true in prod
-    httpOnly: isProduction,         // false in dev, true in prod
-    sameSite: isProduction ? "none" : "lax",  // ✅ KEY FIX: 'lax' in dev, 'none' in prod
-    maxAge: 1000 * 60 * 10,         // 10 minutes
+    secure: isProduction, // false in dev, true in prod
+    httpOnly: isProduction, // false in dev, true in prod
+    sameSite: isProduction ? "none" : "lax", // ✅ KEY FIX: 'lax' in dev, 'none' in prod
+    maxAge: 1000 * 60 * 10, // 10 minutes
   },
   name: "wwah.sid",
   rolling: true,
-  
 };
 server.use(session(sessionConfig));
 
@@ -141,11 +141,15 @@ const io = new Server(app, {
 
 io.on("connection", (socket) => {
   socket.on("join", (email) => {
-    const userEmail = typeof email === "object" && email.email ? email.email : email;
+    const userEmail =
+      typeof email === "object" && email.email ? email.email : email;
     socket.userEmail = userEmail;
     socket.join(userEmail);
     console.log(`✅ ${userEmail} joined chat room: [${userEmail}]`);
-    socket.emit("joined", { email: userEmail, message: "Successfully joined chat room" });
+    socket.emit("joined", {
+      email: userEmail,
+      message: "Successfully joined chat room",
+    });
   });
 
   socket.on("join_notification_room", ({ userId }) => {
@@ -160,7 +164,8 @@ io.on("connection", (socket) => {
   });
 
   socket.on("send_message", async ({ email, text, sender, file }) => {
-    const userEmail = typeof email === "object" && email.email ? email.email : email;
+    const userEmail =
+      typeof email === "object" && email.email ? email.email : email;
     try {
       let chat = await Chat.findOne({ userEmail });
       if (!chat) {
@@ -191,11 +196,15 @@ io.on("connection", (socket) => {
       }
 
       if (notificationRecipient) {
-        const chatRoomSockets = await io.in(notificationRecipient).fetchSockets();
+        const chatRoomSockets = await io
+          .in(notificationRecipient)
+          .fetchSockets();
         const isInChatRoom = chatRoomSockets.length > 0;
         if (!isInChatRoom) {
           const notificationData = {
-            message: `New message from ${sender === "admin" ? "Admin" : userEmail}`,
+            message: `New message from ${
+              sender === "admin" ? "Admin" : userEmail
+            }`,
             sender,
             username: sender === "admin" ? "Admin" : userEmail,
             text: message.text,
@@ -203,8 +212,13 @@ io.on("connection", (socket) => {
             userEmail,
             recipientEmail: notificationRecipient,
           };
-          io.to(`notifications:${notificationRecipient}`).emit("new_notification", notificationData);
-          console.log(`🔔 Notification sent to: notifications:${notificationRecipient}`);
+          io.to(`notifications:${notificationRecipient}`).emit(
+            "new_notification",
+            notificationData
+          );
+          console.log(
+            `🔔 Notification sent to: notifications:${notificationRecipient}`
+          );
         } else {
           console.log("👀 Recipient is active in chat, skipping notification");
         }
@@ -267,14 +281,15 @@ server.use("/refportal/auth", refPortalAuth);
 server.use("/refportal", refPortalAuth);
 server.use("/refportal/forgotpassword", refforget);
 server.use("/refcontact", refcontact);
+
 server.use("/adminDashboard/mbaData", mbaData);
 server.use("/adminDashboard/referrals", referrals);
 // server.use("/refportal/commission", commisionRoutes);
 server.use("/commission", commisionTracker);
 server.use("/refportal/email", EmailRoutes);
-server.use("/jobapplicationform",jobApplicationForm)
-server.use("/sessionbooking",sessionBooking)
-server.use("/refral/forgot",refForgotPassword);
+server.use("/jobapplicationform", jobApplicationForm);
+server.use("/sessionbooking", sessionBooking);
+server.use("/refral/forgot", refForgotPassword);
 server.use("/refal/verify-otp", refverifyOtp);
 server.use("/refal/reset-password", refResetPassword);
 server.use("/superadmin/signin", superAdminSignIn);
@@ -286,7 +301,9 @@ server.get("/", async (req, res) => {
   try {
     res.json({ message: "This is Home Page From Backend" });
   } catch (error) {
-    res.status(500).json({ message: `There is some Error in Server: ${error}` });
+    res
+      .status(500)
+      .json({ message: `There is some Error in Server: ${error}` });
   }
 });
 
@@ -313,9 +330,9 @@ server.get("/chat/messages/:email", async (req, res) => {
 // Centralized error handler
 server.use((err, req, res, next) => {
   console.error(`Error occurred: ${err.message}`);
-  res.status(500).json({ 
-    message: "Internal Server Error, Cause in Main Server", 
-    success: false 
+  res.status(500).json({
+    message: "Internal Server Error, Cause in Main Server",
+    success: false,
   });
 });
 

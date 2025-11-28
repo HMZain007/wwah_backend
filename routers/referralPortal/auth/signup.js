@@ -248,14 +248,15 @@ router.post("/send-otp", async (req, res) => {
       firstName,
       lastName,
       password,
-      verified: false,
-      expiresAt: new Date(Date.now() + 5 * 60 * 1000), // 5 minutes for session
+      otpExpiresAt: new Date(Date.now() + 2 * 60 * 1000), // OTP valid for 2 mins
+      sessionExpiresAt: new Date(Date.now() + 10 * 60 * 1000), // Session valid for 10 mins
     });
 
     console.log("✅ OTP session created:", {
       sessionId,
       email,
-      expiresIn: "5 minutes",
+      expiresIn: "10 minutes",
+      optexpireIn: "2 minutes",
     });
 
     try {
@@ -312,6 +313,14 @@ router.post("/verify-otp", async (req, res) => {
       otpSessions.delete(sessionId);
       return res.status(400).json({
         message: "Session expired. Please start registration again.",
+        success: false,
+      });
+    }
+
+    // Check if OTP expired
+    if (new Date() > session.otpExpiresAt) {
+      return res.status(400).json({
+        message: "OTP has expired. Please request a new one.",
         success: false,
       });
     }
@@ -484,9 +493,13 @@ router.post("/resend-otp", async (req, res) => {
 
     const emailOtp = Math.floor(100000 + Math.random() * 900000).toString();
 
+    // session.emailOtp = emailOtp;
+    // session.verified = false;
+    // session.expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes for session
+
     session.emailOtp = emailOtp;
+    session.otpExpiresAt = new Date(Date.now() + 2 * 60 * 1000); // 2 minutes OTP validity
     session.verified = false;
-    session.expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes for session
 
     try {
       await sendEmailOTP(session.email, emailOtp);
