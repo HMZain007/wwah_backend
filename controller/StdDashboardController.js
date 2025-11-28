@@ -462,6 +462,7 @@ const stdDashboardController = {
       );
     //  console.log(applicationInformation , "This data is save");
      await UserDb.findByIdAndUpdate(
+      
       userId,
       { complete_profile: true },
       { new: true } // important to see changes
