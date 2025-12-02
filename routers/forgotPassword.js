@@ -1,4 +1,3 @@
-
 const express = require("express");
 const router = express.Router();
 const Otp = require("../database/models/Otp");
@@ -24,28 +23,25 @@ router.post("/", async (req, res) => {
     // Generate new OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const otpHash = hashString(otp);
+    const otpExpiry = Date.now() + 2 * 60 * 1000; // 2 minutes
 
     await Otp.deleteMany({ email }); // remove old OTPs
 
     await Otp.create({
       email,
       otpHash,
-      expiresAt: Date.now() + 2 * 60 * 1000,
+      expiresAt: otpExpiry,
       resendAvailableAt: Date.now() + 1 * 60 * 1000,
     });
 
-    //  BUG — you are setting `expiresAt` in session but not defined in this scope
-    // req.session.resetData = { email, otp, expiresAt, verified: false };
-
-    //  FIX
+    // Save session
     req.session.resetData = {
       email,
       otp,
-      expiresAt: Date.now() + 2 * 60 * 1000,
+      expiresAt: otpExpiry,
       verified: false,
     };
 
-    // FIX: Save session explicitly before sending response
     req.session.save((err) => {
       if (err) {
         console.error("Session save error:", err);
@@ -54,8 +50,18 @@ router.post("/", async (req, res) => {
         });
       }
 
-      // Send email after session is saved
-      sendEmail(email, "Your OTP Code", `Your OTP is ${otp}`)
+      // Updated email template with OTP validity info
+      const emailContent = `
+        <div style="font-family: Arial, sans-serif; text-align: center;">
+          <h2>Password Reset OTP</h2>
+          <p>Your One-Time Password (OTP) is:</p>
+          <h1 style="font-size: 36px; color: #2F54EB;">${otp}</h1>
+          <p style="color: #555;">This OTP is valid for <strong>2 minutes</strong>.</p>
+          <p>If you did not request a password reset, please ignore this email.</p>
+        </div>
+      `;
+
+      sendEmail(email, "Your Password Reset OTP", emailContent)
         .then(() => {
           res.json({ message: "OTP sent successfully" });
         })
@@ -64,10 +70,6 @@ router.post("/", async (req, res) => {
           res.status(500).json({ message: "Failed to send email" });
         });
     });
-
-    //  console.log(req.session , "This is my seekn")
-    // await sendEmail(email, "Your OTP Code", `Your OTP is ${otp}`);
-    // res.json({ message: "OTP sent successfully" });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });
