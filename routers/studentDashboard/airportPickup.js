@@ -958,7 +958,7 @@ router.use((req, res, next) => {
 });
 
 router.post("/", handleUpload, async (req, res) => {
-  console.log("Received request to submit airport pickup form");
+  console.log("✅ Received request to submit airport pickup form");
   console.log("Request body:", req.body);
   console.log("Request file:", req.file);
 
@@ -986,6 +986,7 @@ router.post("/", handleUpload, async (req, res) => {
       !pickupOption ||
       !dropOffLocation
     ) {
+      console.log("❌ Missing required fields");
       return res.status(400).json({
         success: false,
         message:
@@ -1002,6 +1003,7 @@ router.post("/", handleUpload, async (req, res) => {
 
     // Check if file was uploaded to S3
     if (!req.file) {
+      console.log("❌ No file uploaded");
       return res.status(400).json({
         success: false,
         message:
@@ -1009,7 +1011,7 @@ router.post("/", handleUpload, async (req, res) => {
       });
     }
 
-    console.log("File uploaded to S3:", {
+    console.log("✅ File uploaded to S3:", {
       location: req.file.location,
       bucket: req.file.bucket,
       key: req.file.key,
@@ -1017,17 +1019,27 @@ router.post("/", handleUpload, async (req, res) => {
       originalname: req.file.originalname,
     });
 
-    // Parse phone country to extract just the code
+    // Parse phone country - Fix for both formats
     let phoneCountryCode = phoneCountry;
-    if (phoneCountry && phoneCountry.includes("|")) {
-      phoneCountryCode = phoneCountry.split("|")[1];
+    if (phoneCountry) {
+      if (phoneCountry.includes("|")) {
+        phoneCountryCode = phoneCountry.split("|")[1];
+      } else if (phoneCountry.includes("-")) {
+        // Handle code-name format
+        const parts = phoneCountry.split("-");
+        phoneCountryCode = parts[0];
+      }
     }
+
+    console.log("📞 Phone country code:", phoneCountryCode);
 
     // Generate a presigned URL for the email attachment
     const presignedUrl = await generatePresignedUrl(
       req.file.bucket,
       req.file.key
     );
+
+    console.log("🔗 Presigned URL generated:", presignedUrl ? "Yes" : "No");
 
     const mailOptions = {
       from: email,
@@ -1082,23 +1094,22 @@ router.post("/", handleUpload, async (req, res) => {
         }">View Document</a></p>
         
         <hr>
-        <p><small>Submitted on: ${new Date().toLocaleString()}</small></p>
+        <p><small>Submitted on: ${new Date().toLocaleString("en-US", {
+          timeZone: "UTC",
+        })}</small></p>
       `,
       cc: email,
-      // Note: For security, we're using presigned URLs instead of direct S3 URLs for attachments
-      // If you want to include file as attachment, uncomment below and ensure proper permissions
-      // attachments: [
-      //   {
-      //     filename: req.file.originalname,
-      //     path: presignedUrl,
-      //   },
-      // ],
     };
 
-    // Send email
-    console.log("Sending email...");
-    await transporter.sendMail(mailOptions);
-    console.log("Email sent successfully");
+    // Send email with timeout
+    console.log("📧 Sending email...");
+    await Promise.race([
+      transporter.sendMail(mailOptions),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Email sending timeout")), 25000)
+      ),
+    ]);
+    console.log("✅ Email sent successfully");
 
     res.status(200).json({
       success: true,
@@ -1108,9 +1119,9 @@ router.post("/", handleUpload, async (req, res) => {
       fileKey: req.file.key,
     });
   } catch (error) {
-    console.error("Error submitting form:", error);
+    console.error("❌ Error submitting form:", error);
 
-    // If there was an error after file upload, optionally delete the file from S3
+    // If there was an error after file upload, delete the file from S3
     if (req.file && req.file.key) {
       try {
         const deleteCommand = new DeleteObjectCommand({
@@ -1118,16 +1129,17 @@ router.post("/", handleUpload, async (req, res) => {
           Key: req.file.key,
         });
         await s3Client.send(deleteCommand);
-        console.log("Cleaned up uploaded file due to error");
+        console.log("🗑️ Cleaned up uploaded file due to error");
       } catch (deleteError) {
-        console.error("Error deleting file from S3:", deleteError);
+        console.error("❌ Error deleting file from S3:", deleteError);
       }
     }
 
     res.status(500).json({
       success: false,
       message: "Error submitting form. Please try again.",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+      error:
+        process.env.NODE_ENV === "development" ? error.message : "Server error",
     });
   }
 });
