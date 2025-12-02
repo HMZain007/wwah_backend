@@ -932,6 +932,29 @@ const generatePresignedUrl = async (bucket, key) => {
 // route specific to timeout
 
 router.use((req, res, next) => {
+  // ✅ Add CORS headers manually for this route
+  const origin = req.headers.origin;
+  const allowedOrigins = [
+    "https://wwah.ai",
+    "https://www.wwah.ai",
+    "http://localhost:3000",
+    "https://wwah.vercel.app",
+    "https://www.worldwideadmissionshub.com",
+  ];
+
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+    res.setHeader(
+      "Access-Control-Allow-Methods",
+      "GET, POST, PUT, DELETE, OPTIONS"
+    );
+    res.setHeader(
+      "Access-Control-Allow-Headers",
+      "Content-Type, Authorization, Cookie, X-Requested-With, Accept, Origin"
+    );
+  }
+
   // request timeout for specific route
   req.setTimeout(300000, () => {
     console.log("❌ Request timeout after 5 minutes");
