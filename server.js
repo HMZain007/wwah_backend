@@ -69,11 +69,11 @@ const superAdminOtp = require("./routers/adminDashboard/auth/otp");
 server.set("trust proxy", 1);
 
 // 2. Body parsers (BEFORE session)
-server.use(express.json());
-server.use(cookieParser());
 server.use(express.json({ limit: "20mb" }));
-server.use(bodyParser.urlencoded({ extended: true }));
 server.use(express.urlencoded({ limit: "20mb", extended: true }));
+server.use(bodyParser.urlencoded({ extended: true }));
+server.use(cookieParser());
+
 // 3. CORS Configuration (BEFORE session)
 const allowedOrigins = [
   "https://wwah.ai",
@@ -86,23 +86,32 @@ const allowedOrigins = [
 const corsOptions = {
   origin: function (origin, callback) {
     console.log("🔍 Incoming Origin:", origin);
-    // ✅ Allow requests with no origin (mobile apps, Postman, etc.)
+
+    // Allow requests with no origin
     if (!origin) {
       return callback(null, true);
     }
 
     if (allowedOrigins.includes(origin)) {
-      callback(null, true);
+      console.log("✅ Allowed Origin:", origin);
+      return callback(null, true);
     } else {
       console.error("❌ Blocked Origin:", origin);
-      callback(new Error("Not allowed by CORS"));
+      return callback(null, false); // ✅ CHANGED: Don't throw error, just block
     }
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+    "Cookie",
+    "X-Requested-With",
+    "Accept",
+    "Origin",
+  ],
   exposedHeaders: ["Set-Cookie"],
-  maxAge: 86400, // 24 hours
+  maxAge: 86400,
   preflightContinue: false,
   optionsSuccessStatus: 204,
 };
@@ -114,6 +123,7 @@ server.options("*", cors(corsOptions));
 server.use(
   helmet({
     crossOriginResourcePolicy: { policy: "cross-origin" },
+    crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
   })
 );
 
