@@ -423,6 +423,7 @@ const path = require("path");
 const refForgotPassword = require("./routers/referralPortal/ref-forgotpassword");
 const refverifyOtp = require("./routers/referralPortal/ref-verify-otp");
 const refResetPassword = require("./routers/referralPortal/resetpassword");
+const airportPickupForm = require("./routers/airportPickup");
 // super admin
 const superAdminSignIn = require("./routers/adminDashboard/auth/signin");
 const superAdminOtp = require("./routers/adminDashboard/auth/otp");
@@ -636,6 +637,7 @@ server.use("/refcontact", refcontact);
 server.use("/adminDashboard/mbaData", mbaData);
 server.use("/adminDashboard/referrals", referrals);
 // server.use("/refportal/commission", commisionRoutes);
+server.use("/airportPickupForm", airportPickupForm);
 server.use("/commission", commisionTracker);
 server.use("/refportal/email", EmailRoutes);
 server.use("/jobapplicationform",jobApplicationForm)
