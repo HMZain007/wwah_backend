@@ -859,8 +859,6 @@ const upload = multer({
   limits: {
     fileSize: 5 * 1024 * 1024, // 5MB limit
     files: 1, // Only allow 1 file
-    fieldSize: 20 * 1024 * 1024,
-    fields: 20, // ✅ max number of fields
   },
 });
 
@@ -929,59 +927,8 @@ const generatePresignedUrl = async (bucket, key) => {
   }
 };
 
-// route specific to timeout
-
-router.use((req, res, next) => {
-  // ✅ Add CORS headers manually for this route
-  const origin = req.headers.origin;
-  const allowedOrigins = [
-    "https://wwah.ai",
-    "https://www.wwah.ai",
-    "http://localhost:3000",
-    "https://wwah.vercel.app",
-    "https://www.worldwideadmissionshub.com",
-  ];
-
-  if (allowedOrigins.includes(origin)) {
-    res.setHeader("Access-Control-Allow-Origin", origin);
-    res.setHeader("Access-Control-Allow-Credentials", "true");
-    res.setHeader(
-      "Access-Control-Allow-Methods",
-      "GET, POST, PUT, DELETE, OPTIONS"
-    );
-    res.setHeader(
-      "Access-Control-Allow-Headers",
-      "Content-Type, Authorization, Cookie, X-Requested-With, Accept, Origin"
-    );
-  }
-
-  // request timeout for specific route
-  req.setTimeout(300000, () => {
-    console.log("❌ Request timeout after 5 minutes");
-    if (!res.headersSent) {
-      res.status(408).json({
-        success: false,
-        message: "Request timeout. Please try again with a smaller file.",
-      });
-    }
-  });
-
-  // Response timeout set karo - 5 minutes
-  res.setTimeout(300000, () => {
-    console.log("❌ Response timeout after 5 minutes");
-    if (!res.headersSent) {
-      res.status(408).json({
-        success: false,
-        message: "Response timeout. Please try again.",
-      });
-    }
-  });
-
-  next();
-});
-
 router.post("/", handleUpload, async (req, res) => {
-  console.log("✅ Received request to submit airport pickup form");
+  console.log("Received request to submit airport pickup form");
   console.log("Request body:", req.body);
   console.log("Request file:", req.file);
 
@@ -1009,7 +956,6 @@ router.post("/", handleUpload, async (req, res) => {
       !pickupOption ||
       !dropOffLocation
     ) {
-      console.log("❌ Missing required fields");
       return res.status(400).json({
         success: false,
         message:
@@ -1026,7 +972,6 @@ router.post("/", handleUpload, async (req, res) => {
 
     // Check if file was uploaded to S3
     if (!req.file) {
-      console.log("❌ No file uploaded");
       return res.status(400).json({
         success: false,
         message:
@@ -1034,7 +979,7 @@ router.post("/", handleUpload, async (req, res) => {
       });
     }
 
-    console.log("✅ File uploaded to S3:", {
+    console.log("File uploaded to S3:", {
       location: req.file.location,
       bucket: req.file.bucket,
       key: req.file.key,
@@ -1042,27 +987,17 @@ router.post("/", handleUpload, async (req, res) => {
       originalname: req.file.originalname,
     });
 
-    // Parse phone country - Fix for both formats
+    // Parse phone country to extract just the code
     let phoneCountryCode = phoneCountry;
-    if (phoneCountry) {
-      if (phoneCountry.includes("|")) {
-        phoneCountryCode = phoneCountry.split("|")[1];
-      } else if (phoneCountry.includes("-")) {
-        // Handle code-name format
-        const parts = phoneCountry.split("-");
-        phoneCountryCode = parts[0];
-      }
+    if (phoneCountry && phoneCountry.includes("|")) {
+      phoneCountryCode = phoneCountry.split("|")[1];
     }
-
-    console.log("📞 Phone country code:", phoneCountryCode);
 
     // Generate a presigned URL for the email attachment
     const presignedUrl = await generatePresignedUrl(
       req.file.bucket,
       req.file.key
     );
-
-    console.log("🔗 Presigned URL generated:", presignedUrl ? "Yes" : "No");
 
     const mailOptions = {
       from: email,
@@ -1083,56 +1018,50 @@ router.post("/", handleUpload, async (req, res) => {
         <p><strong>Pickup Option:</strong> ${pickupOption}</p>
         <p><strong>Drop-off Location:</strong> ${dropOffLocation}</p>
 
-        ${
-          additionalPreference
-            ? `<h3>Additional Preferences</h3><p>${additionalPreference}</p>`
-            : ""
+        ${additionalPreference
+          ? `<h3>Additional Preferences</h3><p>${additionalPreference}</p>`
+          : ""
         }
 
-        ${
-          Object.keys(parsedFlightDetails).length > 0
-            ? `
+        ${Object.keys(parsedFlightDetails).length > 0
+          ? `
         <h3>Flight Details</h3>
-        <p><strong>Arrival Date:</strong> ${
-          parsedFlightDetails.arrivalDate || "N/A"
-        }</p>
+        <p><strong>Arrival Date:</strong> ${parsedFlightDetails.arrivalDate || "N/A"
+          }</p>
         <p><strong>Time:</strong> ${parsedFlightDetails.time || "N/A"}</p>
-        <p><strong>Airport Name:</strong> ${
-          parsedFlightDetails.airportName || "N/A"
-        }</p>
-        <p><strong>Flight Number:</strong> ${
-          parsedFlightDetails.flightNumber || "N/A"
-        }</p>
-        <p><strong>Airline Name:</strong> ${
-          parsedFlightDetails.airlineName || "N/A"
-        }</p>
+        <p><strong>Airport Name:</strong> ${parsedFlightDetails.airportName || "N/A"
+          }</p>
+        <p><strong>Flight Number:</strong> ${parsedFlightDetails.flightNumber || "N/A"
+          }</p>
+        <p><strong>Airline Name:</strong> ${parsedFlightDetails.airlineName || "N/A"
+          }</p>
         `
-            : ""
+          : ""
         }
 
         <h3>Uploaded Document</h3>
         <p><strong>File:</strong> ${req.file.originalname}</p>
-        <p><strong>Download Link:</strong> <a href="${
-          presignedUrl || req.file.location
+        <p><strong>Download Link:</strong> <a href="${presignedUrl || req.file.location
         }">View Document</a></p>
         
         <hr>
-        <p><small>Submitted on: ${new Date().toLocaleString("en-US", {
-          timeZone: "UTC",
-        })}</small></p>
+        <p><small>Submitted on: ${new Date().toLocaleString()}</small></p>
       `,
       cc: email,
+      // Note: For security, we're using presigned URLs instead of direct S3 URLs for attachments
+      // If you want to include file as attachment, uncomment below and ensure proper permissions
+      // attachments: [
+      //   {
+      //     filename: req.file.originalname,
+      //     path: presignedUrl,
+      //   },
+      // ],
     };
 
-    // Send email with timeout
-    console.log("📧 Sending email...");
-    await Promise.race([
-      transporter.sendMail(mailOptions),
-      new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("Email sending timeout")), 25000)
-      ),
-    ]);
-    console.log("✅ Email sent successfully");
+    // Send email
+    console.log("Sending email...");
+    await transporter.sendMail(mailOptions);
+    console.log("Email sent successfully");
 
     res.status(200).json({
       success: true,
@@ -1142,9 +1071,9 @@ router.post("/", handleUpload, async (req, res) => {
       fileKey: req.file.key,
     });
   } catch (error) {
-    console.error("❌ Error submitting form:", error);
+    console.error("Error submitting form:", error);
 
-    // If there was an error after file upload, delete the file from S3
+    // If there was an error after file upload, optionally delete the file from S3
     if (req.file && req.file.key) {
       try {
         const deleteCommand = new DeleteObjectCommand({
@@ -1152,17 +1081,16 @@ router.post("/", handleUpload, async (req, res) => {
           Key: req.file.key,
         });
         await s3Client.send(deleteCommand);
-        console.log("🗑️ Cleaned up uploaded file due to error");
+        console.log("Cleaned up uploaded file due to error");
       } catch (deleteError) {
-        console.error("❌ Error deleting file from S3:", deleteError);
+        console.error("Error deleting file from S3:", deleteError);
       }
     }
 
     res.status(500).json({
       success: false,
       message: "Error submitting form. Please try again.",
-      error:
-        process.env.NODE_ENV === "development" ? error.message : "Server error",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   }
 });
