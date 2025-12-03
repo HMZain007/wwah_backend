@@ -1,3 +1,67 @@
+/**
+ * @swagger
+ * /signin:
+ *   post:
+ *     summary: User Sign In
+ *     description: Authenticates a user using email and password. Returns JWT token, user info, and successChance status.
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: user@example.com
+ *               password:
+ *                 type: string
+ *                 example: 12345678
+ *     responses:
+ *       200:
+ *         description: Sign in successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Sign In Successful
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 token:
+ *                   type: string
+ *                   example: eyJhbGciOiJIUzI1NiIsIn...
+ *                 successChance:
+ *                   type: boolean
+ *                   example: true
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                     firstName:
+ *                       type: string
+ *                     lastName:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     phone:
+ *                       type: string
+ *       400:
+ *         description: Invalid email format
+ *       401:
+ *         description: Invalid credentials
+ *       500:
+ *         description: Internal server error
+ */
+
 // Importing necessary modules
 const express = require("express");
 const router = express.Router();

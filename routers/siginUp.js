@@ -1,3 +1,16 @@
+ /**
+  * @swagger
+  * /signup:
+  *   post:
+  *     summary: User Sign Up
+  *     description: Creates a new user account. Returns JWT token, user info, and successChance status.
+  *     tags: [Auth]
+  *     requestBody:
+  *       required: true
+  *       content:
+  *         application/json:
+  */
+ // Signup Router
 const express = require("express");
 const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
