@@ -1,7 +1,9 @@
-
 // module.exports = router;
 const express = require("express");
 const router = express.Router();
+// ✅ ADD THIS IMMEDIATELY
+router.use(express.json({ limit: "10mb" }));
+router.use(express.urlencoded({ limit: "10mb", extended: true }));
 const multer = require("multer");
 const {
   S3Client,
@@ -117,8 +119,9 @@ const upload = multer({
     }
   },
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB limit
-    files: 1, // Only allow 1 file
+    fileSize: 10 * 1024 * 1024, // ✅ Changed to 10MB
+    fieldSize: 10 * 1024 * 1024, // ✅ Added this
+    files: 1,
   },
 });
 
@@ -278,30 +281,37 @@ router.post("/", handleUpload, async (req, res) => {
         <p><strong>Pickup Option:</strong> ${pickupOption}</p>
         <p><strong>Drop-off Location:</strong> ${dropOffLocation}</p>
 
-        ${additionalPreference
-          ? `<h3>Additional Preferences</h3><p>${additionalPreference}</p>`
-          : ""
+        ${
+          additionalPreference
+            ? `<h3>Additional Preferences</h3><p>${additionalPreference}</p>`
+            : ""
         }
 
-        ${Object.keys(parsedFlightDetails).length > 0
-          ? `
+        ${
+          Object.keys(parsedFlightDetails).length > 0
+            ? `
         <h3>Flight Details</h3>
-        <p><strong>Arrival Date:</strong> ${parsedFlightDetails.arrivalDate || "N/A"
-          }</p>
+        <p><strong>Arrival Date:</strong> ${
+          parsedFlightDetails.arrivalDate || "N/A"
+        }</p>
         <p><strong>Time:</strong> ${parsedFlightDetails.time || "N/A"}</p>
-        <p><strong>Airport Name:</strong> ${parsedFlightDetails.airportName || "N/A"
-          }</p>
-        <p><strong>Flight Number:</strong> ${parsedFlightDetails.flightNumber || "N/A"
-          }</p>
-        <p><strong>Airline Name:</strong> ${parsedFlightDetails.airlineName || "N/A"
-          }</p>
+        <p><strong>Airport Name:</strong> ${
+          parsedFlightDetails.airportName || "N/A"
+        }</p>
+        <p><strong>Flight Number:</strong> ${
+          parsedFlightDetails.flightNumber || "N/A"
+        }</p>
+        <p><strong>Airline Name:</strong> ${
+          parsedFlightDetails.airlineName || "N/A"
+        }</p>
         `
-          : ""
+            : ""
         }
 
         <h3>Uploaded Document</h3>
         <p><strong>File:</strong> ${req.file.originalname}</p>
-        <p><strong>Download Link:</strong> <a href="${presignedUrl || req.file.location
+        <p><strong>Download Link:</strong> <a href="${
+          presignedUrl || req.file.location
         }">View Document</a></p>
         
         <hr>
