@@ -649,14 +649,14 @@ server.use("/superadmin/otp", superAdminOtp);
 // Default routes
 server.get("/", async (req, res) => {
   try {
-    res.json({ message: "This is Home Page From Backend" });
+    res.json({ message: "This is WWAH Backend Server" });
   } catch (error) {
     res.status(500).json({ message: `There is some Error in Server: ${error}` });
   }
 });
 
 server.get("/health", (req, res) => {
-  res.status(200).json({ message: "Server is running smoothly" });
+  res.status(200).json({ message: "Server is running smoothly and healthy" });
 });
 
 server.get("/admin/chats", async (req, res) => {
