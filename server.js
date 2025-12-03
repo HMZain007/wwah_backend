@@ -426,7 +426,7 @@ const refResetPassword = require("./routers/referralPortal/resetpassword");
 // super admin
 const superAdminSignIn = require("./routers/adminDashboard/auth/signin");
 const superAdminOtp = require("./routers/adminDashboard/auth/otp");
-
+const { swaggerUi, swaggerSpec } = require("./swagger");
 // ============================================
 // MIDDLEWARE SETUP (ORDER MATTERS!)
 // ============================================
@@ -439,6 +439,7 @@ server.use(express.json());
 server.use(cookieParser());
 server.use(express.json({ limit: "20mb" }));
 server.use(bodyParser.urlencoded({ extended: true }));
+server.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 server.use(express.urlencoded({ limit: "20mb", extended: true }));
 // 3. CORS Configuration (BEFORE session)
 const allowedOrigins = [
