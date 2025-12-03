@@ -1059,9 +1059,9 @@ router.post("/", handleUpload, async (req, res) => {
     };
 
     // Send email
-    console.log("Sending email...");
+    // console.log("Sending email...");
     await transporter.sendMail(mailOptions);
-    console.log("Email sent successfully");
+    // console.log("Email sent successfully");
 
     res.status(200).json({
       success: true,
