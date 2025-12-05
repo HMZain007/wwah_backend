@@ -1,3 +1,16 @@
+/** 
+  *@swagger
+  * /book-appointment:
+  *   post:
+  *     summary: Book Appointment
+  *     description: This route is used to book an appointment.
+  *     tags: [Book Appointment]
+  *     requestBody:
+  *       required: true
+  *       content:
+  *         application/json:
+  */
+
 const express = require("express");
 const nodemailer = require("nodemailer");
 const router = express.Router();

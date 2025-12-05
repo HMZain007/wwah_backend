@@ -1,3 +1,15 @@
+/** 
+  *@swagger
+  * /send-mail:
+  *   post:
+  *     summary: Send Mail
+  *     description: This route is used to send a mail to the user.
+  *     tags: [Send Mail]
+  *     requestBody:
+  *       required: true
+  *       content:
+  *         application/json:
+  */
 
 const express = require("express");
 const nodemailer = require("nodemailer");

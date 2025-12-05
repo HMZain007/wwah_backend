@@ -1,3 +1,16 @@
+/** 
+  *@swagger
+  * /contactus:
+  *   post:
+  *     summary: Contact Us
+  *     description: This route is used to contact the user.
+  *     tags: [Contact Us]
+  *     requestBody:
+  *       required: true
+  *       content:
+  *         application/json:
+  */
+
 const express = require('express');
 const nodemailer = require('nodemailer');
 

@@ -1,3 +1,15 @@
+/** 
+  *@swagger
+  * /get-universities:
+  *   get:
+  *     summary: Get Universities
+  *     description: This route is used to get the universities.
+  *     tags: [Universities]
+  *     requestBody:
+  *       required: true
+  *       content:
+  *         application/json:
+  */
 // Add this to your existing universities route or create a new one
 const express = require("express");
 const router = express.Router();

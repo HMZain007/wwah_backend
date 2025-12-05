@@ -1,5 +1,107 @@
+/**
+ * @swagger
+ * /refral/forgot:
+ *   post:
+ *     summary: Request Password Reset OTP
+ *     description: |
+ *       Initiates the password reset process by sending a 6-digit OTP to the user's email address. The OTP is valid for 2 minutes and is hashed using SHA-256 before storage.
+ *       
+ *       **Process Flow:**
+ *       1. Validates email format
+ *       2. Checks if user account exists
+ *       3. Generates secure 6-digit OTP (100000-999999)
+ *       4. Hashes OTP with SHA-256 for secure storage
+ *       5. Stores hashed OTP with 2-minute expiration
+ *       6. Sends formatted HTML email with OTP
+ *       
+ *       **Email Details:**
+ *       - Sent from: WWAH Support
+ *       - Subject: "Password Reset OTP - WWAH"
+ *       - Contains: Personalized greeting, OTP in large format, expiration notice
+ *       - Style: Professional HTML template with brand colors
+ *       
+ *       **Security Features:**
+ *       - OTP hashed with SHA-256 before database storage
+ *       - 2-minute expiration window
+ *       - OTP marked as unverified until successful verification
+ *       - Uses Gmail App Password for secure email delivery
+ *     tags:
+ *       - Referral Portal
+ *       - Authentication
+ *       - Password Reset
+ *       - Public
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: User's registered email address
+ *                 example: "user@example.com"
+ *     responses:
+ *       200:
+ *         description: OTP sent successfully to the provided email address.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "OTP sent successfully. Please check your email inbox."
+ *       400:
+ *         description: Bad request - Invalid email format.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Please provide a valid email address."
+ *       404:
+ *         description: User not found with the provided email.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "No account found with this email address."
+ *       500:
+ *         description: Internal server error - Email service failure or other errors.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   enum:
+ *                     - "Email service configuration error. Please contact support."
+ *                     - "An internal server error occurred. Please try again later."
+ *                   example: "An internal server error occurred. Please try again later."
+ */
 // routes/forgotPassword.js
-
 const express = require("express");
 const router = express.Router();
 const crypto = require("crypto");

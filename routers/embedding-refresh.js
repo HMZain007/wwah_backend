@@ -1,3 +1,95 @@
+/**
+ * @swagger
+ * tags:
+ *   - name: Embedding Refresh
+ *     description: Routes to manage user embedding refresh and status
+ */
+
+/**
+ * @swagger
+ * /profile/refresh-embeddings:
+ *   post:
+ *     summary: Refresh user embeddings
+ *     description: Refreshes the embeddings of the logged-in user by triggering embedding webhooks.
+ *     tags: [Embedding Refresh]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Embeddings refreshed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 stats:
+ *                   type: object
+ *                   properties:
+ *                     successful:
+ *                       type: integer
+ *                     failed:
+ *                       type: integer
+ *                     total:
+ *                       type: integer
+ *                     hasSuccessChanceData:
+ *                       type: boolean
+ *                 refreshedAt:
+ *                   type: string
+ *                   format: date-time
+ *       404:
+ *         description: User data not found
+ *       500:
+ *         description: Failed to refresh embeddings
+ */
+
+/**
+ * @swagger
+ * /profile/embedding-status:
+ *   get:
+ *     summary: Get embedding status
+ *     description: Retrieves embedding-related status and profile completeness for the logged-in user.
+ *     tags: [Embedding Refresh]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Embedding status fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 embeddingData:
+ *                   type: object
+ *                   properties:
+ *                     userId:
+ *                       type: string
+ *                     hasUserData:
+ *                       type: boolean
+ *                     hasSuccessChanceData:
+ *                       type: boolean
+ *                     lastUserUpdate:
+ *                       type: string
+ *                       format: date-time
+ *                     lastSuccessChanceUpdate:
+ *                       type: string
+ *                       format: date-time
+ *                     profileCompleteness:
+ *                       type: integer
+ *                       description: Percentage of completed profile fields
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Server error while getting embedding status
+ */
+
+
 // Create a new route file: routes/embedding-refresh.js
 const express = require("express");
 const router = express.Router();

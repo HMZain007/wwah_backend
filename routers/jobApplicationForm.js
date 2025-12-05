@@ -1,3 +1,16 @@
+/** 
+  *@swagger
+  * /job-application-form:
+  *   post:
+  *     summary: Job Application Form
+  *     description: This route is used to submit a job application form.
+  *     tags: [Job Application Form]
+  *     requestBody:
+  *       required: true
+  *       content:
+  *         application/json:
+  */
+
 const express = require("express");
 const multer = require("multer");
 const sendEmail = require("../utils/sendEmail");

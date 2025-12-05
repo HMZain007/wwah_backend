@@ -1,3 +1,16 @@
+/** 
+  *@swagger
+  * /auth:
+  *   post:
+  *     summary: Auth
+  *     description: This route is used to authenticate the user.
+  *     tags: [Auth]
+  *     requestBody:
+  *       required: true
+  *       content:
+  *         application/json:
+  */
+
 const express = require("express");
 // const { OAuth2Client } = require("google-auth-library");
 // const jwt = require("jsonwebtoken");

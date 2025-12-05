@@ -1,3 +1,118 @@
+/**
+ * @swagger
+ * /referral-portal/email/withdrawal-request:
+ *   post:
+ *     summary: Send Withdrawal Request Email to Admin
+ *     description: |
+ *       Sends an automated email notification to the admin team (info@wwah.ai) when an MBA user requests to withdraw their commission. The email includes complete MBA details, commission information, and request timestamp.
+ *       
+ *       **Process Flow:**
+ *       1. Validates required fields (userId, commissionId)
+ *       2. Fetches user data from UserRefDb
+ *       3. Fetches commission record associated with user
+ *       4. Generates professional HTML email with formatted sections
+ *       5. Sends email via Gmail SMTP
+ *       6. Returns email confirmation with messageId
+ *       
+ *       **Email Contents:**
+ *       - **MBA Details**: Name, MBA ID, Email
+ *       - **Commission Details**: Month, Amount (Rs.), Number of referrals, Status
+ *       - **Request Information**: Formatted date and time of request
+ *       - **Format**: Both HTML (styled) and plain text versions
+ *       
+ *       **Email Recipient:**
+ *       - To: info@wwah.ai
+ *       - From: Configured EMAIL_USER
+ *       - Subject: "Withdrawal Request - [MBA Name] ([Month])"
+ *     tags:
+ *       - Referral Portal
+ *       - Email
+ *       - Commission
+ *       - Withdrawal
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - userId
+ *               - commissionId
+ *             properties:
+ *               userId:
+ *                 type: string
+ *                 description: MongoDB ObjectId of the MBA user requesting withdrawal
+ *                 example: "507f1f77bcf86cd799439011"
+ *               commissionId:
+ *                 type: string
+ *                 description: MongoDB ObjectId of the commission record
+ *                 example: "507f1f77bcf86cd799439012"
+ *     responses:
+ *       200:
+ *         description: Withdrawal request email sent successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Withdrawal request email sent successfully"
+ *                 messageId:
+ *                   type: string
+ *                   description: Unique email message ID from the mail server
+ *                   example: "<abc123@gmail.com>"
+ *       400:
+ *         description: Bad request - Missing required fields.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "User ID and Commission ID are required"
+ *       404:
+ *         description: Not found - User or commission record not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   enum:
+ *                     - "User not found"
+ *                     - "Commission record not found"
+ *                   example: "Commission record not found"
+ *       500:
+ *         description: Internal server error - Email sending failed.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Error sending withdrawal request email"
+ *                 error:
+ *                   type: string
+ *                   description: Detailed error message
+ *                   example: "Connection timeout"
+ */
+
 // routes/referralPortal/EmailRoutes.js
 const express = require("express");
 const router = express.Router();

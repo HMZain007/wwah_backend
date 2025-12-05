@@ -1,3 +1,711 @@
+/**
+ * @swagger
+ * /appliedCourses/user/{userId}:
+ *   get:
+ *     summary: Get Applied Courses and Scholarships by User ID (Admin Only)
+ *     description: Retrieves all applied courses and scholarship courses for a specific user. Requires admin authentication.
+ *     tags:
+ *       - Applied Courses
+ *       - Admin
+ *     security:
+ *       - adminBearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: User ID
+ *         example: "60d5ec49f1b2c72b8c8e4a1b"
+ *     responses:
+ *       200:
+ *         description: Applied data fetched successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Applied data fetched successfully"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     appliedCourses:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           courseId:
+ *                             type: string
+ *                           applicationStatus:
+ *                             type: integer
+ *                           statusId:
+ *                             type: integer
+ *                           isConfirmed:
+ *                             type: boolean
+ *                           createdAt:
+ *                             type: string
+ *                             format: date-time
+ *                           updatedAt:
+ *                             type: string
+ *                             format: date-time
+ *                     appliedScholarshipCourses:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                     totalAppliedCourses:
+ *                       type: integer
+ *                     totalAppliedScholarshipCourses:
+ *                       type: integer
+ *                     appliedCourseIds:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *       400:
+ *         description: User ID is required.
+ *       401:
+ *         description: Unauthorized - Admin access required.
+ *       404:
+ *         description: User not found.
+ *       500:
+ *         description: Internal server error.
+ */
+
+/**
+ * @swagger
+ * /appliedCourses:
+ *   get:
+ *     summary: Get Applied Courses with Tracking Data
+ *     description: Retrieves all applied courses for the authenticated user with their tracking information (applicationStatus, statusId, confirmation status).
+ *     tags:
+ *       - Applied Courses
+ *       - Auth
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Applied courses fetched successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Applied courses fetched successfully"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     appliedCourses:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           courseId:
+ *                             type: string
+ *                           applicationStatus:
+ *                             type: integer
+ *                             minimum: 1
+ *                             maximum: 7
+ *                           statusId:
+ *                             type: integer
+ *                             minimum: 1
+ *                             maximum: 11
+ *                           isConfirmed:
+ *                             type: boolean
+ *                           createdAt:
+ *                             type: string
+ *                             format: date-time
+ *                           updatedAt:
+ *                             type: string
+ *                             format: date-time
+ *                     totalAppliedCourses:
+ *                       type: integer
+ *                     appliedCourseIds:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *       401:
+ *         description: Unauthorized - Invalid or missing token.
+ *       404:
+ *         description: User not found.
+ *       500:
+ *         description: Internal server error.
+ *   post:
+ *     summary: Add or Remove Applied Course
+ *     description: Adds or removes a course from the user's applied courses list with optional tracking data.
+ *     tags:
+ *       - Applied Courses
+ *       - Auth
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - courseId
+ *               - action
+ *             properties:
+ *               courseId:
+ *                 type: string
+ *                 description: The ID of the course to add or remove
+ *                 example: "60d5ec49f1b2c72b8c8e4a1b"
+ *               action:
+ *                 type: string
+ *                 enum: [add, remove]
+ *                 description: Action to perform - either 'add' or 'remove'
+ *                 example: "add"
+ *               trackingData:
+ *                 type: object
+ *                 description: Optional tracking data when adding a course
+ *                 properties:
+ *                   applicationStatus:
+ *                     type: integer
+ *                     minimum: 1
+ *                     maximum: 7
+ *                     example: 1
+ *     responses:
+ *       200:
+ *         description: Course added or removed successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Course added to applied courses successfully"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     appliedCourses:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                     isApplied:
+ *                       type: boolean
+ *                     totalAppliedCourses:
+ *                       type: integer
+ *                     courseId:
+ *                       type: string
+ *                     appliedCourseIds:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *       400:
+ *         description: Missing required fields or invalid action.
+ *       401:
+ *         description: Unauthorized - Invalid or missing token.
+ *       404:
+ *         description: User not found.
+ *       500:
+ *         description: Internal server error.
+ */
+
+/**
+ * @swagger
+ * /appliedCourses/tracking/{courseId}:
+ *   put:
+ *     summary: Update Course Application Tracking Status
+ *     description: Updates the application progress step (1-7) and/or status dropdown (1-11) for an applied course. Can be used by both users and admins.
+ *     tags:
+ *       - Applied Courses
+ *       - Admin
+ *     parameters:
+ *       - in: path
+ *         name: courseId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Course ID
+ *         example: "60d5ec49f1b2c72b8c8e4a1b"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               applicationStatus:
+ *                 type: integer
+ *                 minimum: 1
+ *                 maximum: 7
+ *                 description: Progress tracking step (1-7)
+ *                 example: 3
+ *               statusId:
+ *                 type: integer
+ *                 minimum: 1
+ *                 maximum: 11
+ *                 description: |
+ *                   Status dropdown ID (1-11):
+ *                   1=incomplete-application, 2=complete-application, 3=awaiting-course-confirmation,
+ *                   4=pay-application-fee, 5=in-process, 6=application-withdrawn,
+ *                   7=application-successful, 8=application-unsuccessful, 9=visa-in-process,
+ *                   10=visa-rejected, 11=ready-to-fly
+ *                 example: 5
+ *               userId:
+ *                 type: string
+ *                 description: Target user ID (for admin updates)
+ *                 example: "60d5ec49f1b2c72b8c8e4a1b"
+ *     responses:
+ *       200:
+ *         description: Course tracking updated successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Course tracking updated successfully"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     appliedCourses:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                     updatedCourseId:
+ *                       type: string
+ *                     newApplicationStatus:
+ *                       type: integer
+ *                     newStatusId:
+ *                       type: integer
+ *       400:
+ *         description: Invalid applicationStatus or statusId value, or User ID required.
+ *       404:
+ *         description: User or applied course not found.
+ *       500:
+ *         description: Internal server error.
+ */
+
+/**
+ * @swagger
+ * /appliedCourses/check/{courseId}:
+ *   get:
+ *     summary: Check if Course is Applied
+ *     description: Checks whether a specific course is in the user's applied courses list and returns its tracking data if applicable.
+ *     tags:
+ *       - Applied Courses
+ *       - Auth
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: courseId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Course ID to check
+ *         example: "60d5ec49f1b2c72b8c8e4a1b"
+ *     responses:
+ *       200:
+ *         description: Course application status retrieved successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     isApplied:
+ *                       type: boolean
+ *                       example: true
+ *                     courseId:
+ *                       type: string
+ *                     courseData:
+ *                       type: object
+ *                       nullable: true
+ *                       properties:
+ *                         courseId:
+ *                           type: string
+ *                         applicationStatus:
+ *                           type: integer
+ *                         createdAt:
+ *                           type: string
+ *                           format: date-time
+ *                         updatedAt:
+ *                           type: string
+ *                           format: date-time
+ *                     totalAppliedCourses:
+ *                       type: integer
+ *       401:
+ *         description: Unauthorized - Invalid or missing token.
+ *       404:
+ *         description: User not found.
+ *       500:
+ *         description: Internal server error.
+ */
+
+/**
+ * @swagger
+ * /appliedCourses/ids:
+ *   get:
+ *     summary: Get Applied Course IDs Only
+ *     description: Retrieves a lightweight list of only the course IDs that the user has applied for (backward compatible endpoint).
+ *     tags:
+ *       - Applied Courses
+ *       - Auth
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Applied course IDs fetched successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Applied course IDs fetched successfully"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     appliedCourseIds:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                       example: ["60d5ec49f1b2c72b8c8e4a1b", "60d5ec49f1b2c72b8c8e4a2c"]
+ *                     totalAppliedCourses:
+ *                       type: integer
+ *                       example: 2
+ *       401:
+ *         description: Unauthorized - Invalid or missing token.
+ *       404:
+ *         description: User not found.
+ *       500:
+ *         description: Internal server error.
+ */
+
+/**
+ * @swagger
+ * /appliedCourses/remove:
+ *   delete:
+ *     summary: Remove Course from Applied Courses
+ *     description: Removes a specific course from the user's applied courses list.
+ *     tags:
+ *       - Applied Courses
+ *       - Auth
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - courseId
+ *             properties:
+ *               courseId:
+ *                 type: string
+ *                 description: The ID of the course to remove
+ *                 example: "60d5ec49f1b2c72b8c8e4a1b"
+ *     responses:
+ *       200:
+ *         description: Course removed successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Course removed from applied courses successfully"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     removedCourseId:
+ *                       type: string
+ *                     appliedCourses:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                     appliedCourseIds:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                     totalAppliedCourses:
+ *                       type: integer
+ *       400:
+ *         description: Course ID is required.
+ *       401:
+ *         description: Unauthorized - Invalid or missing token.
+ *       404:
+ *         description: User or course not found in applied courses.
+ *       500:
+ *         description: Internal server error.
+ */
+
+/**
+ * @swagger
+ * /appliedCourses/status-options:
+ *   get:
+ *     summary: Get Application Status Options
+ *     description: Retrieves the list of available application status options (1-7) for tracking course applications.
+ *     tags:
+ *       - Applied Courses
+ *     responses:
+ *       200:
+ *         description: Status options retrieved successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     applicationStatuses:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           value:
+ *                             type: integer
+ *                           label:
+ *                             type: string
+ *                       example:
+ *                         - value: 1
+ *                           label: "Application Started"
+ *                         - value: 2
+ *                           label: "Documents Prepared"
+ *                         - value: 3
+ *                           label: "Application Submitted"
+ *                         - value: 4
+ *                           label: "Under Review"
+ *                         - value: 5
+ *                           label: "Interview Scheduled"
+ *                         - value: 6
+ *                           label: "Decision Pending"
+ *                         - value: 7
+ *                           label: "Final Decision"
+ *       500:
+ *         description: Internal server error.
+ */
+
+/**
+ * @swagger
+ * /appliedCourses/confirm/{courseId}:
+ *   put:
+ *     summary: Confirm or Unconfirm Applied Course
+ *     description: Updates the confirmation status (isConfirmed) of an applied course. Can be used by both users and admins.
+ *     tags:
+ *       - Applied Courses
+ *       - Admin
+ *       - Auth
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: courseId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Course ID
+ *         example: "60d5ec49f1b2c72b8c8e4a1b"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - isConfirmed
+ *             properties:
+ *               isConfirmed:
+ *                 type: boolean
+ *                 description: Confirmation status (true to confirm, false to unconfirm)
+ *                 example: true
+ *               userId:
+ *                 type: string
+ *                 description: Target user ID (for admin updates)
+ *                 example: "60d5ec49f1b2c72b8c8e4a1b"
+ *     responses:
+ *       200:
+ *         description: Course confirmation status updated successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Course confirmed successfully"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     appliedCourses:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                     updatedCourseId:
+ *                       type: string
+ *                     isConfirmed:
+ *                       type: boolean
+ *       400:
+ *         description: isConfirmed must be a boolean or User ID required.
+ *       401:
+ *         description: Unauthorized - Invalid or missing token.
+ *       404:
+ *         description: User or applied course not found.
+ *       500:
+ *         description: Internal server error.
+ */
+
+/**
+ * @swagger
+ * /appliedCourses/confirmed/{userId}:
+ *   get:
+ *     summary: Get Confirmed Applied Courses by User ID
+ *     description: Retrieves only the confirmed applied courses for a specific user.
+ *     tags:
+ *       - Applied Courses
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: User ID
+ *         example: "60d5ec49f1b2c72b8c8e4a1b"
+ *     responses:
+ *       200:
+ *         description: Confirmed applied courses fetched successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Confirmed applied courses fetched successfully"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     appliedCourses:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           courseId:
+ *                             type: string
+ *                           applicationStatus:
+ *                             type: integer
+ *                           statusId:
+ *                             type: integer
+ *                           isConfirmed:
+ *                             type: boolean
+ *                             example: true
+ *                     totalConfirmedCourses:
+ *                       type: integer
+ *                     totalAppliedCourses:
+ *                       type: integer
+ *                     confirmedCourseIds:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *       400:
+ *         description: User ID is required.
+ *       404:
+ *         description: User not found.
+ *       500:
+ *         description: Internal server error.
+ */
+
+/**
+ * @swagger
+ * /appliedCourses/my-confirmed:
+ *   get:
+ *     summary: Get My Confirmed Applied Courses
+ *     description: Retrieves only the confirmed applied courses for the authenticated user.
+ *     tags:
+ *       - Applied Courses
+ *       - Auth
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Confirmed applied courses fetched successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Confirmed applied courses fetched successfully"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     appliedCourses:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           courseId:
+ *                             type: string
+ *                           applicationStatus:
+ *                             type: integer
+ *                           statusId:
+ *                             type: integer
+ *                           isConfirmed:
+ *                             type: boolean
+ *                             example: true
+ *                     totalConfirmedCourses:
+ *                       type: integer
+ *                     totalAppliedCourses:
+ *                       type: integer
+ *                     confirmedCourseIds:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *       401:
+ *         description: Unauthorized - Invalid or missing token.
+ *       404:
+ *         description: User not found.
+ *       500:
+ *         description: Internal server error.
+ */
 // /routers/appliedCourses.js
 const express = require("express");
 const router = express.Router();

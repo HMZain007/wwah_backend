@@ -1,3 +1,15 @@
+/** 
+  *@swagger
+  * /forgot-password:
+  *   post:
+  *     summary: Forgot Password
+  *     description: This route is used to forgot the password of the user.
+  *     tags: [Forgot Password]
+  *     requestBody:
+  *       required: true
+  *       content:
+  *         application/json:
+  */
 const express = require("express");
 const router = express.Router();
 const Otp = require("../database/models/Otp");

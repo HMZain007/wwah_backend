@@ -1,3 +1,154 @@
+/**
+ * @swagger
+ * tags:
+ *   - name: Counselor Chat
+ *     description: Routes for chatting with counselors and managing chat files
+ */
+
+/**
+ * @swagger
+ * /chat/upload:
+ *   post:
+ *     summary: Upload a file to counselor chat
+ *     description: Uploads a file (PDF, DOC, TXT, images, ZIP/RAR) for a user in counselor chat.
+ *     tags: [Counselor Chat]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - file
+ *               - email
+ *             properties:
+ *               file:
+ *                 type: string
+ *                 format: binary
+ *               email:
+ *                 type: string
+ *                 example: user@example.com
+ *     responses:
+ *       200:
+ *         description: File uploaded successfully
+ *       400:
+ *         description: Invalid file or missing email
+ *       500:
+ *         description: Failed to upload file
+ */
+
+/**
+ * @swagger
+ * /chat/download/{s3Key}:
+ *   get:
+ *     summary: Generate a pre-signed URL for a file
+ *     description: Generates a temporary pre-signed URL to download a file from S3.
+ *     tags: [Counselor Chat]
+ *     parameters:
+ *       - in: path
+ *         name: s3Key
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The S3 key of the file
+ *     responses:
+ *       200:
+ *         description: Pre-signed URL generated
+ *       400:
+ *         description: Missing S3 key
+ *       500:
+ *         description: Failed to generate download URL
+ */
+
+/**
+ * @swagger
+ * /chat/messages/{email}:
+ *   get:
+ *     summary: Get messages for a user
+ *     description: Fetches all messages for a specific user, including file URLs.
+ *     tags: [Counselor Chat]
+ *     parameters:
+ *       - in: path
+ *         name: email
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Email of the user
+ *     responses:
+ *       200:
+ *         description: Messages fetched successfully
+ *       400:
+ *         description: Missing email parameter
+ *       500:
+ *         description: Failed to fetch messages
+ */
+
+/**
+ * @swagger
+ * /chat/all:
+ *   get:
+ *     summary: Get all chats (admin)
+ *     description: Fetches all counselor chat conversations, sorted by last updated.
+ *     tags: [Counselor Chat]
+ *     responses:
+ *       200:
+ *         description: Chats fetched successfully
+ *       500:
+ *         description: Failed to fetch chats
+ */
+
+/**
+ * @swagger
+ * /chat/messages/{email}/{messageId}:
+ *   delete:
+ *     summary: Delete a specific message
+ *     description: Deletes a specific message for a user, including its file in S3.
+ *     tags: [Counselor Chat]
+ *     parameters:
+ *       - in: path
+ *         name: email
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Email of the user
+ *       - in: path
+ *         name: messageId
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: ID of the message to delete
+ *     responses:
+ *       200:
+ *         description: Message deleted successfully
+ *       404:
+ *         description: Chat or message not found
+ *       500:
+ *         description: Failed to delete message
+ */
+
+/**
+ * @swagger
+ * /chat/messages/{email}:
+ *   delete:
+ *     summary: Clear all messages for a user
+ *     description: Deletes all messages for a user and removes associated files from S3.
+ *     tags: [Counselor Chat]
+ *     parameters:
+ *       - in: path
+ *         name: email
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Email of the user
+ *     responses:
+ *       200:
+ *         description: All messages cleared successfully
+ *       404:
+ *         description: Chat not found
+ *       500:
+ *         description: Failed to clear messages
+ */
+
 const express = require("express");
 const multer = require("multer");
 const AWS = require("aws-sdk");

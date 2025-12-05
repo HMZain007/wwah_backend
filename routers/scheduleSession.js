@@ -1,3 +1,15 @@
+/** 
+  *@swagger
+  * /schedule-session:
+  *   post:
+  *     summary: Schedule Session
+  *     description: This route is used to schedule a session.
+  *     tags: [Schedule Session]
+  *     requestBody:
+  *       required: true
+  *       content:
+  *         application/json:
+  */
 const express = require("express");
 const nodemailer = require("nodemailer");
 const router = express.Router();
