@@ -1,15 +1,375 @@
- /**
-  * @swagger
-  * /signup:
-  *   post:
-  *     summary: User Sign Up
-  *     description: Creates a new user account. Returns JWT token, user info, and successChance status.
-  *     tags: [Auth]
-  *     requestBody:
-  *       required: true
-  *       content:
-  *         application/json:
-  */
+/**
+ * @swagger
+ * /send-otp:
+ *   post:
+ *     summary: Send OTP for Email Verification
+ *     description: Validates user data and sends a 6-digit OTP to the provided email address. Creates a session that expires in 10 minutes, with OTP valid for 2 minutes.
+ *     tags:
+ *       - Auth
+ *       - Signup
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - firstName
+ *               - lastName
+ *               - email
+ *               - phone
+ *               - password
+ *             properties:
+ *               firstName:
+ *                 type: string
+ *                 example: "John"
+ *               lastName:
+ *                 type: string
+ *                 example: "Doe"
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: "john.doe@example.com"
+ *               phone:
+ *                 type: string
+ *                 pattern: '^\d{10,15}$'
+ *                 example: "1234567890"
+ *               password:
+ *                 type: string
+ *                 minLength: 8
+ *                 example: "SecurePass123"
+ *               referralCode:
+ *                 type: string
+ *                 nullable: true
+ *                 example: "MBA12345"
+ *     responses:
+ *       200:
+ *         description: OTP sent successfully to email.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 sessionId:
+ *                   type: string
+ *                   example: "550e8400-e29b-41d4-a716-446655440000"
+ *                 message:
+ *                   type: string
+ *                   example: "OTP sent successfully to your email"
+ *       400:
+ *         description: Validation error (missing fields, invalid password length, or invalid phone format).
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Password must be at least 8 characters"
+ *       409:
+ *         description: Email is already registered.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 signup:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Email is already registered"
+ *       500:
+ *         description: Server error or failed to send OTP.
+ */
+
+/**
+ * @swagger
+ * /verify-otp:
+ *   post:
+ *     summary: Verify Email OTP
+ *     description: Verifies the 6-digit OTP sent to user's email. OTP is valid for 2 minutes from generation.
+ *     tags:
+ *       - Auth
+ *       - Signup
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - sessionId
+ *               - emailOtp
+ *             properties:
+ *               sessionId:
+ *                 type: string
+ *                 example: "550e8400-e29b-41d4-a716-446655440000"
+ *               emailOtp:
+ *                 type: string
+ *                 pattern: '^\d{6}$'
+ *                 example: "123456"
+ *     responses:
+ *       200:
+ *         description: OTP verified successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "OTP verified successfully"
+ *       400:
+ *         description: Invalid session, expired OTP, expired session, or incorrect OTP.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "OTP expired. Please click 'Resend OTP' to get a new code."
+ *                 otpExpired:
+ *                   type: boolean
+ *                   example: true
+ *                 sessionExpired:
+ *                   type: boolean
+ *                   example: false
+ *       500:
+ *         description: Server error while verifying OTP.
+ */
+
+/**
+ * @swagger
+ * /complete-signup:
+ *   post:
+ *     summary: Complete User Registration
+ *     description: Finalizes user registration after OTP verification. Creates user account, processes referral code if provided, generates JWT token, and triggers embedding creation.
+ *     tags:
+ *       - Auth
+ *       - Signup
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - sessionId
+ *             properties:
+ *               sessionId:
+ *                 type: string
+ *                 example: "550e8400-e29b-41d4-a716-446655440000"
+ *               password:
+ *                 type: string
+ *                 minLength: 8
+ *                 description: Optional - if not provided, uses password from session
+ *                 example: "SecurePass123"
+ *     responses:
+ *       201:
+ *         description: User successfully signed up with embeddings created.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 signup:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "User successfully signed up and embeddings created"
+ *                 token:
+ *                   type: string
+ *                   example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *                 referral:
+ *                   type: object
+ *                   properties:
+ *                     processed:
+ *                       type: boolean
+ *                       example: true
+ *                     message:
+ *                       type: string
+ *                       example: "Successfully referred by Jane Smith"
+ *                     mbaInfo:
+ *                       type: object
+ *                       nullable: true
+ *                       properties:
+ *                         firstName:
+ *                           type: string
+ *                         lastName:
+ *                           type: string
+ *                         referralCode:
+ *                           type: string
+ *                         totalReferrals:
+ *                           type: number
+ *                         createdAt:
+ *                           type: string
+ *                           format: date-time
+ *                         firstReferralAt:
+ *                           type: string
+ *                           format: date-time
+ *                         lastReferralAt:
+ *                           type: string
+ *                           format: date-time
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                     firstName:
+ *                       type: string
+ *                     lastName:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     phone:
+ *                       type: string
+ *                     isEmailVerified:
+ *                       type: boolean
+ *                     referralCodeUsed:
+ *                       type: string
+ *                       nullable: true
+ *                     createdAt:
+ *                       type: string
+ *                       format: date-time
+ *       400:
+ *         description: Invalid session, OTP not verified, session expired, or password validation error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Invalid session or OTP not verified"
+ *       409:
+ *         description: Email is already registered (duplicate entry).
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Email is already registered"
+ *       500:
+ *         description: Server error while creating account.
+ */
+
+/**
+ * @swagger
+ * /resend-otp:
+ *   post:
+ *     summary: Resend OTP to Email
+ *     description: Generates and sends a new 6-digit OTP to the user's email. Session must still be valid (within 10 minutes).
+ *     tags:
+ *       - Auth
+ *       - Signup
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - sessionId
+ *             properties:
+ *               sessionId:
+ *                 type: string
+ *                 example: "550e8400-e29b-41d4-a716-446655440000"
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: Optional - for logging purposes
+ *                 example: "john.doe@example.com"
+ *     responses:
+ *       200:
+ *         description: New OTP sent successfully to email.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "New OTP sent successfully to your email"
+ *       400:
+ *         description: Session ID required, session not found, or session expired.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Session expired. Please register again."
+ *                 sessionExpired:
+ *                   type: boolean
+ *                   example: true
+ *       500:
+ *         description: Server error or failed to send OTP email.
+ */
+
+/**
+ * @swagger
+ * /health:
+ *   get:
+ *     summary: Health Check
+ *     description: Check if the OTP signup service is running properly.
+ *     tags:
+ *       - Auth
+ *       - Health
+ *     responses:
+ *       200:
+ *         description: Service is running.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "OTP signup service is running"
+ *                 timestamp:
+ *                   type: string
+ *                   format: date-time
+ *                   example: "2025-12-04T10:30:00.000Z"
+ */
  // Signup Router
 const express = require("express");
 const crypto = require("crypto");

@@ -1,3 +1,380 @@
+/**
+ * @swagger
+ * /favorites:
+ *   post:
+ *     summary: Add or Remove Course from Favorites
+ *     description: Toggles a course in the user's favorites list with explicit add or remove action. This is the main route for frontend usage.
+ *     tags:
+ *       - Favourites
+ *       - Auth
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - courseId
+ *               - action
+ *             properties:
+ *               courseId:
+ *                 type: string
+ *                 description: The ID of the course to add or remove
+ *                 example: "60d5ec49f1b2c72b8c8e4a1b"
+ *               action:
+ *                 type: string
+ *                 enum: [add, remove]
+ *                 description: Action to perform - either 'add' or 'remove'
+ *                 example: "add"
+ *     responses:
+ *       200:
+ *         description: Course successfully added to or removed from favorites.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Course added to favorites"
+ *                 isFavorite:
+ *                   type: boolean
+ *                   example: true
+ *                 favouriteCourses:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                   example: ["60d5ec49f1b2c72b8c8e4a1b", "60d5ec49f1b2c72b8c8e4a2c"]
+ *       400:
+ *         description: Missing required fields or invalid action.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Action is required and must be 'add' or 'remove'"
+ *       401:
+ *         description: Unauthorized - Invalid or missing token.
+ *       404:
+ *         description: User not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "User not found"
+ *       500:
+ *         description: Internal server error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Internal server error"
+ *                 error:
+ *                   type: string
+ *   get:
+ *     summary: Get User's Favorite Courses
+ *     description: Retrieves the list of all course IDs that the authenticated user has favorited.
+ *     tags:
+ *       - Favourites
+ *       - Auth
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: User's favorite courses retrieved successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 favouriteCourses:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                   description: Array of favorite course IDs
+ *                   example: ["60d5ec49f1b2c72b8c8e4a1b", "60d5ec49f1b2c72b8c8e4a2c", "60d5ec49f1b2c72b8c8e4a3d"]
+ *       401:
+ *         description: Unauthorized - Invalid or missing token.
+ *       404:
+ *         description: User not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "User not found"
+ *       500:
+ *         description: Internal server error.
+ */
+
+/**
+ * @swagger
+ * /favorites/toggle:
+ *   post:
+ *     summary: Toggle Course Favorite Status
+ *     description: Automatically toggles a course's favorite status. If already favorited, removes it; if not favorited, adds it.
+ *     tags:
+ *       - Favourites
+ *       - Auth
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - courseId
+ *             properties:
+ *               courseId:
+ *                 type: string
+ *                 description: The ID of the course to toggle
+ *                 example: "60d5ec49f1b2c72b8c8e4a1b"
+ *     responses:
+ *       200:
+ *         description: Course favorite status toggled successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Course added to favorites"
+ *                 isFavorite:
+ *                   type: boolean
+ *                   description: Current favorite status after toggle
+ *                   example: true
+ *                 favouriteCourses:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                   description: Updated list of all favorite course IDs
+ *                   example: ["60d5ec49f1b2c72b8c8e4a1b", "60d5ec49f1b2c72b8c8e4a2c"]
+ *       400:
+ *         description: Course ID is required.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Course ID is required"
+ *       401:
+ *         description: Unauthorized - Invalid or missing token.
+ *       404:
+ *         description: User not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "User not found"
+ *       500:
+ *         description: Internal server error.
+ */
+
+/**
+ * @swagger
+ * /favorites/add:
+ *   post:
+ *     summary: Add Course to Favorites
+ *     description: Explicitly adds a course to the user's favorites list. Prevents duplicates using MongoDB's $addToSet operator.
+ *     tags:
+ *       - Favourites
+ *       - Auth
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - courseId
+ *             properties:
+ *               courseId:
+ *                 type: string
+ *                 description: The ID of the course to add to favorites
+ *                 example: "60d5ec49f1b2c72b8c8e4a1b"
+ *     responses:
+ *       200:
+ *         description: Course successfully added to favorites.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Course added to favorites"
+ *                 isFavorite:
+ *                   type: boolean
+ *                   example: true
+ *                 favouriteCourses:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                   description: Updated list of all favorite course IDs
+ *                   example: ["60d5ec49f1b2c72b8c8e4a1b", "60d5ec49f1b2c72b8c8e4a2c"]
+ *       400:
+ *         description: Course ID is required.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Course ID is required"
+ *       401:
+ *         description: Unauthorized - Invalid or missing token.
+ *       404:
+ *         description: User not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "User not found"
+ *       500:
+ *         description: Internal server error.
+ */
+
+/**
+ * @swagger
+ * /favorites/remove:
+ *   post:
+ *     summary: Remove Course from Favorites
+ *     description: Explicitly removes a course from the user's favorites list.
+ *     tags:
+ *       - Favourites
+ *       - Auth
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - courseId
+ *             properties:
+ *               courseId:
+ *                 type: string
+ *                 description: The ID of the course to remove from favorites
+ *                 example: "60d5ec49f1b2c72b8c8e4a1b"
+ *     responses:
+ *       200:
+ *         description: Course successfully removed from favorites.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Course removed from favorites"
+ *                 isFavorite:
+ *                   type: boolean
+ *                   example: false
+ *                 favouriteCourses:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                   description: Updated list of all favorite course IDs
+ *                   example: ["60d5ec49f1b2c72b8c8e4a2c"]
+ *       400:
+ *         description: Course ID is required.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Course ID is required"
+ *       401:
+ *         description: Unauthorized - Invalid or missing token.
+ *       404:
+ *         description: User not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "User not found"
+ *       500:
+ *         description: Internal server error.
+ */
+
 const express = require("express");
 const router = express.Router();
 const UserDb = require("../database/models/UserDb");

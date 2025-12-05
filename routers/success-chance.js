@@ -1,3 +1,551 @@
+/**
+ * @swagger
+ * /success-chance/add:
+ *   post:
+ *     summary: Create or Update Success Chance Data
+ *     description: This API creates success chance data for a user if not present, or updates the existing record.
+ *     tags:
+ *       - Success Chance
+ *       - Auth
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - studyLevel
+ *               - grade
+ *               - dateOfBirth
+ *               - nationality
+ *               - majorSubject
+ *               - livingCosts
+ *               - tuitionfee
+ *               - StudyPreferenced
+ *             properties:
+ *               studyLevel:
+ *                 type: string
+ *                 example: "Undergraduate"
+ *               grade:
+ *                 type: object
+ *                 required:
+ *                   - gradeType
+ *                   - score
+ *                 properties:
+ *                   gradeType:
+ *                     type: string
+ *                     example: "CGPA"
+ *                   score:
+ *                     type: number
+ *                     example: 3.2
+ *               dateOfBirth:
+ *                 type: string
+ *                 format: date
+ *                 example: "2002-04-18"
+ *               nationality:
+ *                 type: string
+ *                 example: "Pakistan"
+ *               majorSubject:
+ *                 type: string
+ *                 example: "Computer Science"
+ *               livingCosts:
+ *                 type: object
+ *                 required:
+ *                   - amount
+ *                   - currency
+ *                 properties:
+ *                   amount:
+ *                     type: number
+ *                     example: 6000
+ *                   currency:
+ *                     type: string
+ *                     example: "USD"
+ *               tuitionfee:
+ *                 type: object
+ *                 required:
+ *                   - amount
+ *                   - currency
+ *                 properties:
+ *                   amount:
+ *                     type: number
+ *                     example: 12000
+ *                   currency:
+ *                     type: string
+ *                     example: "USD"
+ *               LanguageProficiency:
+ *                 type: object
+ *                 nullable: true
+ *                 properties:
+ *                   level:
+ *                     type: string
+ *                     example: "Intermediate"
+ *                   test:
+ *                     type: string
+ *                     example: "IELTS"
+ *                   score:
+ *                     type: number
+ *                     example: 6.5
+ *               hasExperience:
+ *                 type: boolean
+ *                 example: true
+ *               years:
+ *                 type: number
+ *                 nullable: true
+ *                 example: 2
+ *               StudyPreferenced:
+ *                 type: object
+ *                 required:
+ *                   - country
+ *                   - degree
+ *                   - subject
+ *                 properties:
+ *                   country:
+ *                     type: string
+ *                     example: "United Kingdom"
+ *                   degree:
+ *                     type: string
+ *                     example: "Masters"
+ *                   subject:
+ *                     type: string
+ *                     example: "Artificial Intelligence"
+ *     responses:
+ *       201:
+ *         description: Success chance data created successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Success chance data created successfully"
+ *                 action:
+ *                   type: string
+ *                   example: "created"
+ *                 data:
+ *                   type: object
+ *                 embeddingUpdate:
+ *                   type: string
+ *                   example: "success"
+ *                 metadata:
+ *                   type: object
+ *       200:
+ *         description: Success chance data updated successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Success chance data updated successfully"
+ *                 action:
+ *                   type: string
+ *                   example: "updated"
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Validation error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                 field:
+ *                   type: string
+ *       401:
+ *         description: Unauthorized - Invalid or missing token.
+ *       409:
+ *         description: Duplicate entry error.
+ *       500:
+ *         description: Server error.
+ */
+
+/**
+ * @swagger
+ * /success-chance/add-upsert:
+ *   post:
+ *     summary: Create or Update Success Chance Data (Native MongoDB Upsert)
+ *     description: Alternative endpoint using MongoDB's native upsert functionality to create or update success chance data.
+ *     tags:
+ *       - Success Chance
+ *       - Auth
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - studyLevel
+ *               - grade
+ *               - dateOfBirth
+ *               - nationality
+ *               - majorSubject
+ *               - livingCosts
+ *               - tuitionfee
+ *               - StudyPreferenced
+ *             properties:
+ *               studyLevel:
+ *                 type: string
+ *                 example: "Undergraduate"
+ *               grade:
+ *                 type: object
+ *                 properties:
+ *                   gradeType:
+ *                     type: string
+ *                     example: "CGPA"
+ *                   score:
+ *                     type: number
+ *                     example: 3.2
+ *               dateOfBirth:
+ *                 type: string
+ *                 format: date
+ *                 example: "2002-04-18"
+ *               nationality:
+ *                 type: string
+ *                 example: "Pakistan"
+ *               majorSubject:
+ *                 type: string
+ *                 example: "Computer Science"
+ *               livingCosts:
+ *                 type: object
+ *                 properties:
+ *                   amount:
+ *                     type: number
+ *                     example: 6000
+ *                   currency:
+ *                     type: string
+ *                     example: "USD"
+ *               tuitionfee:
+ *                 type: object
+ *                 properties:
+ *                   amount:
+ *                     type: number
+ *                     example: 12000
+ *                   currency:
+ *                     type: string
+ *                     example: "USD"
+ *               LanguageProficiency:
+ *                 type: object
+ *                 nullable: true
+ *                 properties:
+ *                   level:
+ *                     type: string
+ *                     example: "Intermediate"
+ *                   test:
+ *                     type: string
+ *                     example: "IELTS"
+ *                   score:
+ *                     type: number
+ *                     example: 6.5
+ *               years:
+ *                 type: number
+ *                 nullable: true
+ *                 example: 2
+ *               StudyPreferenced:
+ *                 type: object
+ *                 properties:
+ *                   country:
+ *                     type: string
+ *                     example: "United Kingdom"
+ *                   degree:
+ *                     type: string
+ *                     example: "Masters"
+ *                   subject:
+ *                     type: string
+ *                     example: "Artificial Intelligence"
+ *     responses:
+ *       201:
+ *         description: Success chance data created successfully.
+ *       200:
+ *         description: Success chance data updated successfully.
+ *       400:
+ *         description: Validation error.
+ *       401:
+ *         description: Unauthorized - Invalid or missing token.
+ *       500:
+ *         description: Server error.
+ */
+
+/**
+ * @swagger
+ * /success-chance/update:
+ *   patch:
+ *     summary: Update Existing Success Chance Data
+ *     description: Updates specific fields of existing success chance data for the authenticated user.
+ *     tags:
+ *       - Success Chance
+ *       - Auth
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               studyLevel:
+ *                 type: string
+ *                 example: "Graduate"
+ *               grade:
+ *                 type: number
+ *                 example: 3.5
+ *               gradeType:
+ *                 type: string
+ *                 example: "CGPA Grade Scale"
+ *               cgpaOutOf:
+ *                 type: number
+ *                 example: 4.0
+ *               dateOfBirth:
+ *                 type: string
+ *                 format: date
+ *                 example: "2002-04-18"
+ *               nationality:
+ *                 type: string
+ *                 example: "Pakistan"
+ *               majorSubject:
+ *                 type: string
+ *                 example: "Computer Science"
+ *               livingCosts:
+ *                 type: object
+ *                 properties:
+ *                   amount:
+ *                     type: number
+ *                     example: 7000
+ *                   currency:
+ *                     type: string
+ *                     example: "USD"
+ *               tuitionFee:
+ *                 type: object
+ *                 properties:
+ *                   amount:
+ *                     type: number
+ *                     example: 15000
+ *                   currency:
+ *                     type: string
+ *                     example: "USD"
+ *               languageProficiency:
+ *                 type: object
+ *                 properties:
+ *                   level:
+ *                     type: string
+ *                     example: "Advanced"
+ *                   test:
+ *                     type: string
+ *                     example: "TOEFL"
+ *                   score:
+ *                     type: number
+ *                     example: 95
+ *               hasExperience:
+ *                 type: boolean
+ *                 example: false
+ *               years:
+ *                 type: number
+ *                 nullable: true
+ *                 example: null
+ *               studyPreferenced:
+ *                 type: object
+ *                 properties:
+ *                   country:
+ *                     type: string
+ *                     example: "United States"
+ *                   degree:
+ *                     type: string
+ *                     example: "PhD"
+ *                   subject:
+ *                     type: string
+ *                     example: "Machine Learning"
+ *     responses:
+ *       200:
+ *         description: Success chance data updated successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Success chance data updated successfully"
+ *                 data:
+ *                   type: object
+ *                 embeddingUpdate:
+ *                   type: string
+ *                   example: "success"
+ *                 metadata:
+ *                   type: object
+ *       400:
+ *         description: Validation error.
+ *       401:
+ *         description: Unauthorized - Invalid or missing token.
+ *       404:
+ *         description: No success chance data found to update.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "No success chance data found to update. Use POST to create."
+ *       500:
+ *         description: Server error.
+ */
+
+/**
+ * @swagger
+ * /success-chance:
+ *   get:
+ *     summary: Get Success Chance Data
+ *     description: Retrieves success chance data for the authenticated user.
+ *     tags:
+ *       - Success Chance
+ *       - Auth
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Success chance data retrieved successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                     userId:
+ *                       type: string
+ *                     studyLevel:
+ *                       type: string
+ *                     gradeType:
+ *                       type: string
+ *                     grade:
+ *                       type: number
+ *                     dateOfBirth:
+ *                       type: string
+ *                       format: date
+ *                     nationality:
+ *                       type: string
+ *                     majorSubject:
+ *                       type: string
+ *                     livingCosts:
+ *                       type: object
+ *                     tuitionFee:
+ *                       type: object
+ *                     languageProficiency:
+ *                       type: object
+ *                     workExperience:
+ *                       type: number
+ *                       nullable: true
+ *                     studyPreferenced:
+ *                       type: object
+ *                 metadata:
+ *                   type: object
+ *                   properties:
+ *                     profileCompleteness:
+ *                       type: number
+ *                       example: 85
+ *                     lastUpdated:
+ *                       type: string
+ *                       format: date-time
+ *                     hasLanguageProficiency:
+ *                       type: boolean
+ *                     hasWorkExperience:
+ *                       type: boolean
+ *       401:
+ *         description: Unauthorized - Invalid or missing token.
+ *       404:
+ *         description: No success chance data found for this user.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "No success chance data found for this user"
+ *       500:
+ *         description: Server error.
+ */
+
+/**
+ * @swagger
+ * /success-chance/delete:
+ *   delete:
+ *     summary: Delete Success Chance Data
+ *     description: Deletes all success chance data for the authenticated user.
+ *     tags:
+ *       - Success Chance
+ *       - Auth
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Success chance data deleted successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Success chance data deleted successfully"
+ *                 embeddingUpdate:
+ *                   type: string
+ *                   example: "success"
+ *       401:
+ *         description: Unauthorized - Invalid or missing token.
+ *       404:
+ *         description: No success chance data found to delete.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "No success chance data found to delete"
+ *       500:
+ *         description: Server error.
+ */
+
 const express = require("express");
 const router = express.Router();
 // const authenticateToken = require("../middlewares/authMiddleware");

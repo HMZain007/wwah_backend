@@ -1,3 +1,16 @@
+/** 
+  *@swagger
+  * /session-booking:
+  *   post:
+  *     summary: Session Booking
+  *     description: This route is used to book a session.
+  *     tags: [Session Booking]
+  *     requestBody:
+  *       required: true
+  *       content:
+  *         application/json:
+  */
+
 const express = require("express");
 const router = express.Router();
 const sendEmail = require("../utils/sendEmail"); // same email helper you're using

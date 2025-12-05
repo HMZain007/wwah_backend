@@ -1,3 +1,16 @@
+/** 
+
+  *@swagger
+  * /logout:
+  *   get:
+  *     summary: Logout
+  *     description: This route is used to logout the user.
+  *     tags: [Logout]
+  *     requestBody:
+  *       required: true
+  *       content:
+  *         application/json:
+  */
 const express = require("express");
 const router = express.Router();
 
