@@ -156,7 +156,32 @@ router.post("/resend", async (req, res) => {
       resendAvailableAt: Date.now() + 2 * 60 * 1000,
     });
 
-    await sendEmail(email, "Your New OTP Code", `Your new OTP is ${otp}`);
+    const emailContent = `
+    <div style="font-family: Arial, sans-serif; text-align: center; padding: 20px;">
+      <h2 style="color: #2F54EB; margin-bottom: 10px;">New OTP Sent</h2>
+      
+      <p style="font-size: 15px; color: #555;">
+        You requested to resend your One-Time Password (OTP).
+      </p>
+  
+      <p style="font-size: 15px; color: #555;">Your new OTP is:</p>
+  
+      <h1 style="font-size: 36px; color: #2F54EB; margin: 20px 0;">
+        ${otp}
+      </h1>
+  
+      <p style="color: #555; font-size: 14px;">
+        This OTP is valid for <strong>2 minutes</strong>.
+      </p>
+  
+      <p style="font-size: 13px; color: #777; margin-top: 20px;">
+        If you did not request this, you can safely ignore this email.
+      </p>
+    </div>
+  `;
+
+    await sendEmail(email, "Your New OTP Code", emailContent);
+
     res.json({ success: true, message: "OTP resent successfully" });
   } catch (err) {
     console.error(err);
