@@ -22,11 +22,11 @@
   router.post("/", async (req, res) => {
     try {
       const { email } = req.body;
-      if (!email) return res.status(400).json({ message: "Email required" });
+      if (!email) return res.status(400).json({ message: "Email  is required" });
   
       // check if user exists
       const userExists = await userDb.findOne({ email });
-      if (!userExists) return res.status(404).json({ message: "Invalid email" });
+      if (!userExists) return res.status(404).json({ message: "User not found" });
   
       // Check last OTP
       const lastOtp = await Otp.findOne({ email }).sort({ createdAt: -1 });
