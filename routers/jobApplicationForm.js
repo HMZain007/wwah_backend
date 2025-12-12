@@ -42,13 +42,25 @@ const uploadFields = upload.fields([
   { name: "ref1Attachment", maxCount: 1 },
   { name: "ref2Attachment", maxCount: 1 },
 ]);
+function formatPhone(countryCode, number) {
+  const cleanCode = countryCode.replace("+", "");
+  const cleanNum = number.replace(/\D/g, "");
+
+  // If Pakistan number starting with 3XXXXXXXXX
+  if (cleanNum.length === 10 && cleanNum.startsWith("3")) {
+    return `+${cleanCode}-${cleanNum}`;
+  }
+
+  // Default format: +CC-NUMBER
+  return `+${cleanCode}-${cleanNum}`;
+}
 
 // ✅ Custom multer error handler middleware
 function handleMulterError(err, req, res, next) {
   if (err instanceof multer.MulterError && err.code === "LIMIT_FILE_SIZE") {
     return res.status(400).json({
       success: false,
-      message: "File size too large. Each file must be under 5MB.",
+      message: "File size too large. Each file must be under 3MB.",
     });
   } else if (err) {
     return res.status(400).json({ success: false, message: err.message });
@@ -178,19 +190,28 @@ if (hasExperience === true) {
     const attachments = [cvFile, coverLetterFile, ref1Attachment, ref2Attachment].filter(Boolean);
 
     // ✅ Full phone
-    const fullPhone = `${countryCode}${phoneNumber}`.replace(/\s+/g, "");
+    // const fullPhone = `${countryCode}${phoneNumber}`.replace(/\s+/g, "");
+    const fullPhone = formatPhone(countryCode, phoneNumber);
+
 
     // ✅ Reference table HTML
     let referenceSection = "";
     const referenceRows = [];
 
   if (ref1Name || ref1PhoneNumber) {
-  const ref1PhoneFull = ref1countryCode ? `${ref1countryCode}${ref1PhoneNumber}` : ref1PhoneNumber || "N/A";
+  // const ref1PhoneFull = ref1countryCode ? `${ref1countryCode}${ref1PhoneNumber}` : ref1PhoneNumber || "N/A";
+  const ref1PhoneFull = ref1countryCode
+  ? formatPhone(ref1countryCode, ref1PhoneNumber)
+  : ref1PhoneNumber || "N/A";
+
   referenceRows.push(`<tr><td>${ref1Name || "N/A"}</td><td>${ref1PhoneFull}</td></tr>`);
 }
 
 if (ref2Name || ref2PhoneNumber) {
-  const ref2PhoneFull = ref2countryCode ? `${ref2countryCode}${ref2PhoneNumber}` : ref2PhoneNumber || "N/A";
+  // const ref2PhoneFull = ref2countryCode ? `${ref2countryCode}${ref2PhoneNumber}` : ref2PhoneNumber || "N/A";
+  const ref2PhoneFull = ref2countryCode
+  ? formatPhone(ref2countryCode, ref2PhoneNumber)
+  : ref2PhoneNumber || "N/A";
   referenceRows.push(`<tr><td>${ref2Name || "N/A"}</td><td>${ref2PhoneFull}</td></tr>`);
 }
 const { workexperience } = req.body;
@@ -308,7 +329,7 @@ const adminEmailHtml = `
     // ✅ Send emails
     await Promise.all([
    sendEmail(email, `Application Received - ${position}`, userEmailHtml, attachments),
- sendEmail("info@wwah.ai", `New Job Application - ${position}`, adminEmailHtml, attachments),
+//  sendEmail("info@wwah.ai", `New Job Application - ${position}`, adminEmailHtml, attachments),
 ]);
 
     res.status(200).json({ success: true, message: "Emails sent successfully with attachments!" });
@@ -319,3 +340,6 @@ const adminEmailHtml = `
 });
 
 module.exports = router;
+
+
+
