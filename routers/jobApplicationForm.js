@@ -329,7 +329,7 @@ const adminEmailHtml = `
     // ✅ Send emails
     await Promise.all([
    sendEmail(email, `Application Received - ${position}`, userEmailHtml, attachments),
-//  sendEmail("info@wwah.ai", `New Job Application - ${position}`, adminEmailHtml, attachments),
+  sendEmail("info@wwah.ai", `New Job Application - ${position}`, adminEmailHtml, attachments),
 ]);
 
     res.status(200).json({ success: true, message: "Emails sent successfully with attachments!" });
