@@ -158,14 +158,12 @@ router.post("/resend", async (req, res) => {
 
     const emailContent = `
     <div style="font-family: Arial, sans-serif; text-align: center; padding: 20px;">
-      <h2 style="color: #2F54EB; margin-bottom: 10px;">New OTP Sent</h2>
+      <h2 style="color: #ffffffff; margin-bottom: 10px;">New OTP Sent</h2>
       
       <p style="font-size: 15px; color: #555;">
-        You requested to resend your One-Time Password (OTP).
+        You to resend your One-Time Password (OTP).
       </p>
-  
-      <p style="font-size: 15px; color: #555;">Your new OTP is:</p>
-  
+
       <h1 style="font-size: 36px; color: #2F54EB; margin: 20px 0;">
         ${otp}
       </h1>
@@ -173,10 +171,7 @@ router.post("/resend", async (req, res) => {
       <p style="color: #555; font-size: 14px;">
         This OTP is valid for <strong>2 minutes</strong>.
       </p>
-  
-      <p style="font-size: 13px; color: #777; margin-top: 20px;">
-        If you did not request this, you can safely ignore this email.
-      </p>
+     <p>If you did not request a password reset, please ignore this email.</p>
     </div>
   `;
 

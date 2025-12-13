@@ -128,23 +128,31 @@ const transporter = nodemailer.createTransport({
 });
 
 // Send OTP Email
-const sendOTPEmail = async (email, otp, firstName = "User") => {
+const sendOTPEmail = async (email, otp,) => {
   const mailOptions = {
     from: `"WWAH Support" <${process.env.EMAIL_USER}>`,
     to: email,
     subject: "Password Reset OTP - WWAH",
     html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
-        <h2 style="color: #d32f2f; text-align: center;">Password Reset Request</h2>
-        <p>Hello ${firstName},</p>
-        <p>We received a request to reset your password for your WWAH account. Please use the following One-Time Password (OTP) to proceed:</p>
-        <div style="background: #f5f5f5; padding: 20px; text-align: center; border-radius: 8px; margin: 30px 0;">
-          <h1 style="color: #d32f2f; font-size: 32px; letter-spacing: 5px; margin: 0;">${otp}</h1>
-          <p style="color: #666; font-size: 14px;">Valid for 2 minutes</p>
-        </div>
-        <p>If you did not request this, please ignore this email.</p>
-        <p style="font-size: 12px; color: #999; text-align: center;">This is an automated email. Please do not reply.</p>
-      </div>
+  <div style="font-family: Arial, sans-serif; text-align: center; padding: 20px;">
+    <h2 style="color: #333333; margin-bottom: 10px;">Password Reset OTP</h2>
+    
+    <p style="font-size: 15px; color: #555;">
+      Your One-Time Password (OTP) is:
+    </p>
+
+    <h1 style="font-size: 36px; color: #2F54EB; margin: 20px 0;">
+      ${otp}
+    </h1>
+
+    <p style="color: #555; font-size: 14px;">
+      This OTP is valid for <strong>2 minutes</strong>.
+    </p>
+    
+    <p style="color: #555; font-size: 14px;">
+      If you did not request a password reset, please ignore this email.
+    </p>
+  </div>
     `,
   };
 
