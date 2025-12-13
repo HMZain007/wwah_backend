@@ -564,15 +564,19 @@ const sendEmailOTP = async (email, otp) => {
     to: email,
     subject: "Your Verification Code",
     html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #333;">Email Verification</h2>
         <p>Your verification code is:</p>
-        <div style="background-color: #f0f0f0; padding: 20px; text-align: center; font-size: 24px; font-weight: bold; letter-spacing: 5px; margin: 20px 0;">
-          ${otp}
-        </div>
-        <p>This code will expire in 2 minutes.</p>
-        <p>If you didn't receive the code or it expired, you can request a new one.</p>
-        <p>If you didn't request this code, please ignore this email.</p>
+    <h1 style="font-size: 36px; color: #2F54EB; margin: 20px 0;">
+      ${otp}
+    </h1>
+    <p style="color: #555; font-size: 14px;">
+      This code will expire in <strong>2 minutes</strong>.
+    </p>
+            
+    <p style="color: #555; font-size: 14px;">
+      If you did not request a password reset, please ignore this email.
+    </p>
       </div>
     `,
   };
@@ -584,9 +588,8 @@ const sendEmailOTP = async (email, otp) => {
 const sendWelcomeEmail = async (userInfo) => {
   try {
     const { firstName, lastName, email, referralCode } = userInfo;
-    const dashboardUrl = `${
-      process.env.FRONTEND_URL || "https://wwah.ai"
-    }/referralportal/signin`;
+    const dashboardUrl = `${process.env.FRONTEND_URL || "https://wwah.ai"
+      }/referralportal/signin`;
 
     const mailOptions = {
       from: process.env.EMAIL_USER,
@@ -660,12 +663,12 @@ const sendWelcomeEmail = async (userInfo) => {
 // Create user function
 const createUser = async (userData) => {
   try {
-    console.log("Creating new user...");
+    // console.log("Creating new user...");
     const refId = await generateNextRefId();
-    console.log("Generated refId:", refId);
+    // console.log("Generated refId:", refId);
 
     const referralCode = generateReferralCode(userData.firstName, refId);
-    console.log("Generated referral code:", referralCode);
+    // console.log("Generated referral code:", referralCode);
 
     const userDataWithIds = {
       ...userData,
@@ -717,7 +720,7 @@ const validateUserData = (userData) => {
 router.post("/send-otp", async (req, res) => {
   const userData = req.body;
   const missingFields = REQUIRED_FIELDS.filter((field) => !userData[field]);
-  console.log("User data received:", userData);
+  // console.log("User data received:", userData);
 
   if (missingFields.length) {
     const fieldList = missingFields.join(", ");
@@ -755,12 +758,12 @@ router.post("/send-otp", async (req, res) => {
       sessionExpiresAt: new Date(Date.now() + 10 * 60 * 1000), // Session valid for 10 mins
     });
 
-    console.log("✅ OTP session created:", {
-      sessionId,
-      email,
-      expiresIn: "10 minutes",
-      optexpireIn: "2 minutes",
-    });
+    // console.log("✅ OTP session created:", {
+    //   sessionId,
+    //   email,
+    //   expiresIn: "10 minutes",
+    //   optexpireIn: "2 minutes",
+    // });
 
     try {
       await sendEmailOTP(email, emailOtp);
@@ -803,7 +806,7 @@ router.post("/verify-otp", async (req, res) => {
   try {
     const { sessionId, emailOtp } = req.body;
     const session = otpSessions.get(sessionId);
-    console.log("Session data:", session, "Email OTP:", emailOtp);
+    // console.log("Session data:", session, "Email OTP:", emailOtp); 
 
     if (!session || !emailOtp) {
       return res.status(400).json({
@@ -854,10 +857,10 @@ router.post("/complete-signup", async (req, res) => {
   try {
     const { sessionId, password: providedPassword } = req.body;
     const session = otpSessions.get(sessionId);
-    console.log(
-      "Session data for completion:",
-      session ? "Found" : "Not found"
-    );
+    // console.log(
+    //   "Session data for completion:",
+    //   session ? "Found" : "Not found"
+    // );
 
     if (!session || !session.verified) {
       return res.status(400).json({
@@ -895,9 +898,9 @@ router.post("/complete-signup", async (req, res) => {
       createdAt: new Date(),
     };
 
-    console.log("Creating user...");
+    // console.log("Creating user...");
     const newUser = await createUser(userData);
-    console.log("User created successfully:", newUser._id);
+    // console.log("User created successfully:", newUser._id);
 
     // ✅ Send welcome email (non-blocking)
     const welcomeEmailInfo = {
@@ -927,7 +930,7 @@ router.post("/complete-signup", async (req, res) => {
 
     // Clean up session
     otpSessions.delete(sessionId);
-    console.log("User successfully signed up");
+    // console.log("User successfully signed up");
 
     // Success response
     res.status(201).json({
@@ -966,9 +969,7 @@ router.post("/complete-signup", async (req, res) => {
 router.post("/resend-otp", async (req, res) => {
   try {
     const { sessionId } = req.body;
-
-    console.log("🔄 Resend OTP request for sessionId:", sessionId);
-
+    // console.log("🔄 Resend OTP request for sessionId:", sessionId);
     if (!sessionId) {
       return res.status(400).json({
         message: "Session ID is required",
@@ -979,7 +980,7 @@ router.post("/resend-otp", async (req, res) => {
     const session = otpSessions.get(sessionId);
 
     if (!session) {
-      console.log("❌ Session not found or expired");
+      // console.log("❌ Session not found or expired");
       return res.status(400).json({
         message: "Invalid or expired session",
         success: false,
@@ -987,7 +988,7 @@ router.post("/resend-otp", async (req, res) => {
     }
 
     if (!session.email) {
-      console.log("Session missing email data");
+      // console.log("Session missing email data");
       return res.status(400).json({
         message: "Invalid session data",
         success: false,
@@ -1006,7 +1007,7 @@ router.post("/resend-otp", async (req, res) => {
 
     try {
       await sendEmailOTP(session.email, emailOtp);
-      console.log("✅ New OTP sent to:", session.email);
+      // console.log("✅ New OTP sent to:", session.email);
 
       res.status(200).json({
         success: true,

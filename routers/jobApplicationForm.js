@@ -43,16 +43,9 @@ const uploadFields = upload.fields([
   { name: "ref2Attachment", maxCount: 1 },
 ]);
 function formatPhone(countryCode, number) {
-  const cleanCode = countryCode.replace("+", "");
-  const cleanNum = number.replace(/\D/g, "");
-
+  const cleanNum=number.replace(/\D/g, ""); // Remove non-digit characters
+   return `+${countryCode}-${cleanNum}`;
   // If Pakistan number starting with 3XXXXXXXXX
-  if (cleanNum.length === 10 && cleanNum.startsWith("3")) {
-    return `+${cleanCode}-${cleanNum}`;
-  }
-
-  // Default format: +CC-NUMBER
-  return `+${cleanCode}-${cleanNum}`;
 }
 
 // ✅ Custom multer error handler middleware

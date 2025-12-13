@@ -411,11 +411,16 @@ const sendEmailOTP = async (email, otp) => {
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #333;">Email Verification</h2>
         <p>Your verification code is:</p>
-        <div style="background-color: #f0f0f0; padding: 20px; text-align: center; font-size: 24px; font-weight: bold; letter-spacing: 5px; margin: 20px 0;">
-          ${otp}
-        </div>
-        <p>This code will expire in 2 minutes.</p>
-        <p>If you didn't request this code, please ignore this email.</p>
+    <h1 style="font-size: 36px; color: #2F54EB; margin: 20px 0;">
+      ${otp}
+    </h1>
+    <p style="color: #555; font-size: 14px;">
+      This code will expire in <strong>2 minutes</strong>.
+    </p>
+            
+    <p style="color: #555; font-size: 14px;">
+      If you did not request a password reset, please ignore this email.
+    </p>
       </div>
     `,
   };
@@ -514,9 +519,9 @@ router.post("/verify-otp", async (req, res) => {
   try {
     const { sessionId, emailOtp } = req.body;
 
-    console.log("=== VERIFY OTP START ===");
-    console.log("SessionId:", sessionId);
-    console.log("EmailOtp received:", emailOtp);
+    // console.log("=== VERIFY OTP START ===");
+    // console.log("SessionId:", sessionId);
+    // console.log("EmailOtp received:", emailOtp);
 
     const session = otpSessions.get(sessionId);
 
@@ -565,14 +570,14 @@ router.post("/verify-otp", async (req, res) => {
       });
     }
 
-    console.log("OTP VERIFIED SUCCESSFULLY");
+    // console.log("OTP VERIFIED SUCCESSFULLY");
 
     // Update session
     session.verified = true;
     session.sessionExpiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes to complete signup
 
     otpSessions.set(sessionId, session);
-    console.log("Session marked as verified");
+    // console.log("Session marked as verified");
 
     res.status(200).json({
       success: true,
@@ -593,7 +598,7 @@ const processReferralCode = async (referralCode, studentData) => {
       return { success: true, message: "No referral code provided" };
     }
 
-    console.log("Processing referral code:", referralCode.trim());
+    // console.log("Processing referral code:", referralCode.trim());
 
     // Find the MBA with the matching referral code
     const mbaUser = await UserRefDb.findOne({
@@ -608,12 +613,12 @@ const processReferralCode = async (referralCode, studentData) => {
       };
     }
 
-    console.log("Found MBA for referral code:", {
-      mbaName: mbaUser.firstName + " " + mbaUser.lastName,
-      referralCode: mbaUser.referralCode,
-      currentReferrals: mbaUser.totalReferrals || 0,
-      mbaCreatedAt: mbaUser.createdAt, // Log MBA's original creation date
-    });
+    // console.log("Found MBA for referral code:", {
+    //   mbaName: mbaUser.firstName + " " + mbaUser.lastName,
+    //   referralCode: mbaUser.referralCode,
+    //   currentReferrals: mbaUser.totalReferrals || 0,
+    //   mbaCreatedAt: mbaUser.createdAt, // Log MBA's original creation date
+    // });
 
     // Check if student is already in this MBA's referrals (prevent duplicates)
     const existingReferral = mbaUser.referrals.find(
@@ -621,7 +626,7 @@ const processReferralCode = async (referralCode, studentData) => {
     );
 
     if (existingReferral) {
-      console.log("Student already referred by this MBA");
+      // console.log("Student already referred by this MBA");
       return { success: true, message: "Student already referred by this MBA" };
     }
 
@@ -657,17 +662,17 @@ const processReferralCode = async (referralCode, studentData) => {
       { new: true }
     );
 
-    console.log("Successfully added student to MBA referrals:", {
-      mbaId: mbaUser._id,
-      mbaName: mbaUser.firstName + " " + mbaUser.lastName,
-      mbaCreatedAt: mbaUser.createdAt,
-      firstReferralAt: updatedMBA.firstReferralAt,
-      lastReferralAt: updatedMBA.lastReferralAt,
-      studentId: studentData._id,
-      studentName: studentData.firstName + " " + studentData.lastName,
-      newTotalReferrals: updatedMBA.totalReferrals,
-      referralCreatedAt: currentTimestamp,
-    });
+    // console.log("Successfully added student to MBA referrals:", {
+    //   mbaId: mbaUser._id,
+    //   mbaName: mbaUser.firstName + " " + mbaUser.lastName,
+    //   mbaCreatedAt: mbaUser.createdAt,
+    //   firstReferralAt: updatedMBA.firstReferralAt,
+    //   lastReferralAt: updatedMBA.lastReferralAt,
+    //   studentId: studentData._id,
+    //   studentName: studentData.firstName + " " + studentData.lastName,
+    //   newTotalReferrals: updatedMBA.totalReferrals,
+    //   referralCreatedAt: currentTimestamp,
+    // });
 
     return {
       success: true,
@@ -733,7 +738,7 @@ router.post("/complete-signup", async (req, res) => {
       createdAt: new Date(),
     };
 
-    console.log("Creating student user with embeddings...");
+    // console.log("Creating student user with embeddings...");
     const newUser = await ExpressDbHooks.createUser(userData);
 
     let referralProcessed = false;
@@ -1141,12 +1146,12 @@ router.post("/resend-otp", async (req, res) => {
   try {
     const { sessionId, email } = req.body;
 
-    console.log("=== RESEND OTP START ===");
-    console.log("SessionId:", sessionId);
-    console.log("Email:", email);
+    // console.log("=== RESEND OTP START ===");
+    // console.log("SessionId:", sessionId);
+    // console.log("Email:", email);
 
     if (!sessionId) {
-      console.log("❌ No sessionId provided");
+      // console.log("❌ No sessionId provided");
       return res.status(400).json({
         message: "Session ID is required",
         success: false,
@@ -1177,7 +1182,7 @@ router.post("/resend-otp", async (req, res) => {
     }
 
     // ✅ Session is still valid - Generate NEW OTP
-    console.log("✅ Session valid, generating new OTP");
+    // console.log("✅ Session valid, generating new OTP");
 
     const newEmailOtp = Math.floor(100000 + Math.random() * 900000).toString();
 
@@ -1192,18 +1197,18 @@ router.post("/resend-otp", async (req, res) => {
 
     otpSessions.set(sessionId, updatedSession);
 
-    console.log("Session updated:", {
-      email: session.email,
-      newOTP: newEmailOtp,
-      otpExpiresAt: updatedSession.otpExpiresAt,
-      sessionExpiresAt: updatedSession.sessionExpiresAt,
-    });
+    // console.log("Session updated:", {
+    //   email: session.email,
+    //   newOTP: newEmailOtp,
+    //   otpExpiresAt: updatedSession.otpExpiresAt,
+    //   sessionExpiresAt: updatedSession.sessionExpiresAt,
+    // });
 
     // ✅ Send new OTP
     try {
-      console.log("📧 Sending new OTP to:", session.email);
+      // console.log("📧 Sending new OTP to:", session.email);
       await sendEmailOTP(session.email, newEmailOtp);
-      console.log("✅ Email sent successfully");
+      // console.log("✅ Email sent successfully");
 
       res.status(200).json({
         success: true,
