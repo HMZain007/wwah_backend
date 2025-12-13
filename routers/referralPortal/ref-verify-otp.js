@@ -199,7 +199,7 @@ router.post("/", async (req, res) => {
       resetPasswordTokenExpires: resetTokenExpires,
     });
 
-    console.log(`✅ OTP verified successfully for: ${email}`);
+    // console.log(`✅ OTP verified successfully for: ${email}`);
 
     return res.status(200).json({
       success: true,
