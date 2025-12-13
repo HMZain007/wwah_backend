@@ -560,14 +560,14 @@ const generateReferralCode = (firstName, refId) => {
 // Send Email OTP
 const sendEmailOTP = async (email, otp) => {
   const mailOptions = {
-    from: process.env.EMAIL_USER,
+    from: `"WWAH" <${process.env.EMAIL_USER}>`,
     to: email,
     subject: "Your Verification Code",
     html: `
-       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #333;">Email Verification</h2>
-        <p>Your verification code is:</p>
-    <h1 style="font-size: 36px; color: #2F54EB; margin: 20px 0;">
+      <div style="font-family: Arial, sans-serif; text-align: center; padding: 20px;">
+        <h2  style="color: #333333; margin-bottom: 10px;">Email Verification</h2>
+        <p style="font-size: 15px; color: #555;">Your verification code is:</p>
+    <h1 style="font-size: 36px; color: #2F54EB; margin: 20px 0;"">
       ${otp}
     </h1>
     <p style="color: #555; font-size: 14px;">
@@ -679,7 +679,7 @@ const createUser = async (userData) => {
     const newUser = new UserRefDb(userDataWithIds);
     const savedUser = await newUser.save();
 
-    console.log("User created successfully:", savedUser._id);
+    // console.log("User created successfully:", savedUser._id);
     return savedUser;
   } catch (error) {
     console.error("Error creating user:", error);
