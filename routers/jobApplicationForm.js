@@ -1,16 +1,3 @@
-/** 
-  *@swagger
-  * /job-application-form:
-  *   post:
-  *     summary: Job Application Form
-  *     description: This route is used to submit a job application form.
-  *     tags: [Job Application Form]
-  *     requestBody:
-  *       required: true
-  *       content:
-  *         application/json:
-  */
-
 const express = require("express");
 const multer = require("multer");
 const sendEmail = require("../utils/sendEmail");
@@ -43,9 +30,10 @@ const uploadFields = upload.fields([
   { name: "ref2Attachment", maxCount: 1 },
 ]);
 function formatPhone(countryCode, number) {
-  const cleanNum=number.replace(/\D/g, ""); // Remove non-digit characters
-   return `+${countryCode}-${cleanNum}`;
-  // If Pakistan number starting with 3XXXXXXXXX
+  // countryCode is already in format "Pakistan_+92"
+  const cleanNum = number.replace(/\D/g, "");
+  
+  return `${countryCode}-${cleanNum}`;
 }
 
 // ✅ Custom multer error handler middleware
@@ -322,7 +310,7 @@ const adminEmailHtml = `
     // ✅ Send emails
     await Promise.all([
    sendEmail(email, `Application Received - ${position}`, userEmailHtml, attachments),
-  sendEmail("info@wwah.ai", `New Job Application - ${position}`, adminEmailHtml, attachments),
+sendEmail("info@wwah.ai", `New Job Application - ${position}`, adminEmailHtml, attachments),
 ]);
 
     res.status(200).json({ success: true, message: "Emails sent successfully with attachments!" });

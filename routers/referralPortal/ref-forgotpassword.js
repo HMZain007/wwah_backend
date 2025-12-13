@@ -130,7 +130,7 @@ const transporter = nodemailer.createTransport({
 // Send OTP Email
 const sendOTPEmail = async (email, otp,) => {
   const mailOptions = {
-    from: `"WWAH Support" <${process.env.EMAIL_USER}>`,
+    from: `"WWAH" <${process.env.EMAIL_USER}>`,
     to: email,
     subject: "Password Reset OTP - WWAH",
     html: `
@@ -149,7 +149,7 @@ const sendOTPEmail = async (email, otp,) => {
       This OTP is valid for <strong>2 minutes</strong>.
     </p>
     
-    <p style="color: #555; font-size: 14px;">
+    <p>
       If you did not request a password reset, please ignore this email.
     </p>
   </div>

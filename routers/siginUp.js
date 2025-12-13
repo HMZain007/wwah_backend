@@ -418,7 +418,7 @@ const sendEmailOTP = async (email, otp) => {
       This code will expire in <strong>2 minutes</strong>.
     </p>
             
-    <p style="color: #555; font-size: 14px;">
+    <p>
       If you did not request a password reset, please ignore this email.
     </p>
       </div>
