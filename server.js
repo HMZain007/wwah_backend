@@ -440,7 +440,7 @@ server.use(express.json());
 server.use(cookieParser());
 server.use(express.json({ limit: "20mb" }));
 server.use(bodyParser.urlencoded({ extended: true }));
-server.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+server.use("/wwah-backend-api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 server.use(express.urlencoded({ limit: "20mb", extended: true }));
 // 3. CORS Configuration (BEFORE session)
 const allowedOrigins = [

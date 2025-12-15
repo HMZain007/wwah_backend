@@ -175,37 +175,6 @@
  *                   example: "Error deleting file from S3"
  */
 
-/**
- * @swagger
- * components:
- *   schemas:
- *     FlightDetails:
- *       type: object
- *       description: Flight information object (sent as JSON string in flightDetails field)
- *       properties:
- *         arrivalDate:
- *           type: string
- *           format: date
- *           description: Flight arrival date
- *           example: "2025-09-15"
- *         time:
- *           type: string
- *           description: Arrival time
- *           example: "14:30"
- *         airportName:
- *           type: string
- *           description: Name of the arrival airport
- *           example: "Heathrow Airport"
- *         flightNumber:
- *           type: string
- *           description: Flight number
- *           example: "BA123"
- *         airlineName:
- *           type: string
- *           description: Name of the airline
- *           example: "British Airways"
- */
-
 // module.exports = router;
 const express = require("express");
 const router = express.Router();
