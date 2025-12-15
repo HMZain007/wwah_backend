@@ -5,9 +5,9 @@ const options = {
   definition: {
     openapi: "3.0.0",
     info: {
-      title: "Your Project API Docs",
+      title: "WWAH Backend API Documnets list",
       version: "1.0.0",
-      description: "API documentation for your backend",
+      description: "API documentation for your wwah backend",
     },
   },
 
