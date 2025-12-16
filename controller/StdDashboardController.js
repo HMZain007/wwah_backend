@@ -10,10 +10,35 @@ const {
   deleteFromS3,
 } = require("../config/s3Config"); // Import your fixed S3 config
 const statusUpdate = require("../database/models/stdDashboard/statusUpdates");
+const DOCUMENT_SIZE_LIMITS_MB = {
+ "Valid Passport": 2,
+  "National ID Card": 2,
+  "Passport Size Photograph": 1,
+
+  "Academic Marksheet of 10th Grade": 3,
+  "Academic Marksheet of 12th Grade": 3,
+  "Academic Marksheet of Bachelors": 3,
+  "Academic Marksheet of Masters": 3,
+
+  "Academic Degree/Certificates of 10th Grade": 2,
+  "Academic Degree/Certificates of 12th Grade": 2,
+  "Academic Degree/Certificates of Bachelors": 2,
+  "Academic Degree/Certificates of Masters": 2,
+
+  "English Language Proficiency Test Certificate": 2,
+  "Letter of Recommendations": 2,
+  "Statement of Purpose": 2,
+  "Birth Certificate": 1,
+  "Curriculum Vitae/Resume": 1,
+
+  "Portfolio (For creative courses such as art, design and architecture)": 4,
+  "Translation (if your documents are not in English)": 2,
+  "Standardized Test Result (If any)": 2,
+};
 
 // Helper function to determine file type
 const getFileType = (extension) => {
-  const imageTypes = ["jpg", "jpeg", "png", "gif", "webp"];
+  const imageTypes = ["jpg", "jpeg", "png"];
   const documentTypes = ["pdf", "doc", "docx"];
 
   if (imageTypes.includes(extension)) return "image";
@@ -55,7 +80,7 @@ const stdDashboardController = {
   },
   // Basic Information Controller
   basicInformation: async (req, res) => {
-    console.log("DEBUG: Fetching basic for user");
+    // console.log("DEBUG: Fetching basic for user");
     try {
       const userId = req.user?.id; // Safely access req.user and get userId
 
@@ -195,7 +220,7 @@ const stdDashboardController = {
         },
         { new: true, upsert: true } // Return updated doc or create new one
       );
-
+   
       // Return the updated user data with success message
       return res.status(200).json({
         message: "Basic Information Updated Successfully",
@@ -460,13 +485,15 @@ const stdDashboardController = {
         },
         { new: true, upsert: true } // Return updated doc or create new one
       );
-    //  console.log(applicationInformation , "This data is save");
-     await UserDb.findByIdAndUpdate(
-      
-      userId,
-      { complete_profile: true },
-      { new: true } // important to see changes
-    );
+      const updatedUser = await UserDb.findByIdAndUpdate(
+  userId,
+  { complete_profile: true },
+  { new: true } // important to see changes
+);
+
+    console.log("Updated User:", updatedUser);
+      console.log(applicationInformation , "This data is save");
+     
       // Return the updated user data with success message
       return res.status(200).json({
         message: "Application Information Updated  and Respone is send back to Frontend",
@@ -551,7 +578,6 @@ const stdDashboardController = {
       });
     }
   },
-
   // Update single application info field
   updateApplicationInfoField: async (req, res) => {
     try {
@@ -610,7 +636,6 @@ const stdDashboardController = {
       });
     }
   },
-
   // Update family members array
   updateFamilyMembers: async (req, res) => {
     try {
@@ -664,7 +689,6 @@ const stdDashboardController = {
       });
     }
   },
-
   // Update educational background array
   updateEducationalBackground: async (req, res) => {
     try {
@@ -718,7 +742,6 @@ const stdDashboardController = {
       });
     }
   },
-
   // Update work experience array
   updateWorkExperience: async (req, res) => {
     try {
@@ -772,7 +795,6 @@ const stdDashboardController = {
       });
     }
   },
-
   // Final application submission
   finalSubmission: async (req, res) => {
     try {
@@ -927,136 +949,444 @@ const stdDashboardController = {
     }
   },
 
-  uploadDocument: async (req, res) => {
-    try {
-      const userId = req.user?.id;
-      console.log("DEBUG: Upload request for user:", userId);
+  // uploadDocument: async (req, res) => {
+  //   try {
+  //     const userId = req.user?.id;
+  //     console.log("DEBUG: Upload request for user:", userId);
 
-      if (!userId) {
-        return res.status(401).json({
-          message: "Login First to upload file",
+  //     if (!userId) {
+  //       return res.status(401).json({
+  //         message: "Login First to upload file",
+  //         success: false,
+  //       });
+  //     }
+
+  //     // Use multer middleware for file upload
+  //     upload.array("files", 10)(req, res, async (err) => {
+  //       if (err) {
+  //         console.error("Multer error:", err);
+  //         return res.status(400).json({
+  //           message: err.message || "File upload failed",
+  //           success: false,
+  //         });
+  //       }
+
+  //       const { documentName, documentId } = req.body;
+  //       const uploadedFiles = req.files;
+
+  //       console.log("DEBUG: Request body:", { documentName, documentId });
+  //       console.log("DEBUG: Uploaded files count:", uploadedFiles?.length || 0);
+
+  //       if (!uploadedFiles || uploadedFiles.length === 0) {
+  //         return res.status(400).json({
+  //           message: "No files uploaded",
+  //           success: false,
+  //         });
+  //       }
+
+  //       // Debug: Log the structure of uploaded files
+  //       console.log("DEBUG: First uploaded file structure:", {
+  //         originalname: uploadedFiles[0].originalname,
+  //         key: uploadedFiles[0].key,
+  //         location: uploadedFiles[0].location,
+  //         size: uploadedFiles[0].size,
+  //         mimetype: uploadedFiles[0].mimetype,
+  //       });
+
+  //       // Find or create user document entry
+  //       let userDocument = await userFiles.findOne({ user: userId });
+  //       if (!userDocument) {
+  //         userDocument = new userFiles({ user: userId, documents: [] });
+  //         console.log("DEBUG: Created new user document entry");
+  //       } else {
+  //         console.log("DEBUG: Found existing user document entry");
+  //       }
+
+  //       // Process uploaded files
+  //       const processedFiles = uploadedFiles.map((file) => {
+  //         const fileExtension = file.originalname
+  //           .split(".")
+  //           .pop()
+  //           .toLowerCase();
+  //         const fileType = getFileType(fileExtension);
+
+  //         // Extract bucket name from S3 URL
+  //         const bucketName = file.location
+  //           .split(".s3.")[0]
+  //           .split("https://")[1];
+
+  //         const processedFile = {
+  //           name: file.originalname,
+  //           key: file.key, // Changed from s3_key to key (matches schema)
+  //           bucket: bucketName, // Added bucket field (required by schema)
+  //           url: file.location,
+  //           size: file.size,
+  //           mimetype: file.mimetype, // Changed from content_type to mimetype (matches schema)
+  //           uploadedAt: new Date(),
+  //           // Optional: Add etag if available from multer-s3
+  //           etag: file.etag || undefined,
+  //         };
+
+  //         console.log("DEBUG: Processed file:", processedFile);
+  //         return processedFile;
+  //       });
+
+  //       // Check if document already exists
+  //       const existingDocumentIndex = userDocument.documents.findIndex(
+  //         (d) => d.id === documentId
+  //       );
+
+  //       if (existingDocumentIndex !== -1) {
+  //         console.log("DEBUG: Updating existing document");
+  //         const existingDocument =
+  //           userDocument.documents[existingDocumentIndex];
+  //         existingDocument.files.push(...processedFiles);
+  //         existingDocument.date = new Date().toISOString(); // Ensure it's a string as per schema
+  //         existingDocument.isChecked = true;
+  //       } else {
+  //         console.log("DEBUG: Creating new document");
+  //         userDocument.documents.push({
+  //           id: documentId,
+  //           name: documentName,
+  //           files: processedFiles,
+  //           date: new Date().toISOString(), // Ensure it's a string as per schema
+  //           isChecked: true,
+  //         });
+  //       }
+
+  //       await userDocument.save();
+  //       console.log("DEBUG: Document saved successfully");
+
+  //       res.status(201).json({
+  //         message: "Documents uploaded successfully!",
+  //         success: true,
+  //         uploadedFiles: processedFiles.map((file) => ({
+  //           name: file.name,
+  //           url: file.url,
+  //           key: file.key, // Changed from s3_key to key
+  //           bucket: file.bucket, // Added bucket
+  //           size: file.size,
+  //           mimetype: file.mimetype, // Changed from file_type to mimetype
+  //           _id: file._id || new Date().getTime().toString(), // Temporary ID for frontend
+  //         })),
+  //       });
+  //     });
+  //   } catch (error) {
+  //     console.error("Error uploading documents:", error);
+  //     res.status(500).json({
+  //       error: "Internal server error",
+  //       message: error.message,
+  //     });
+  //   }
+  // },
+// uploadDocument: async (req, res) => {
+//   try {
+//     const userId = req.user?.id;
+//     console.log("DEBUG: Upload request for user:", userId);
+
+//     if (!userId) {
+//       return res.status(401).json({
+//         message: "Login First to upload file",
+//         success: false,
+//       });
+//     }
+
+//     upload.array("files", 10)(req, res, async (err) => {
+//       if (err) {
+//         console.error("Multer error:", err);
+//         return res.status(400).json({
+//           message: err.message || "File upload failed",
+//           success: false,
+//         });
+//       }
+
+//       const { documentName, documentId } = req.body;
+//       const uploadedFiles = req.files;
+
+//       if (!documentId) {
+//         return res.status(400).json({
+//           message: "documentId is required",
+//           success: false,
+//         });
+//       }
+
+//       if (!uploadedFiles || uploadedFiles.length === 0) {
+//         return res.status(400).json({
+//           message: "No files uploaded",
+//           success: false,
+//         });
+//       }
+
+//       // ===============================
+//       // 🔒 DOCUMENT SIZE VALIDATION
+//       // ===============================
+//       const maxAllowedMB = DOCUMENT_SIZE_LIMITS_MB[documentId];
+
+//       if (!maxAllowedMB) {
+//         return res.status(400).json({
+//           success: false,
+//           message: "Invalid document type",
+//         });
+//       }
+
+//       for (const file of uploadedFiles) {
+//         const fileSizeMB = file.size / (1024 * 1024);
+
+//         if (fileSizeMB > maxAllowedMB) {
+//           return res.status(400).json({
+//             success: false,
+//             message: `${documentName} allows maximum ${maxAllowedMB} MB only`,
+//           });
+//         }
+//       }
+
+//       // ===============================
+//       // FIND / CREATE USER DOCUMENT
+//       // ===============================
+//       let userDocument = await userFiles.findOne({ user: userId });
+//       if (!userDocument) {
+//         userDocument = new userFiles({ user: userId, documents: [] });
+//       }
+
+//       // ===============================
+//       // PROCESS FILES
+//       // ===============================
+//       const processedFiles = uploadedFiles.map((file) => {
+//         const fileExtension = file.originalname.split(".").pop().toLowerCase();
+//         const fileType = getFileType(fileExtension);
+
+//         const bucketName = file.location
+//           .split(".s3.")[0]
+//           .split("https://")[1];
+
+//         return {
+//           name: file.originalname,
+//           key: file.key,
+//           bucket: bucketName,
+//           url: file.location,
+//           size: file.size,
+//           mimetype: file.mimetype,
+//           uploadedAt: new Date(),
+//           etag: file.etag || undefined,
+//         };
+//       });
+
+//       // ===============================
+//       // SAVE TO DOCUMENT ARRAY
+//       // ===============================
+//       const existingIndex = userDocument.documents.findIndex(
+//         (d) => d.id === documentId
+//       );
+
+//       if (existingIndex !== -1) {
+//         userDocument.documents[existingIndex].files.push(...processedFiles);
+//         userDocument.documents[existingIndex].date = new Date().toISOString();
+//         userDocument.documents[existingIndex].isChecked = true;
+//       } else {
+//         userDocument.documents.push({
+//           id: documentId,
+//           name: documentName,
+//           files: processedFiles,
+//           date: new Date().toISOString(),
+//           isChecked: true,
+//         });
+//       }
+
+//       await userDocument.save();
+
+//       return res.status(201).json({
+//         message: "Documents uploaded successfully!",
+//         success: true,
+//         uploadedFiles: processedFiles,
+//       });
+//     });
+//   } catch (error) {
+//     console.error("Error uploading documents:", error);
+//     res.status(500).json({
+//       success: false,
+//       message: error.message || "Internal server error",
+//     });
+//   }
+// },
+uploadDocument: async (req, res) => {
+  try {
+    const userId = req.user?.id;
+    // console.log("DEBUG: Upload request for user:", userId);
+
+    if (!userId) {
+      return res.status(401).json({
+        message: "Login First to upload file",
+        success: false,
+      });
+    }
+
+    upload.array("files", 10)(req, res, async (err) => {
+      if (err) {
+        console.error("Multer error:", err);
+        return res.status(400).json({
+          message: err.message || "File upload failed",
           success: false,
         });
       }
 
-      // Use multer middleware for file upload
-      upload.array("files", 10)(req, res, async (err) => {
-        if (err) {
-          console.error("Multer error:", err);
+      const { documentName, documentId } = req.body;
+      const uploadedFiles = req.files;
+
+      // console.log("DEBUG: documentName:", documentName);
+      // console.log("DEBUG: documentId:", documentId);
+
+      if (!documentName || !documentId) {
+        return res.status(400).json({
+          message: "documentName and documentId are required",
+          success: false,
+        });
+      }
+
+      if (!uploadedFiles || uploadedFiles.length === 0) {
+        return res.status(400).json({
+          message: "No files uploaded",
+          success: false,
+        });
+      }
+
+      // ===============================
+      // 🔒 DOCUMENT SIZE VALIDATION
+      // ===============================
+      // FIX: Use documentName instead of documentId
+      const maxAllowedMB = DOCUMENT_SIZE_LIMITS_MB[documentName];
+
+      // console.log("DEBUG: maxAllowedMB for", documentName, ":", maxAllowedMB);
+
+      if (!maxAllowedMB) {
+        return res.status(400).json({
+          success: false,
+          message: `Unknown document type: ${documentName}`,
+        });
+      }
+
+      // Check each uploaded file size
+      for (const file of uploadedFiles) {
+        const fileSizeMB = file.size / (1024 * 1024);
+
+        if (fileSizeMB > maxAllowedMB) {
+          // Delete the file from S3 since validation failed
+          if (file.key) {
+            await deleteFromS3(file.key);
+          }
+          
           return res.status(400).json({
-            message: err.message || "File upload failed",
             success: false,
+            message: `${documentName} allows maximum ${maxAllowedMB} MB per file. File "${file.originalname}" is ${fileSizeMB.toFixed(2)} MB.`,
           });
         }
+      }
 
-        const { documentName, documentId } = req.body;
-        const uploadedFiles = req.files;
+      // ===============================
+      // FIND / CREATE USER DOCUMENT
+      // ===============================
+      let userDocument = await userFiles.findOne({ user: userId });
+      if (!userDocument) {
+        userDocument = new userFiles({ user: userId, documents: [] });
+        // console.log("DEBUG: Created new user document entry");
+      }
 
-        console.log("DEBUG: Request body:", { documentName, documentId });
-        console.log("DEBUG: Uploaded files count:", uploadedFiles?.length || 0);
+      // ===============================
+      // CHECK EXISTING FILES SIZE
+      // ===============================
+      const existingDoc = userDocument.documents.find(d => d.id === documentId);
+      const existingFilesSize = existingDoc 
+        ? existingDoc.files.reduce((sum, f) => sum + (f.size || 0), 0)
+        : 0;
 
-        if (!uploadedFiles || uploadedFiles.length === 0) {
-          return res.status(400).json({
-            message: "No files uploaded",
-            success: false,
-          });
+      const newFilesSize = uploadedFiles.reduce((sum, f) => sum + f.size, 0);
+      const totalSizeMB = (existingFilesSize + newFilesSize) / (1024 * 1024);
+      const maxTotalMB = maxAllowedMB;
+
+      // console.log("DEBUG: Existing files size (MB):", (existingFilesSize / (1024 * 1024)).toFixed(2));
+      // console.log("DEBUG: New files size (MB):", (newFilesSize / (1024 * 1024)).toFixed(2));
+      // console.log("DEBUG: Total size (MB):", totalSizeMB.toFixed(2));
+
+      if (totalSizeMB > maxTotalMB) {
+        // Delete uploaded files since validation failed
+        for (const file of uploadedFiles) {
+          if (file.key) {
+            await deleteFromS3(file.key);
+          }
         }
 
-        // Debug: Log the structure of uploaded files
-        console.log("DEBUG: First uploaded file structure:", {
-          originalname: uploadedFiles[0].originalname,
-          key: uploadedFiles[0].key,
-          location: uploadedFiles[0].location,
-          size: uploadedFiles[0].size,
-          mimetype: uploadedFiles[0].mimetype,
+        return res.status(400).json({
+          success: false,
+          message: `${documentName} total size exceeds ${maxTotalMB} MB limit. Current: ${totalSizeMB.toFixed(2)} MB`,
         });
+      }
 
-        // Find or create user document entry
-        let userDocument = await userFiles.findOne({ user: userId });
-        if (!userDocument) {
-          userDocument = new userFiles({ user: userId, documents: [] });
-          console.log("DEBUG: Created new user document entry");
-        } else {
-          console.log("DEBUG: Found existing user document entry");
-        }
+      // ===============================
+      // PROCESS FILES
+      // ===============================
+      const processedFiles = uploadedFiles.map((file) => {
+        const fileExtension = file.originalname.split(".").pop().toLowerCase();
+        const bucketName = file.location
+          .split(".s3.")[0]
+          .split("https://")[1];
 
-        // Process uploaded files
-        const processedFiles = uploadedFiles.map((file) => {
-          const fileExtension = file.originalname
-            .split(".")
-            .pop()
-            .toLowerCase();
-          const fileType = getFileType(fileExtension);
-
-          // Extract bucket name from S3 URL
-          const bucketName = file.location
-            .split(".s3.")[0]
-            .split("https://")[1];
-
-          const processedFile = {
-            name: file.originalname,
-            key: file.key, // Changed from s3_key to key (matches schema)
-            bucket: bucketName, // Added bucket field (required by schema)
-            url: file.location,
-            size: file.size,
-            mimetype: file.mimetype, // Changed from content_type to mimetype (matches schema)
-            uploadedAt: new Date(),
-            // Optional: Add etag if available from multer-s3
-            etag: file.etag || undefined,
-          };
-
-          console.log("DEBUG: Processed file:", processedFile);
-          return processedFile;
-        });
-
-        // Check if document already exists
-        const existingDocumentIndex = userDocument.documents.findIndex(
-          (d) => d.id === documentId
-        );
-
-        if (existingDocumentIndex !== -1) {
-          console.log("DEBUG: Updating existing document");
-          const existingDocument =
-            userDocument.documents[existingDocumentIndex];
-          existingDocument.files.push(...processedFiles);
-          existingDocument.date = new Date().toISOString(); // Ensure it's a string as per schema
-          existingDocument.isChecked = true;
-        } else {
-          console.log("DEBUG: Creating new document");
-          userDocument.documents.push({
-            id: documentId,
-            name: documentName,
-            files: processedFiles,
-            date: new Date().toISOString(), // Ensure it's a string as per schema
-            isChecked: true,
-          });
-        }
-
-        await userDocument.save();
-        console.log("DEBUG: Document saved successfully");
-
-        res.status(201).json({
-          message: "Documents uploaded successfully!",
-          success: true,
-          uploadedFiles: processedFiles.map((file) => ({
-            name: file.name,
-            url: file.url,
-            key: file.key, // Changed from s3_key to key
-            bucket: file.bucket, // Added bucket
-            size: file.size,
-            mimetype: file.mimetype, // Changed from file_type to mimetype
-            _id: file._id || new Date().getTime().toString(), // Temporary ID for frontend
-          })),
-        });
+        return {
+          name: file.originalname,
+          key: file.key,
+          bucket: bucketName,
+          url: file.location,
+          size: file.size,
+          mimetype: file.mimetype,
+          uploadedAt: new Date(),
+          etag: file.etag || undefined,
+        };
       });
-    } catch (error) {
-      console.error("Error uploading documents:", error);
-      res.status(500).json({
-        error: "Internal server error",
-        message: error.message,
+
+      // ===============================
+      // SAVE TO DOCUMENT ARRAY
+      // ===============================
+      const existingIndex = userDocument.documents.findIndex(
+        (d) => d.id === documentId
+      );
+
+      if (existingIndex !== -1) {
+        userDocument.documents[existingIndex].files.push(...processedFiles);
+        userDocument.documents[existingIndex].date = new Date().toISOString();
+        userDocument.documents[existingIndex].isChecked = true;
+      } else {
+        userDocument.documents.push({
+          id: documentId,
+          name: documentName,
+          files: processedFiles,
+          date: new Date().toISOString(),
+          isChecked: true,
+        });
+      }
+
+      await userDocument.save();
+
+      // console.log("DEBUG: Upload successful, returning response");
+
+      return res.status(201).json({
+        message: "Documents uploaded successfully!",
+        success: true,
+        uploadedFiles: processedFiles.map(f => ({
+          name: f.name,
+          url: f.url,
+          key: f.key,
+          size: f.size,
+          mimetype: f.mimetype,
+          _id: f._id || new Date().getTime().toString(),
+        })),
       });
-    }
-  },
+    });
+  } catch (error) {
+    console.error("Error uploading documents:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Internal server error",
+    });
+  }
+},
 
   deleteDocument: async (req, res) => {
     try {
@@ -1094,7 +1424,7 @@ const stdDashboardController = {
           if (s3Key) {
             const deleteResult = await deleteFromS3(s3Key);
             if (deleteResult.success) {
-              console.log(`Successfully deleted ${s3Key} from S3`);
+              // console.log(`Successfully deleted ${s3Key} from S3`);
             } else {
               console.error(
                 `Failed to delete ${s3Key} from S3:`,
@@ -1259,6 +1589,8 @@ const stdDashboardController = {
     }
   },
 
+  
+
   getStatusUpdate: async (req, res) => {
     const studentId = req.params.studentid;
     console.log("DEBUG: Fetching status for student ID:", studentId);
@@ -1289,7 +1621,7 @@ const stdDashboardController = {
 
   getStatusUpdateStudent: async (req, res) => {
     const userId = req.user?.id;
-    console.log("DEBUG: Fetching status for user ID:", userId);
+    // console.log("DEBUG: Fetching status for user ID:", userId);
     try {
       const status = await statusUpdate.findOne({ user: userId }); // or whatever field matches
 
