@@ -451,5 +451,41 @@ router.patch("/update", authenticateToken, async (req, res) => {
     });
   }
 });
+router.patch("/accept-terms", authenticateToken, async (req, res) => {
+  console.log("Updating Zeus terms acceptance...");
+  const id = req.user.id;
 
+  try {
+    const updatedUser = await UserDb.findByIdAndUpdate(
+      id,
+      {
+        zeusTermsAccepted: true,
+        zeusTermsAcceptedDate: new Date(),
+      },
+      { new: true } // Return updated document
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    console.log("✅ Zeus terms accepted for user:", id);
+
+    res.json({
+      success: true,
+      message: "Terms accepted successfully",
+      user: updatedUser,
+    });
+  } catch (error) {
+    console.error("❌ Error updating terms acceptance:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to update terms acceptance",
+      error: error.message,
+    });
+  }
+});
 module.exports = router;
