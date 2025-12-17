@@ -114,12 +114,12 @@ const appliedScholarshipCourseSchema = new mongoose.Schema(
       default: 1,
     },
     successChances: {
-      age:{type : String},
-      academicBackground : {type : String},
-      englishProficiency: {type: String},
-      gradesAndCGPA : {type: String},
-      nationality : {type: String},
-    workExperience: {type: String},
+      age: { type: String },
+      academicBackground: { type: String },
+      englishProficiency: { type: String },
+      gradesAndCGPA: { type: String },
+      nationality: { type: String },
+      workExperience: { type: String },
     },
     isConfirmed: {
       type: Boolean,
@@ -282,6 +282,14 @@ const userSchema = new mongoose.Schema(
     },
     lastMigrated: {
       type: Date,
+    },
+    zeusTermsAccepted: {
+      type: Boolean,
+      default: false,
+    },
+    zeusTermsAcceptedDate: {
+      type: Date,
+      default: null,
     },
   },
   {
