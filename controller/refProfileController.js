@@ -708,81 +708,70 @@ const profileController = {
         });
       }
 
-      // Log incoming data for debugging
-      console.log("Received payment data:", {
-        preferredPaymentMethod,
-        bankAccountTitle,
-        bankName,
-        accountNumberIban,
-        mobileWalletNumber,
-        accountHolderName,
-        termsAndAgreement,
-      });
+      console.log("Received payment data:", req.body);
 
-      // Prepare update fields based on logic
-      const updateFields = {
-        preferredPaymentMethod,
-      };
+      // Prepare update fields
+      const updateFields = {};
 
-      // Add termsAndAgreement to updateFields if it's provided
+      // Handle termsAndAgreement - explicitly set as boolean
       if (termsAndAgreement !== undefined) {
-        updateFields.termsAndAgreement = termsAndAgreement;
+        updateFields.termsAndAgreement = Boolean(termsAndAgreement);
+        console.log(
+          "Setting termsAndAgreement to:",
+          updateFields.termsAndAgreement
+        );
       }
 
-      // Logic for bank transfer
-      if (preferredPaymentMethod === "bank_transfer") {
-        updateFields.bankAccountTitle = bankAccountTitle;
-        updateFields.bankName = bankName;
-        updateFields.accountNumberIban = accountNumberIban;
+      // Handle payment method updates
+      if (preferredPaymentMethod !== undefined) {
+        updateFields.preferredPaymentMethod = preferredPaymentMethod;
 
-        // Clear mobile wallet fields
-        updateFields.mobileWalletNumber = null;
-        updateFields.accountHolderName = null;
-      }
-      // Logic for mobile wallet options (any option other than 'none' and 'bank_transfer')
-      else if (preferredPaymentMethod && preferredPaymentMethod !== "none") {
-        updateFields.mobileWalletNumber = mobileWalletNumber;
-        updateFields.accountHolderName = accountHolderName;
-
-        // Clear bank transfer fields
-        updateFields.bankAccountTitle = null;
-        updateFields.bankName = null;
-        updateFields.accountNumberIban = null;
-      }
-      // Logic for 'none' option - clear all payment details
-      else if (preferredPaymentMethod === "none") {
-        updateFields.bankAccountTitle = null;
-        updateFields.bankName = null;
-        updateFields.accountNumberIban = null;
-        updateFields.mobileWalletNumber = null;
-        updateFields.accountHolderName = null;
+        if (preferredPaymentMethod === "bank_transfer") {
+          updateFields.bankAccountTitle = bankAccountTitle || null;
+          updateFields.bankName = bankName || null;
+          updateFields.accountNumberIban = accountNumberIban || null;
+          updateFields.mobileWalletNumber = null;
+          updateFields.accountHolderName = null;
+        } else if (
+          preferredPaymentMethod &&
+          preferredPaymentMethod !== "none"
+        ) {
+          updateFields.mobileWalletNumber = mobileWalletNumber || null;
+          updateFields.accountHolderName = accountHolderName || null;
+          updateFields.bankAccountTitle = null;
+          updateFields.bankName = null;
+          updateFields.accountNumberIban = null;
+        } else if (preferredPaymentMethod === "none") {
+          updateFields.bankAccountTitle = null;
+          updateFields.bankName = null;
+          updateFields.accountNumberIban = null;
+          updateFields.mobileWalletNumber = null;
+          updateFields.accountHolderName = null;
+        }
       }
 
       console.log("Update fields:", updateFields);
 
-      // Update or insert payment information
+      // Update or create payment information
       const paymentInfo = await refPaymentInformation.findOneAndUpdate(
-        { user: userId }, // Match user by ID
+        { user: userId },
         { $set: updateFields },
-        { new: true, upsert: true } // Return updated document or create if not exists
+        { new: true, upsert: true }
       );
 
       console.log("Saved document:", paymentInfo);
 
-      // Success response
       return res.status(200).json({
         message: "Payment information updated successfully.",
         success: true,
         paymentInfo,
       });
     } catch (error) {
-      // Log error for debugging
       console.error(`Error updating payment information: ${error}`);
-
-      // Server error response
       return res.status(500).json({
         message: "Internal server error while updating payment information.",
         success: false,
+        error: error.message,
       });
     }
   },
@@ -901,4 +890,80 @@ const profileController = {
     }
   },
 };
+
+const getProfileCompletionStatus = async (userId) => {
+  try {
+    const user = await UserRefDb.findById(userId);
+    const academic = await refAcademicInfo.findOne({ user: userId });
+    const work = await refWorkExperience.findOne({ user: userId });
+    const payment = await refPaymentInformation.findOne({ user: userId });
+
+    console.log("Checking completion status:");
+    console.log("User:", {
+      contactNo: user?.contactNo,
+      dob: user?.dob,
+      country: user?.country,
+      city: user?.city,
+    });
+    console.log("Academic:", {
+      currentDegree: academic?.currentDegree,
+      program: academic?.program,
+      uniName: academic?.uniName,
+    });
+    console.log("Work:", work ? "exists" : "not found");
+    console.log("Payment:", {
+      exists: !!payment,
+      termsAndAgreement: payment?.termsAndAgreement,
+    });
+
+    return {
+      step1: !!(user?.contactNo && user?.dob && user?.country && user?.city),
+      step2: !!(
+        academic?.currentDegree &&
+        academic?.program &&
+        academic?.uniName
+      ),
+      step3: !!work,
+      step4: !!payment?.preferredPaymentMethod,
+      step5: payment?.termsAndAgreement === true, // Explicitly check for true
+    };
+  } catch (error) {
+    console.error("Error checking profile completion:", error);
+    return {
+      step1: false,
+      step2: false,
+      step3: false,
+      step4: false,
+      step5: false,
+    };
+  }
+};
+
+// Add new endpoint to get completion status
+profileController.getCompletionStatus = async (req, res) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({
+        message: "Login required.",
+        success: false,
+      });
+    }
+
+    const status = await getProfileCompletionStatus(userId);
+
+    return res.status(200).json({
+      message: "Completion status retrieved successfully.",
+      success: true,
+      data: status,
+    });
+  } catch (error) {
+    console.error("Error getting completion status:", error);
+    return res.status(500).json({
+      message: "Internal server error.",
+      success: false,
+    });
+  }
+};
+
 module.exports = profileController;

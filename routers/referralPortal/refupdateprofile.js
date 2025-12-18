@@ -655,4 +655,10 @@ router.patch(
   profileController.updatePaymentInformation
 );
 
+router.get(
+  "/completionStatus",
+  authenticateRefToken,
+  profileController.getCompletionStatus
+);
+
 module.exports = router;

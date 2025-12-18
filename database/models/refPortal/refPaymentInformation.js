@@ -40,6 +40,7 @@ const PaymentInformationSchema = new mongoose.Schema(
     },
     termsAndAgreement: {
       type: Boolean,
+      default: false,
     },
   },
   { timestamps: true }
