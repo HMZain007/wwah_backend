@@ -1,3 +1,5 @@
+
+
 const express = require("express");
 const multer = require("multer");
 const sendEmail = require("../utils/sendEmail");
@@ -12,10 +14,13 @@ const allowedFileTypes = [
 ];
 
 // ✅ Configure multer
+const MIN_FILE_SIZE = 10 * 1024;      // 10 KB
+const MAX_FILE_SIZE = 1 * 1024 * 1024; // 1 MB
 const storage = multer.memoryStorage();
 const upload = multer({
   storage,
-   limits: { fileSize: 3 * 1024 * 1024 }, // ⬅️ 3 MB limit (per file)
+  limits: { fileSize: MAX_FILE_SIZE }, // ⬅️ hard stop at 1MB
+   
   fileFilter: (req, file, cb) => {
     if (allowedFileTypes.includes(file.mimetype)) cb(null, true);
     else cb(new Error("Invalid file type. Only PDF, DOCX, JPG, and PNG allowed."));
@@ -41,12 +46,21 @@ function handleMulterError(err, req, res, next) {
   if (err instanceof multer.MulterError && err.code === "LIMIT_FILE_SIZE") {
     return res.status(400).json({
       success: false,
-      message: "File size too large. Each file must be under 3MB.",
+       message: "File size must be between 10KB and 1MB.",
     });
   } else if (err) {
     return res.status(400).json({ success: false, message: err.message });
   }
   next();
+}
+function validateFileSize(file, fieldName) {
+  if (file.size < MIN_FILE_SIZE) {
+    return `${fieldName} must be at least 10KB in size.`;
+  }
+  if (file.size > MAX_FILE_SIZE) {
+    return `${fieldName} must not exceed 1MB.`;
+  }
+  return null;
 }
 
 router.post("/", uploadFields, handleMulterError, async (req, res) => {
@@ -161,14 +175,37 @@ if (hasExperience === true) {
 
     // ✅ Uploaded files
     const cvFile = req.files?.cvFile?.[0];
-    const coverLetterFile = req.files?.coverLetterFile?.[0];
-    const ref1Attachment = req.files?.ref1Attachment?.[0];
-    const ref2Attachment = req.files?.ref2Attachment?.[0];
+const coverLetterFile = req.files?.coverLetterFile?.[0];
+const ref1Attachment = req.files?.ref1Attachment?.[0];
+const ref2Attachment = req.files?.ref2Attachment?.[0];
 
-    if (!cvFile) return res.status(400).json({ success: false, message: "CV file is required." });
+if (!cvFile) {
+  return res.status(400).json({
+    success: false,
+    message: "CV file is required.",
+  });
+}
 
-    // ✅ Prepare attachments
-    const attachments = [cvFile, coverLetterFile, ref1Attachment, ref2Attachment].filter(Boolean);
+// 🔐 File size validation
+const filesToValidate = [
+  { file: cvFile, name: "CV" },
+  { file: coverLetterFile, name: "Cover Letter" },
+  { file: ref1Attachment, name: "Reference 1 Attachment" },
+  { file: ref2Attachment, name: "Reference 2 Attachment" },
+];
+
+for (const item of filesToValidate) {
+  if (!item.file) continue;
+
+  const error = validateFileSize(item.file, item.name);
+  if (error) {
+    return res.status(400).json({
+      success: false,
+      message: error,
+    });
+  }
+}
+
 
     // ✅ Full phone
     // const fullPhone = `${countryCode}${phoneNumber}`.replace(/\s+/g, "");
@@ -321,6 +358,3 @@ sendEmail("info@wwah.ai", `New Job Application - ${position}`, adminEmailHtml, a
 });
 
 module.exports = router;
-
-
-

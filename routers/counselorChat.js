@@ -167,8 +167,33 @@ const s3 = new AWS.S3({
 const storage = multer.memoryStorage();
 
 // File filter to restrict file types
+// const fileFilter = (req, file, cb) => {
+//   // Allowed file types
+//   const allowedTypes = [
+//     "application/pdf",
+//     "application/msword",
+//     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+//     "text/plain",
+//     "image/jpeg",
+//     "image/jpg",
+//     "image/png",
+//     "image/gif",
+//     "application/zip",
+//     "application/x-rar-compressed",
+//   ];
+
+//   if (allowedTypes.includes(file.mimetype)) {
+//     cb(null, true);
+//   } else {
+//     cb(
+//       new Error(
+//         "Invalid file type. Only PDF, DOC, DOCX, TXT, JPG, JPEG, PNG, GIF, ZIP, and RAR files are allowed."
+//       ),
+//       false
+//     );
+//   }
+// };
 const fileFilter = (req, file, cb) => {
-  // Allowed file types
   const allowedTypes = [
     "application/pdf",
     "application/msword",
@@ -182,24 +207,36 @@ const fileFilter = (req, file, cb) => {
     "application/x-rar-compressed",
   ];
 
-  if (allowedTypes.includes(file.mimetype)) {
-    cb(null, true);
-  } else {
-    cb(
+  if (!allowedTypes.includes(file.mimetype)) {
+    return cb(
       new Error(
         "Invalid file type. Only PDF, DOC, DOCX, TXT, JPG, JPEG, PNG, GIF, ZIP, and RAR files are allowed."
       ),
       false
     );
   }
+
+  // Minimum file size: 10KB
+  if (file.size < 10 * 1024) {
+    return cb(new Error("File size too small. Minimum size is 10KB."), false);
+  }
+
+  cb(null, true);
 };
 
 // Configure multer with options
+// const upload = multer({
+//   storage: storage,
+//   fileFilter: fileFilter,
+//   limits: {
+//     fileSize: 10 * 1024 * 1024, // 10MB limit
+//   },
+// });
 const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB limit
+    fileSize: 10 * 1024 * 1024, // 10MB maximum
   },
 });
 
@@ -250,36 +287,26 @@ const generatePresignedUrl = async (key, expiresIn = 3600) => {
   }
 };
 
-// Error handling middleware for multer
+// Middleware to handle multer errors
 const handleMulterError = (err, req, res, next) => {
   if (err instanceof multer.MulterError) {
     if (err.code === "LIMIT_FILE_SIZE") {
-      return res
-        .status(400)
-        .json({ error: "File size too large. Maximum size is 10MB." });
-    }
-    if (err.code === "LIMIT_FILE_COUNT") {
-      return res
-        .status(400)
-        .json({ error: "Too many files. Only one file allowed." });
-    }
-    if (err.code === "LIMIT_UNEXPECTED_FILE") {
-      return res.status(400).json({ error: "Unexpected file field." });
+      return res.status(400).json({ error: "File size too large. Maximum size is 10MB." });
     }
   }
 
+  // Custom error messages from fileFilter
   if (err.message.includes("Invalid file type")) {
     return res.status(400).json({ error: err.message });
   }
 
-  if (err.message.includes("Email is required")) {
-    return res
-      .status(400)
-      .json({ error: "Email is required for file upload." });
+  if (err.message.includes("File size too small")) {
+    return res.status(400).json({ error: err.message });
   }
 
   next(err);
 };
+
 
 // File upload route
 router.post(
