@@ -343,7 +343,7 @@ const adminEmailHtml = `
   <p style="margin-top:12px;">All uploaded documents are downloadable.</p>
 </div>
 `;
-
+const attachments = [cvFile, coverLetterFile, ref1Attachment, ref2Attachment].filter(Boolean);
     // ✅ Send emails
     await Promise.all([
    sendEmail(email, `Application Received - ${position}`, userEmailHtml, attachments),
