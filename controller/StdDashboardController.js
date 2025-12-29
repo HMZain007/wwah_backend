@@ -11,29 +11,29 @@ const {
 } = require("../config/s3Config"); // Import your fixed S3 config
 const statusUpdate = require("../database/models/stdDashboard/statusUpdates");
 const DOCUMENT_SIZE_LIMITS_MB = {
- "Valid Passport": 2,
-  "National ID Card": 2,
-  "Passport Size Photograph": 1,
+  "Valid Passport": 1,
+    "National ID Card": 1,
+    "Passport Size Photograph": 1,
 
-  "Academic Marksheet of 10th Grade": 3,
-  "Academic Marksheet of 12th Grade": 3,
-  "Academic Marksheet of Bachelors": 3,
-  "Academic Marksheet of Masters": 3,
+    "Academic Marksheet of 10th Grade": 1,
+    "Academic Marksheet of 12th Grade": 1,
+    "Academic Marksheet of Bachelors": 1,
+    "Academic Marksheet of Masters": 2,
 
-  "Academic Degree/Certificates of 10th Grade": 2,
-  "Academic Degree/Certificates of 12th Grade": 2,
-  "Academic Degree/Certificates of Bachelors": 2,
-  "Academic Degree/Certificates of Masters": 2,
+    "Academic Degree/Certificates of 10th Grade": 2,
+    "Academic Degree/Certificates of 12th Grade": 1,
+    "Academic Degree/Certificates of Bachelors": 2,
+    "Academic Degree/Certificates of Masters": 2,
 
-  "English Language Proficiency Test Certificate": 2,
-  "Letter of Recommendations": 2,
-  "Statement of Purpose": 2,
-  "Birth Certificate": 1,
-  "Curriculum Vitae/Resume": 1,
+    "English Language Proficiency Test Certificate": 2,
+    "Letter of Recommendations": 2,
+    "Statement of Purpose": 2,
+    "Birth Certificate": 1,
+    "Curriculum Vitae/Resume": 1,
 
-  "Portfolio (For creative courses such as art, design and architecture)": 4,
-  "Translation (if your documents are not in English)": 2,
-  "Standardized Test Result (If any)": 2,
+    "Portfolio (For creative courses such as art, design and architecture)": 4,
+    "Translation (if your documents are not in English)": 2,
+    "Standardized Test Result (If any)": 1,
 };
 
 // Helper function to determine file type
