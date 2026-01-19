@@ -427,7 +427,10 @@ const airportPickupForm = require("./routers/airportPickup");
 // super admin
 const superAdminSignIn = require("./routers/adminDashboard/auth/signin");
 const superAdminOtp = require("./routers/adminDashboard/auth/otp");
+//pricing plan routes
+const pricingPlanRoutes = require("./routers/pricing-plan/createOrder");
 const { swaggerUi, swaggerSpec } = require("./swagger");
+
 // ============================================
 // MIDDLEWARE SETUP (ORDER MATTERS!)
 // ============================================
@@ -647,7 +650,7 @@ server.use("/refal/verify-otp", refverifyOtp);
 server.use("/refal/reset-password", refResetPassword);
 server.use("/superadmin/signin", superAdminSignIn);
 server.use("/superadmin/otp", superAdminOtp);
-
+server.use("/create-order", pricingPlanRoutes);
 // ============================================
 // Default routes
 server.get("/", async (req, res) => {
