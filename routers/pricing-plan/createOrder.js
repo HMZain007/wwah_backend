@@ -5,7 +5,7 @@ const router = express.Router();
 const Payment = require('../../database/models/pricingPlan/payment');
 const { createPayProOrder, createMultiplePayProOrders } = require('../../services/paypro/service');
 
-// routes/payment.routes.js 
+// routes/payment.routes.js   
 router.post("/", async (req, res) => {
   try {
     const products = req.body;
@@ -146,6 +146,50 @@ router.post("/", async (req, res) => {
     res.status(500).json({
       success: false,
       message: error.message || 'Failed to create payment order'
+    });
+  }
+});
+// Update payment status (Admin)
+router.put("/update-status/:paymentId", async (req, res) => {
+  try {
+    const { paymentId } = req.params;
+    const { status } = req.body;
+
+    const validStatuses = ["PENDING", "PAID", "UNPAID", "CANCELLED", "EXPIRED", "FAILED"];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid status. Must be one of: ${validStatuses.join(", ")}`,
+      });
+    }
+
+    const payment = await Payment.findByIdAndUpdate(
+      paymentId,
+      {
+        paymentStatus: status,
+        ...(status === "PAID" ? { paidAt: new Date() } : {}),
+      },
+      { new: true }
+    );
+
+    if (!payment) {
+      return res.status(404).json({
+        success: false,
+        message: "Payment not found",
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Payment status updated successfully",
+      data: payment,
+    });
+  } catch (error) {
+    console.error("Error updating payment status:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error updating payment status",
+      error: error.message,
     });
   }
 });
