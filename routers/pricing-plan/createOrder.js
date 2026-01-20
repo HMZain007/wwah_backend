@@ -1,12 +1,11 @@
-// routes/payment.routes.js - Simple and efficient
+// routes/payment.routes.js
 
 const express = require("express");
 const router = express.Router();
 const Payment = require('../../database/models/pricingPlan/payment');
 const { createPayProOrder, createMultiplePayProOrders } = require('../../services/paypro/service');
 
-// routes/payment.routes.js - Fixed
-
+// routes/payment.routes.js 
 router.post("/", async (req, res) => {
   try {
     const products = req.body;

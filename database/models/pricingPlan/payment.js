@@ -1,63 +1,71 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-const pricingPlanPaymentSchema = new mongoose.Schema({
+const pricingPlanPaymentSchema = new mongoose.Schema(
+  {
     customerId: {
-        type: String,
-        required: true
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "UserDb",
+      required: true,
     },
     orderNumber: {
-        type: String,
-        required: true,
-        unique: true,
-        index: true
+      type: String,
+      required: true,
+      unique: true,
+      index: true,
     },
     customerName: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
     },
     customerEmail: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
     },
     customerMobile: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
     },
     amount: {
-        type: Number,
-        required: true
+      type: Number,
+      required: true,
     },
     orderDescription: {
-        type: String,
-        default: ''
+      type: String,
+      default: "",
     },
     paymentStatus: {
-        type: String,
-        enum: ['PENDING', 'PAID', 'UNPAID', 'CANCELLED', 'EXPIRED', 'FAILED'],
-        default: 'PENDING'
+      type: String,
+      enum: ["PENDING", "PAID", "UNPAID", "CANCELLED", "EXPIRED", "FAILED"],
+      default: "PENDING",
     },
     payproOrderId: {
-        type: String,
-        default: null
+      type: String,
+      default: null,
     },
     paymentUrl: {
-        type: String,
-        default: null
+      type: String,
+      default: null,
     },
     paymentDetails: {
-        type: Object,
-        default: {}
+      type: Object,
+      default: {},
     },
     paidAt: {
-        type: Date,
-        default: null
+      type: Date,
+      default: null,
     },
     webhookData: {
-        type: Object,
-        default: {}
-    }
-}, {
-    timestamps: true
-});
+      type: Object,
+      default: {},
+    },
+  },
+  {
+    timestamps: true,
+  },
+);
 
-module.exports = mongoose.model('pricingPlanPayment', pricingPlanPaymentSchema);
+const pricingPlanPayment = mongoose.model(
+  "pricingPlanPayment",
+  pricingPlanPaymentSchema,
+);
+module.exports = pricingPlanPayment;
