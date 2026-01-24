@@ -138,8 +138,7 @@ const pricingPlanPaymentSchema = new mongoose.Schema(
     },
 
     paymentUrl: {
-      type: String,
-      required: false
+      type: String
     },
 
     // ✅ PAYMENT DETAILS (products, paypro response, etc.)
@@ -387,13 +386,6 @@ pricingPlanPaymentSchema.pre('save', function (next) {
     }
   }
 
-  // Ensure card payments have PayPro data
-  if ((this.paymentMethod === 'CARD' || this.paymentMethod === 'CREDIT_CARD') &&
-    this.paymentDetails?.paymentType === 'ONLINE') {
-    if (this.paymentStatus === 'PENDING' && !this.paymentUrl) {
-      return next(new Error('Card payment requires payment URL'));
-    }
-  }
 
   // Auto-set paidAt when status changes to PAID/COMPLETED/VERIFIED
   if (this.isModified('paymentStatus')) {
