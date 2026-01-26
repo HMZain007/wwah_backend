@@ -5,6 +5,316 @@ const express = require("express");
 const router = express.Router();
 const Payment = require('../../database/models/pricingPlan/payment');
 const { createPayProOrder, createMultiplePayProOrders } = require('../../services/paypro/service');
+const sendEmail = require('../../utils/sendEmail');
+
+// ================================
+// EMAIL TEMPLATES
+// ================================
+
+const getCardPaymentAdminEmail = (payment, products) => {
+  const productRows = products.map((p, i) => `
+    <tr>
+      <td style="padding: 8px; border: 1px solid #ddd;">${i + 1}</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">${p.CustomerAddress || 'N/A'}</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">${p.Currency} ${p.CurrencyAmount}</td>
+    </tr>
+  `).join('');
+
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background-color: #4CAF50; color: white; padding: 20px; text-align: center; border-radius: 5px 5px 0 0; }
+        .content { background-color: #f9f9f9; padding: 20px; border: 1px solid #ddd; }
+        .info-row { margin: 10px 0; padding: 10px; background-color: white; border-left: 4px solid #4CAF50; }
+        .label { font-weight: bold; color: #555; }
+        table { width: 100%; border-collapse: collapse; margin: 15px 0; background-color: white; }
+        th { background-color: #4CAF50; color: white; padding: 10px; text-align: left; }
+        .footer { text-align: center; margin-top: 20px; color: #777; font-size: 12px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h2>🎉 New Card Payment Received</h2>
+        </div>
+        <div class="content">
+          <div class="info-row">
+            <span class="label">Order Number:</span> ${payment.orderNumber}
+          </div>
+          <div class="info-row">
+            <span class="label">Customer Name:</span> ${payment.customerName}
+          </div>
+          <div class="info-row">
+            <span class="label">Email:</span> ${payment.customerEmail}
+          </div>
+          <div class="info-row">
+            <span class="label">Mobile:</span> ${payment.customerMobile}
+          </div>
+          <div class="info-row">
+            <span class="label">Total Amount:</span> ${payment.currency} ${payment.amount}
+          </div>
+          <div class="info-row">
+            <span class="label">Payment Method:</span> Card (Online)
+          </div>
+          <div class="info-row">
+            <span class="label">Status:</span> <span style="color: #ff0000ff;">PENDING</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Payment URL:</span> <a href="${payment.paymentUrl}" target="_blank">View Payment</a>
+          </div>
+
+          <h3 style="margin-top: 20px;">Products:</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Item Description</th>
+                <th>Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${productRows}
+            </tbody>
+          </table>
+
+          <div class="info-row">
+            <span class="label">Order Created:</span> ${new Date(payment.createdAt).toLocaleString()}
+          </div>
+        </div>
+        <div class="footer">
+          <p>This is an automated notification from WWAH Payment System</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+};
+
+const getManualPaymentAdminEmail = (payment, receiptUrl) => {
+  const productRows = payment.paymentDetails.products.map((p, i) => `
+    <tr>
+      <td style="padding: 8px; border: 1px solid #ddd;">${i + 1}</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">${p.productName || p.CustomerAddress}</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">${p.Currency} ${p.CurrencyAmount}</td>
+    </tr>
+  `).join('');
+
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background-color: #ff0000ff; color: white; padding: 20px; text-align: center; border-radius: 5px 5px 0 0; }
+        .content { background-color: #f9f9f9; padding: 20px; border: 1px solid #ddd; }
+        .info-row { margin: 10px 0; padding: 10px; background-color: white; border-left: 4px solid #ff0000ff; }
+        .label { font-weight: bold; color: #555; }
+        table { width: 100%; border-collapse: collapse; margin: 15px 0; background-color: white; }
+        th { background-color: #ff0000ff; color: white; padding: 10px; text-align: left; }
+        .receipt-section { margin: 20px 0; padding: 15px; background-color: white; border: 2px dashed #ff0000ff; text-align: center; }
+        .receipt-image { max-width: 100%; height: auto; border: 1px solid #ddd; margin-top: 10px; }
+        .alert { background-color: #fff3cd; border: 1px solid #ff0707ff; padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .footer { text-align: center; margin-top: 20px; color: #777; font-size: 12px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h2>📋 New Manual Payment Submitted</h2>
+          <p style="margin: 5px 0;">Requires Verification</p>
+        </div>
+        <div class="content">
+          <div class="alert">
+            ⚠️ <strong>Action Required:</strong> Please verify this payment within 24-48 hours
+          </div>
+
+          <h3>Customer Information:</h3>
+          <div class="info-row">
+            <span class="label">Order Number:</span> ${payment.orderNumber}
+          </div>
+          <div class="info-row">
+            <span class="label">Customer Name:</span> ${payment.customerName}
+          </div>
+          <div class="info-row">
+            <span class="label">Email:</span> ${payment.customerEmail}
+          </div>
+          <div class="info-row">
+            <span class="label">Mobile:</span> ${payment.customerMobile}
+          </div>
+
+          <h3>Payment Details:</h3>
+          <div class="info-row">
+            <span class="label">Total Amount:</span> ${payment.currency} ${payment.amount}
+          </div>
+          <div class="info-row">
+            <span class="label">Payment Method:</span> ${payment.paymentMethod === 'MOBILE_WALLET' ? 'Mobile Wallet' : 'Bank Transfer'}
+          </div>
+          <div class="info-row">
+            <span class="label">Transaction ID:</span> ${payment.transactionId}
+          </div>
+          <div class="info-row">
+            <span class="label">Status:</span> <span style="color: #ff0000ff;">PENDING VERIFICATION</span>
+          </div>
+
+          <h3>Products:</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Item Description</th>
+                <th>Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${productRows}
+            </tbody>
+          </table>
+
+          <div class="receipt-section">
+            <h3 style="margin-top: 0;">📸 Payment Receipt</h3>
+            <p><a href="${receiptUrl}" target="_blank" style="color: #ff0000ff; text-decoration: none; font-weight: bold;">Click to view full size</a></p>
+            <img src="${receiptUrl}" alt="Payment Receipt" class="receipt-image" />
+          </div>
+
+          <div class="info-row">
+            <span class="label">Submitted:</span> ${new Date(payment.createdAt).toLocaleString()}
+          </div>
+        </div>
+        <div class="footer">
+          <p>This is an automated notification from WWAH Payment System</p>
+          <p>Please verify and update the payment status in the admin panel</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+};
+
+const getCustomerConfirmationEmail = (orderNumber, customerName, amount, transactionId) => {
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background-color: #2196F3; color: white; padding: 20px; text-align: center; border-radius: 5px 5px 0 0; }
+        .content { background-color: #f9f9f9; padding: 20px; border: 1px solid #ddd; }
+        .success-box { background-color: #d4edda; border: 1px solid #c3e6cb; padding: 15px; margin: 15px 0; border-radius: 4px; text-align: center; }
+        .info-row { margin: 10px 0; padding: 10px; background-color: white; border-left: 4px solid #2196F3; }
+        .label { font-weight: bold; color: #555; }
+        .footer { text-align: center; margin-top: 20px; color: #777; font-size: 12px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h2>✅ Payment Proof Received</h2>
+        </div>
+        <div class="content">
+          <div class="success-box">
+            <h3 style="margin: 0; color: #155724;">Thank you for your payment!</h3>
+            <p style="margin: 5px 0;">We have received your payment proof and will verify it shortly.</p>
+          </div>
+
+          <h3>Order Details:</h3>
+          <div class="info-row">
+            <span class="label">Order Number:</span> ${orderNumber}
+          </div>
+          <div class="info-row">
+            <span class="label">Transaction ID:</span> ${transactionId}
+          </div>
+          <div class="info-row">
+            <span class="label">Amount:</span> USD ${amount}
+          </div>
+          <div class="info-row">
+            <span class="label">Status:</span> Pending Verification
+          </div>
+
+          <div style="margin: 20px 0; padding: 15px; background-color: #ffcdcdff; border: 1px solid #b10000ff; border-radius: 4px;">
+            <strong>⏱️ Next Steps:</strong>
+            <ul style="margin: 10px 0;">
+              <li>Our team will verify your payment within 24-48 hours</li>
+              <li>You will receive a confirmation email once verified</li>
+              <li>If you have any questions, please contact us at info@wwah.ai</li>
+            </ul>
+          </div>
+
+          <p>Thank you for choosing WWAH!</p>
+        </div>
+        <div class="footer">
+          <p>This is an automated email from WWAH</p>
+          <p>Please do not reply to this email</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+};
+
+// ================================
+// EMAIL NOTIFICATION FUNCTIONS
+// ================================
+
+const notifyAdminCardPayment = async (payment, products) => {
+  try {
+    const adminEmail = process.env.ADMIN_EMAIL || 'admin@wwah.ai';
+    const html = getCardPaymentAdminEmail(payment, products);
+    
+    await sendEmail(
+      adminEmail,
+      `💳 New Card Payment - ${payment.orderNumber}`,
+      html
+    );
+    
+    console.log('✅ Admin notification email sent for card payment');
+  } catch (error) {
+    console.error('❌ Failed to send admin email for card payment:', error);
+    // Don't throw - email failure shouldn't stop the payment process
+  }
+};
+
+const notifyAdminManualPayment = async ({ payment, receiptUrl }) => {
+  try {
+    const adminEmail = 'info@wwah.ai';
+    const html = getManualPaymentAdminEmail(payment, receiptUrl);
+    
+    await sendEmail(
+      adminEmail,
+      `📋 Manual Payment Verification Required - ${payment.orderNumber} 
+         Payment Receipt URL: ${receiptUrl}
+      `,
+      html
+    );
+    
+    console.log('✅ Admin notification email sent for manual payment');
+  } catch (error) {
+    console.error('❌ Failed to send admin email for manual payment:', error);
+    // Don't throw - email failure shouldn't stop the payment process
+  }
+};
+
+const sendCustomerConfirmation = async ({ email, name, orderNumber, transactionId, amount }) => {
+  try {
+    const html = getCustomerConfirmationEmail(orderNumber, name, amount, transactionId);
+    
+    await sendEmail(
+      email,
+      `Payment Proof Received - Order ${orderNumber}`,
+      html
+    );
+    
+    console.log('✅ Customer confirmation email sent');
+  } catch (error) {
+    console.error('❌ Failed to send customer confirmation email:', error);
+    // Don't throw - email failure shouldn't stop the payment process
+  }
+};
 
 // ================================
 // CARD PAYMENT ROUTE (PayPro)
@@ -52,7 +362,6 @@ router.post("/", async (req, res) => {
     });
 
     await payment.save();
-    // console.log('✅ Payment saved:', mainOrderNumber);
 
     let payproResponse;
     let orderDataForPayPro;
@@ -78,7 +387,6 @@ router.post("/", async (req, res) => {
         }
       ];
 
-      // console.log('📤 Calling SINGLE order API (/co)');
       payproResponse = await createPayProOrder(orderDataForPayPro);
 
     } else {
@@ -102,7 +410,6 @@ router.post("/", async (req, res) => {
         ...formattedProducts
       ];
 
-      // console.log(`📤 Calling MULTIPLE orders API (/cmo) with ${products.length} products`);
       payproResponse = await createMultiplePayProOrders(orderDataForPayPro);
     }
 
@@ -114,7 +421,8 @@ router.post("/", async (req, res) => {
       payment.paymentDetails.payproResponse = orderDetails;
       await payment.save();
 
-      // console.log('✅ Payment URL generated:', orderDetails.Click2Pay);
+      // ✅ Send email notification to admin
+      await notifyAdminCardPayment(payment, products);
 
       return res.json({
         success: true,
@@ -153,8 +461,8 @@ router.post("/", async (req, res) => {
 router.post('/manual', async (req, res) => {
   try {
     const {
-      receiptUrl,          // S3 URL from upload-receipt API
-      receiptKey,          // S3 key
+      receiptUrl,
+      receiptKey,
       receiptFileName,
       receiptMimeType,
       receiptSize,
@@ -168,13 +476,6 @@ router.post('/manual', async (req, res) => {
       customerEmail,
       customerMobile
     } = req.body;
-
-    // console.log('📥 Manual payment submission received');
-    // console.log('   Transaction ID:', transactionId);
-    // console.log('   Payment Method:', paymentMethod);
-    // console.log('   Customer:', customerName);
-    // console.log('   Amount:', amount);
-    // console.log('   Receipt URL:', receiptUrl);
 
     // ================================
     // VALIDATION
@@ -194,7 +495,6 @@ router.post('/manual', async (req, res) => {
       });
     }
 
-    // ✅ Validate S3 URL
     if (!receiptUrl || !receiptUrl.startsWith('https://')) {
       return res.status(400).json({
         success: false,
@@ -258,7 +558,6 @@ router.post('/manual', async (req, res) => {
 
     // ================================
     // CREATE PAYMENT RECORD
-    // ✅ STORES S3 URL (NOT FILE OR BASE64)
     // ================================
     
     const payment = new Payment({
@@ -283,42 +582,30 @@ router.post('/manual', async (req, res) => {
       currency: 'USD',
       paymentMethod: paymentMethod === 'wallet' ? 'MOBILE_WALLET' : 'BANK_TRANSFER',
       transactionId: transactionId,
-      
-      // ✅ STORE S3 URL (NOT BASE64, NOT FILE PATH)
-      receiptUrl: receiptUrl,                 // S3 public URL
-      receiptKey: receiptKey,                 // S3 key for deletion if needed
+      receiptUrl: receiptUrl,
+      receiptKey: receiptKey,
       receiptFileName: receiptFileName,
       receiptMimeType: receiptMimeType,
       receiptSize: receiptSize,
-      
       verifiedAt: null,
       verifiedBy: null,
     });
 
     await payment.save();
 
-    // console.log('✅ Manual payment saved successfully with S3 URL!');
-    // console.log('   Order Number:', orderNumber);
-    // console.log('   Customer:', customerName);
-    // console.log('   Amount:', amount);
-    // console.log('   Transaction ID:', transactionId);
-    // console.log('   Receipt S3 URL:', receiptUrl);
-    // console.log('   Products count:', productsFormatted.length);
+    // ✅ Send email notifications
+    await notifyAdminManualPayment({
+      payment,
+      receiptUrl: receiptUrl
+    });
 
-    // TODO: Send email notification to admin
-    // await sendAdminNotification({
-    //   payment,
-    //   receiptUrl: receiptUrl
-    // });
-
-    // TODO: Send confirmation email to customer
-    // await sendCustomerConfirmation({
-    //   email: customerEmail,
-    //   name: customerName,
-    //   orderNumber: orderNumber,
-    //   transactionId: transactionId,
-    //   amount: amount
-    // });
+    await sendCustomerConfirmation({
+      email: customerEmail,
+      name: customerName,
+      orderNumber: orderNumber,
+      transactionId: transactionId,
+      amount: amount
+    });
 
     return res.status(200).json({
       success: true,
