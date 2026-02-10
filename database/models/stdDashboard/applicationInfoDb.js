@@ -10,10 +10,10 @@ const educationalBackgroundSchema = new mongoose.Schema({
     required: true,
     trim: true,
   },
-  gradingType:{
-    type:String,
-    required:true,
-    trim:true
+  gradingType: {
+    type: String,
+    required: true,
+    trim: true,
   },
   marks: {
     type: String,
@@ -47,6 +47,10 @@ const workExperienceSchema = new mongoose.Schema({
   },
   to: {
     type: Date,
+  },
+  isPresent: {
+    type: Boolean,
+    default: false,
   },
 });
 const applicationInfoSchema = mongoose.Schema(
@@ -92,7 +96,7 @@ const applicationInfoSchema = mongoose.Schema(
       required: true,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 const applicationInfo =
