@@ -71,47 +71,59 @@
  *         description: Server error
  */
 
-
 // module.exports = router;
 const express = require("express");
 const router = express.Router();
 const Otp = require("../database/models/Otp");
 const { hashString } = require("../utils/hashString");
 const { generateResetToken } = require("../utils/generateToken");
-const sendEmail = require("../utils/sendEmail");
+
 router.post("/", async (req, res) => {
   try {
     const { otp } = req.body;
-    // console.log(otp);
-    const resetData = req.session.resetData;
-    // console.log(resetData , "Resrey")
+
     if (!otp) return res.status(400).json({ message: "OTP required" });
-    if (!resetData)
+
+    const resetData = req.session.resetData;
+    if (!resetData || !resetData.email)
       return res.status(400).json({
         success: false,
-        message: "Session expired, request OTP again.",
+        message: "Session expired. Please request OTP again.",
       });
 
     const email = resetData.email;
+
     const otpRecord = await Otp.findOne({ email });
     if (!otpRecord) return res.status(400).json({ message: "OTP not found" });
 
+    //  Check expiry
     if (Date.now() > otpRecord.expiresAt) {
-      await Otp.deleteMany({ email }); // clean expired OTP
-      return res
-        .status(400)
-        .json({ message: "OTP expired. Please request a new one." });
+      await Otp.deleteMany({ email });
+      return res.status(400).json({
+        message: "OTP expired. Please request a new one.",
+      });
     }
 
-    if (otpRecord.otpHash !== hashString(otp))
-      return res.status(400).json({ message: "Invalid OTP" });
+    //  Check already used
+    if (otpRecord.verified) {
+      return res.status(400).json({
+        message: "OTP already used. Please request a new one.",
+      });
+    }
 
+    //  Check OTP match
+    if (otpRecord.otpHash !== hashString(otp)) {
+      return res.status(400).json({ message: "Invalid OTP" });
+    }
+
+    //  Mark as used (one-time use)
     otpRecord.verified = true;
     await otpRecord.save();
 
+    // Generate reset token
     const resetToken = generateResetToken(email);
 
-    // Mark session verified (optional)
+    // Mark session verified
     req.session.resetData.verified = true;
 
     res.json({
@@ -125,8 +137,6 @@ router.post("/", async (req, res) => {
   }
 });
 
-module.exports = router;
-
 router.post("/resend", async (req, res) => {
   try {
     const resetData = req.session.resetData;
@@ -138,7 +148,7 @@ router.post("/resend", async (req, res) => {
     //  console.log(email , "resend")
     if (lastOtp && new Date() < lastOtp.resendAvailableAt) {
       const waitSec = Math.ceil(
-        (lastOtp.resendAvailableAt - Date.now()) / 1000
+        (lastOtp.resendAvailableAt - Date.now()) / 1000,
       );
       return res
         .status(429)
@@ -183,3 +193,5 @@ router.post("/resend", async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+
+module.exports = router;
